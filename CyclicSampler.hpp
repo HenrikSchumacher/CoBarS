@@ -7,8 +7,6 @@
 #include <cstring>
 #include <array>
 
-
-
 #define EIGEN_USE_BLAS
 #define EIGEN_USE_LAPACKE
 #include <eigen3/Eigen/Dense>
@@ -20,15 +18,15 @@ namespace CyclicSampler {
     using namespace Tensors;
 } // namespace CyclicSampler
 
-extern "C"
-{
-    #include <gsl/gsl_rng.h>
-    #include <gsl/gsl_randist.h>
-}
-
-#include <plcTopology.h>
-
-int PD_VERBOSE = 0;
+//extern "C"
+//{
+//    #include <gsl/gsl_rng.h>
+//    #include <gsl/gsl_randist.h>
+//}
+//
+//#include <plcTopology.h>
+//
+//int PD_VERBOSE = 0;
 
 #include "src/ShiftMap.hpp"
 #include "src/CyclicSamplerBase.hpp"
