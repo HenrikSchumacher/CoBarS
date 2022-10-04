@@ -18,7 +18,6 @@ namespace CyclicSampler
     #include "RandomVariables/EdgeSpaceSamplingWeight.hpp"
     #include "RandomVariables/EdgeQuotientSpaceSamplingWeight.hpp"
     #include "RandomVariables/IterationCount.hpp"
-    #include "RandomVariables/BarycenterNorm.hpp"
         
         
     // Add your own random variables here.

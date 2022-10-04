@@ -67,13 +67,13 @@ protected:
     
     virtual Real MaxValue( const CyclicSampler_T & C ) const override
     {
-        auto & omega = C.Omega();
+        const Weights_T & r = C.EdgeLengths();
         
         Real L = static_cast<Real>(0);
         
         for( Int k = first_vertex; k < last_vertex; ++k )
         {
-            L += omega[k];
+            L += r[k];
         }
         
         return L;
@@ -84,11 +84,6 @@ public:
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS)+"("+ToString(first_vertex)+","+ToString(last_vertex)+")";
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
         

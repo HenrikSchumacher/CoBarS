@@ -77,12 +77,6 @@ public:
     {
         return TO_STD_STRING(CLASS);
     }
-    
-    // The name of the function that will is used by Tools::Profiler. Don't modify this; it will be filled-in by the preprocessor.
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
-    }
 };
     
 #undef BASE

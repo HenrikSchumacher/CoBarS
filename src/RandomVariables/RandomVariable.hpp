@@ -49,11 +49,6 @@ namespace CyclicSampler {
         }
         
         virtual std::string Tag() const override = 0;
-        
-        virtual std::string ClassName() const override
-        {
-            return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
-        }
     };
         
 #undef BASE

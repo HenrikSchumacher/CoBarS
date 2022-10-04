@@ -9,8 +9,6 @@ class CLASS : public BASE
 public:
     
     using CyclicSampler_T   = typename BASE::CyclicSampler_T;
-    using SpherePoints_T    = typename BASE::SpherePoints_T;
-    using SpacePoints_T     = typename BASE::SpacePoints_T;
     
     CLASS() = default;
     
@@ -42,11 +40,6 @@ public:
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS);
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
         

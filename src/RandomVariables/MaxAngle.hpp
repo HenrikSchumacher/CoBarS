@@ -24,18 +24,18 @@ protected:
     virtual Real operator()( const CyclicSampler_T & C ) const override
     {
         
-        const Int edge_count     = C.EdgeCount();
+        const Int n              = C.EdgeCount();
         const SpherePoints_T & y = C.EdgeCoordinates();
 
         Real max_angle = static_cast<Real>(0);
         
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(edge_count-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
             
             max_angle = std::max(max_angle,phi);
         }
         
-        for( Int k = 0; k < edge_count-1; ++k )
+        for( Int k = 0; k < n-1; ++k )
         {
             const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
             
@@ -60,11 +60,6 @@ public:
     virtual std::string Tag() const override
     {
         return TO_STD_STRING(CLASS);
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
     

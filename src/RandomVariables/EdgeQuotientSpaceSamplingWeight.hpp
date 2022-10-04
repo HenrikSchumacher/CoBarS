@@ -41,11 +41,6 @@ public:
     {
         return TO_STD_STRING(CLASS);
     }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
-    }
 };
         
 #undef BASE

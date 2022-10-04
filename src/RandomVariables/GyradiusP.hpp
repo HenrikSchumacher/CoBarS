@@ -43,12 +43,12 @@ protected:
         
         const Real power = exponent/2;
         
-        const Int edge_count    = C.EdgeCount();
+        const Int n             = C.EdgeCount();
         const SpacePoints_T & p = C.SpaceCoordinates();
         
-        for( Int k = 0; k < edge_count; ++k )
+        for( Int k = 0; k < n; ++k )
         {
-            for( Int l = k+1; l < edge_count; ++l )
+            for( Int l = k+1; l < n; ++l )
             {
                 r2 = static_cast<Real>(0);
                 
@@ -63,7 +63,7 @@ protected:
             }
         }
         
-        return std::pow( sum/(edge_count * edge_count), static_cast<Real>(1)/exponent );
+        return std::pow( sum/(n * n), static_cast<Real>(1)/exponent );
     }
     
     virtual Real MinValue( const CyclicSampler_T & C ) const override
@@ -73,7 +73,7 @@ protected:
     
     virtual Real MaxValue( const CyclicSampler_T & C ) const override
     {
-        return Total(C.Omega())/std::pow(C.EdgeCount(),static_cast<Real>(1)/exponent);
+        return Total(C.EdgeLengths())/std::pow(C.EdgeCount(),static_cast<Real>(1)/exponent);
     }
     
 public:
@@ -81,11 +81,6 @@ public:
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS)+"("+ToString(exponent)+")";
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
     

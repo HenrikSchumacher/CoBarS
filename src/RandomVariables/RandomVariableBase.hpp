@@ -36,11 +36,6 @@ namespace CyclicSampler {
         virtual Int AmbientDimension() const = 0;
         
         virtual std::string Tag() const = 0;
-        
-        virtual std::string ClassName() const 
-        {
-            return TO_STD_STRING(CLASS)+"<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
-        }
     };
 #undef CLASS
         

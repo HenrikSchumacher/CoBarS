@@ -26,10 +26,10 @@ protected:
     {
         Real r2 = static_cast<Real>(0);
         
-        const Int edge_count    = C.EdgeCount();
+        const Int n             = C.EdgeCount();
         const SpacePoints_T & p = C.SpaceCoordinates();
         
-        for( Int k = 0; k < edge_count; ++k )
+        for( Int k = 0; k < n; ++k )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -37,7 +37,7 @@ protected:
             }
         }
         
-        return std::sqrt( r2/edge_count );
+        return std::sqrt( r2/n );
     }
     
     virtual Real MinValue( const CyclicSampler_T & C ) const override
@@ -47,7 +47,7 @@ protected:
     
     virtual Real MaxValue( const CyclicSampler_T & C ) const override
     {
-        return Total(C.Omega())/std::sqrt(C.EdgeCount());
+        return Total(C.EdgeLengths())/std::sqrt(C.EdgeCount());
     }
     
 public:
@@ -55,11 +55,6 @@ public:
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS);
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
         

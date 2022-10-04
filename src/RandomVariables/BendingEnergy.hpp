@@ -37,23 +37,23 @@ protected:
     
     virtual Real operator()( const CyclicSampler_T & C ) const override
     {
-        const Int edge_count     = C.EdgeCount();
+        const Int n              = C.EdgeCount();
         const SpherePoints_T & y = C.EdgeCoordinates();
-        const Weights_T & omega = C.Omega();
+        const Weights_T & r      = C.EdgeLengths();
     
         Real sum;
         
         {
-            const Real len = static_cast<Real>(0.5)*(omega[edge_count-1]+omega[0]);
+            const Real len = static_cast<Real>(0.5)*(r[n-1]+r[0]);
             
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(edge_count-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
             
             sum = std::pow( phi / len, p ) * len;
         }
         
-        for( Int k = 0; k < edge_count-1; ++k )
+        for( Int k = 0; k < n-1; ++k )
         {
-            const Real len = static_cast<Real>(0.5)*(omega[k]+omega[k+1]);
+            const Real len = static_cast<Real>(0.5)*(r[k]+r[k+1]);
             
             const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
             
@@ -70,13 +70,13 @@ protected:
     
     virtual Real MaxValue( const CyclicSampler_T & C ) const override
     {
-        const Int edge_count    = C.EdgeCount();
-        const Weights_T & omega = C.Omega();
+        const Int n         = C.EdgeCount();
+        const Weights_T & r = C.EdgeLengths();
     
         Real sum;
         
         {
-            const Real len = static_cast<Real>(0.5)*(omega[edge_count-1]+omega[0]);
+            const Real len = static_cast<Real>(0.5)*(r[n-1]+r[0]);
             
             const Real phi = static_cast<Real>(M_PI);
             
@@ -84,9 +84,9 @@ protected:
             
         }
         
-        for( Int k = 0; k < edge_count-1; ++k )
+        for( Int k = 0; k < n-1; ++k )
         {
-            const Real len = static_cast<Real>(0.5)*(omega[k]+omega[k+1]);
+            const Real len = static_cast<Real>(0.5)*(r[k]+r[k+1]);
             
             const Real phi = static_cast<Real>(M_PI);
             
@@ -106,11 +106,6 @@ public:
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS)+"("+ToString(p)+")";
-    }
-    
-    virtual std::string ClassName() const override
-    {
-        return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
     }
 };
 
