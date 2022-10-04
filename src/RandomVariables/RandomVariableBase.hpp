@@ -25,7 +25,7 @@ namespace CyclicSampler {
         
         virtual Real MaxValue( const CyclicSampler_T & C ) const = 0;
         
-        CYCLICSAMPLER__ADD_CLONE_CODE_FOR_BASE_CLASS(CLASS)
+        __ADD_CLONE_CODE_FOR_BASE_CLASS__(CLASS)
         
     public:
         

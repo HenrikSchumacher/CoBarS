@@ -23,7 +23,7 @@ namespace CyclicSampler {
         
         virtual ~CLASS() override = default;
         
-        CYCLICSAMPLER__ADD_CLONE_CODE(CLASS)
+        __ADD_CLONE_CODE__(CLASS)
 
         static constexpr Real eps = std::numeric_limits<Real>::min();
         

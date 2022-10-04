@@ -28,7 +28,7 @@ namespace CyclicSampler {
         
         virtual Real MaxValue( const CyclicSampler_T & C ) const override = 0;
         
-        CYCLICSAMPLER__ADD_CLONE_CODE_FOR_ABSTRACT_CLASS(CLASS)
+        __ADD_CLONE_CODE_FOR_ABSTRACT_CLASS__(CLASS)
 
         virtual CLASS & DownCast() override
         {
