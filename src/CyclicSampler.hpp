@@ -44,14 +44,14 @@ namespace CyclicSampler {
             y = SpherePoints_T( edge_count,     AmbDim );
             p = SpherePoints_T( edge_count + 1, AmbDim );
             
-            omega = Weights_T ( edge_count, one / edge_count );
+            r = Weights_T ( edge_count, one / edge_count );
             rho   = Weights_T ( edge_count, one );
             
-            total_omega_inv = one;
+            total_r_inv = one;
         }
         
         explicit CLASS(
-            const Real * restrict const omega_in,
+            const Real * restrict const r_in,
             const Real * restrict const rho_in,
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
@@ -62,10 +62,10 @@ namespace CyclicSampler {
             y = SpherePoints_T( edge_count,     AmbDim );
             p = SpherePoints_T( edge_count + 1, AmbDim );
             
-            omega = Weights_T( edge_count );
-            rho   = Weights_T( edge_count );
+            r   = Weights_T( edge_count );
+            rho = Weights_T( edge_count );
             
-            ReadOmega(omega_in);
+            ReadEdgeLengths(r_in);
             ReadRho(rho_in);
         }
         
@@ -77,9 +77,9 @@ namespace CyclicSampler {
 //        ,   x(other.x)
 //        ,   y(other.y)
 //        ,   p(other.p)
-//        ,   omega(other.omega)
+//        ,   r(other.r)
 //        ,   rho(other.rho)
-//        ,   total_omega_inv(other.total_omega_inv)
+//        ,   total_r_inv(other.total_r_inv)
 //        ,   w(other.w)
 //        ,   F(other.F)
 //        ,   DF(other.DF)
@@ -99,9 +99,9 @@ namespace CyclicSampler {
 //            swap(A.x,B.x);
 //            swap(A.y,B.y);
 //            swap(A.p,B.p);
-//            swap(A.omega,B.omega);
+//            swap(A.r,B.r);
 //            swap(A.rho,B.rho);
-//            swap(A.total_omega_inv,B.total_omega_inv);
+//            swap(A.total_r_inv,B.total_r_inv);
 //            
 //            std::swap_ranges(&A.w[0],    &A.w[AmbDim],            &B.w[0]   );
 //            std::swap_ranges(&A.z[0],    &A.z[AmbDim],            &B.z[0]   );
@@ -139,10 +139,10 @@ namespace CyclicSampler {
         
         mutable SpacePoints_T p {0,AmbDim};
         
-        Weights_T omega {0};
+        Weights_T r {0};
         Weights_T rho   {0};
         
-        Real total_omega_inv = one;
+        Real total_r_inv = one;
         
         Vector_T w;           // current point in hyperbolic space.
         Vector_T F;           // right hand side of Newton iteration.
@@ -220,7 +220,7 @@ namespace CyclicSampler {
         void ComputeEdgeSpaceSamplingWeight()
         {
             edge_space_sampling_weight =  S.EdgeSpaceSamplingWeight(
-                x.data(), w.data(), y.data(), omega.data(), rho.data(), edge_count
+                x.data(), w.data(), y.data(), r.data(), rho.data(), edge_count
             );
         }
         
@@ -358,10 +358,10 @@ namespace CyclicSampler {
                     yz2 += y(k,i) * z[i];
                 }
                 
-                value += omega[k] * std::log(std::abs( (a - two * yz2) * b ) );
+                value += r[k] * std::log(std::abs( (a - two * yz2) * b ) );
             }
             
-            return value * total_omega_inv;
+            return value * total_r_inv;
         }
         
         
@@ -484,14 +484,14 @@ namespace CyclicSampler {
         void DifferentialAndHessian_Hyperbolic()
         {
             // CAUTION: We use a different sign convention as in the paper!
-            // Assemble  F = -1/2 y * omega.
+            // Assemble  F = -1/2 y * r.
             // Assemble DF = nabla F + regulatization:
-            // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \omega_k.
+            // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
 
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = omega[0] * y(0,i);
+                    const Real factor = r[0] * y(0,i);
 
                     F(i) = - factor;
 
@@ -506,7 +506,7 @@ namespace CyclicSampler {
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = omega[k] * y(k,i);
+                    const Real factor = r[k] * y(k,i);
 
                     F(i) -= factor;
 
@@ -517,14 +517,14 @@ namespace CyclicSampler {
                 }
             }
             
-            // Normalize for case that the weights in omega do not sum to 1.
+            // Normalize for case that the weights in r do not sum to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                F(i) *= total_omega_inv;
+                F(i) *= total_r_inv;
 
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    DF(i,j) *= total_omega_inv;
+                    DF(i,j) *= total_r_inv;
                 }
             }
             
@@ -736,11 +736,11 @@ namespace CyclicSampler {
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                const Real omega_k = omega[k];
+                const Real r_k = r[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real offset = omega_k * y(k,i);
+                    const Real offset = r_k * y(k,i);
                     
                     barycenter[i] += (point_accumulator[i] + half * offset);
                     
@@ -755,11 +755,11 @@ namespace CyclicSampler {
 
             for( Int k = 0; k < edge_count; ++k )
             {
-                const Real omega_k = omega[k];
+                const Real r_k = r[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p(k+1,i) = p(k,i) + omega_k * y(k,i);
+                    p(k+1,i) = p(k,i) + r_k * y(k,i);
                 }
             }
         }
@@ -767,19 +767,14 @@ namespace CyclicSampler {
 
         virtual const Weights_T & EdgeLengths() const override
         {
-            return omega;
+            return r;
         }
         
-        virtual const Weights_T & Omega() const override
+        virtual void ReadEdgeLengths( const Real * const r_in ) override
         {
-            return omega;
-        }
-        
-        virtual void ReadOmega( const Real * const omega_in ) override
-        {
-            omega.Read(omega_in);
+            r.Read(r_in);
             
-            total_omega_inv = one / omega.Total();
+            total_r_inv = one / r.Total();
         }
         
         
@@ -800,17 +795,17 @@ namespace CyclicSampler {
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                const Real weight_k = omega[k];
+                const Real r_k = r[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w_[i] += x(k,i) * weight_k;
+                    w_[i] += x(k,i) * r_k;
                 }
             }
             
-            // Normalize in that case that omega does not sum up to 1.
+            // Normalize in that case that r does not sum up to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w_[i] *= total_omega_inv;
+                w_[i] *= total_r_inv;
             }
             
             w.Read(&w_[0]);
@@ -892,7 +887,7 @@ namespace CyclicSampler {
 
                 CLASS W( edge_count, settings );
                 
-                W.ReadOmega( Omega().data() );
+                W.ReadEdgeLengths( EdgeLengths().data() );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
@@ -938,7 +933,7 @@ namespace CyclicSampler {
 
                 CLASS W( edge_count, settings );
 
-                W.ReadOmega( Omega().data() );
+                W.ReadEdgeLengths( EdgeLengths().data() );
                 W.ReadRho( Rho().data() );
 
                 for( Int k = k_begin; k < k_end; ++k )
@@ -1026,7 +1021,7 @@ namespace CyclicSampler {
 
                 CLASS W( edge_count, settings );
 
-                W.ReadOmega( Omega().data() );
+                W.ReadEdgeLengths( EdgeLengths().data() );
                 W.ReadRho( Rho().data() );
 
                 std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > F_list;
@@ -1203,7 +1198,7 @@ namespace CyclicSampler {
 
                 CLASS W( edge_count, settings );
 
-                W.ReadOmega( Omega().data() );
+                W.ReadEdgeLengths( EdgeLengths().data() );
                 W.ReadRho( Rho().data() );
 
                 std::map<std::string, std::tuple<Real,Real,Real>> map_loc;

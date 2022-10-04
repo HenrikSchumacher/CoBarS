@@ -147,9 +147,7 @@ namespace CyclicSampler {
         
         virtual const Weights_T & EdgeLengths() const = 0;
         
-        virtual const Weights_T & Omega() const = 0;
-        
-        virtual void ReadOmega( const Real * const omega_in ) = 0;
+        virtual void ReadEdgeLengths( const Real * const r_in ) = 0;
         
         
         virtual const Weights_T & Rho() const = 0;

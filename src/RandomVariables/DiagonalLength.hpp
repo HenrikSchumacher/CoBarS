@@ -45,7 +45,7 @@ protected:
     
     virtual Real MaxValue( const CyclicSampler_T & C ) const override
     {
-        Weights_T & r = C.EdgeLengths();
+        const Weights_T & r = C.EdgeLengths();
         
         Real L = static_cast<Real>(0);
         
