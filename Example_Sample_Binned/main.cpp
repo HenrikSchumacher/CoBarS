@@ -36,12 +36,12 @@ int main(int argc, const char * argv[])
     F_list.push_back( std::make_unique<CyclicSampler::ChordLength<AmbDim,Real,Int>>(0,2) );
     F_list.push_back( std::make_unique<CyclicSampler::TotalCurvature<AmbDim,Real,Int>>() );
 
-    const Int fun_count = static_cast<Int>(F_list.size());
-    const Int bin_count = 40;
+    const Int fun_count    = static_cast<Int>(F_list.size());
+    const Int bin_count    = 40;
     const Int moment_count = 3;
     
-    // Prepare arrays to store the results.
-    // C.Sample will _add into_ these arrays, hence we have to make sure that they are initialized appropriately by zeroes.
+    // Now we prepare arrays to store the results.
+    // C.Sample_Binned will _add into_ these arrays, hence we have to make sure that they are initialized appropriately by zeroes.
     
     
     // bins is a 3D-array of size 3 x fun_count x bin_count. Entry bins(i,j,k) will store the sampled weighted sum in bin k of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i:

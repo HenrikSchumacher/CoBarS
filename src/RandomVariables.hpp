@@ -6,6 +6,7 @@
 
 namespace CyclicSampler
 {
+    #include "RandomVariables/BarycenterNorm.hpp"   // Shouls always evaluate to 0.
     #include "RandomVariables/ChordLength.hpp"
     #include "RandomVariables/DiagonalLength.hpp"
     #include "RandomVariables/Gyradius.hpp"

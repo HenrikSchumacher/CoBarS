@@ -34,6 +34,9 @@ int main(int argc, const char * argv[])
     C.Settings().PrintStats();
 
     print("");
+    valprint("sample_count",sample_count);
+    valprint("thread_count",thread_count);
+    print("");
 
     tic("RandomClosedPolygons");
         C.RandomClosedPolygons(
@@ -50,10 +53,6 @@ int main(int argc, const char * argv[])
     print("");
 
     valprint( "last K_out", K[sample_count-1], 16 );
-
-//    tic("SampleHOMFLY");
-//    std::map<std::string, std::tuple<double,double,double>> data = C->SampleHOMFLY( 160, thread_count );
-//    toc("SampleHOMFLY");
 
     print("");
 
