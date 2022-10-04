@@ -98,11 +98,6 @@ protected:
     
 public:
     
-    virtual bool RequiresSpaceCurve() const override
-    {
-        return false;
-    };
-    
     virtual std::string Tag() const  override
     {
         return TO_STD_STRING(CLASS)+"("+ToString(p)+")";
