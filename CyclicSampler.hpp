@@ -1,6 +1,4 @@
-#pragma  once
-
-#define _USE_MATH_DEFINES
+#pragma once
 
 #include <cmath>
 #include <algorithm>
@@ -15,10 +13,11 @@
 #define EIGEN_USE_LAPACKE
 #include <eigen3/Eigen/Dense>
 
-#include "src/Tools.hpp"
+#include "Tensors/Tensors.hpp"
 
 namespace CyclicSampler {
     using namespace Tools;
+    using namespace Tensors;
 } // namespace CyclicSampler
 
 extern "C"
@@ -30,14 +29,6 @@ extern "C"
 #include <plcTopology.h>
 
 int PD_VERBOSE = 0;
-
-#include "Tensors/Tensors.hpp"
-
-namespace CyclicSampler {
-    
-    using namespace Tensors;
-    
-} // namespace CyclicSampler
 
 #include "src/ShiftMap.hpp"
 #include "src/CyclicSamplerBase.hpp"
