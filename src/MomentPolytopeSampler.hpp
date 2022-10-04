@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace CyclicSampler {
 
@@ -272,18 +272,16 @@ namespace CyclicSampler {
         }
         
         
-        Int RandomClosedPolygons( Real * restrict p, const Int sample_count, const Int thread_count_ = 0 )
+        Int RandomClosedPolygons( Real * restrict p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             Int trials = 0;
             
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
+            JobPointers<Int> job_ptr (sample_count, thread_count);
             
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
-            
-            #pragma omp parallel num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
             {
-                const Int thread = omp_get_thread_num();
                 
                 // Create a new instance of the class with its own random number generator.
                 CLASS C ( edge_count );

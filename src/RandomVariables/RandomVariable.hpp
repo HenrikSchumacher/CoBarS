@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace CyclicSampler {
 
@@ -17,6 +17,7 @@ namespace CyclicSampler {
         using SpherePoints_T    = typename CyclicSampler_T::SpherePoints_T;
         using SpacePoints_T     = typename CyclicSampler_T::SpacePoints_T;
         using Weights_T         = typename CyclicSampler_T::Weights_T;
+        using Vector_T          = typename CyclicSampler<AmbDim,Real,Int>::Vector_T;
         
         CLASS() = default;
         
@@ -46,8 +47,6 @@ namespace CyclicSampler {
         {
             return AmbDim;
         }
-        
-        virtual bool RequiresSpaceCurve() const override = 0;
         
         virtual std::string Tag() const override = 0;
         

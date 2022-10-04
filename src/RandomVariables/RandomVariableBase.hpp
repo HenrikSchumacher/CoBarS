@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace CyclicSampler {
     
@@ -34,8 +34,6 @@ namespace CyclicSampler {
         virtual const CLASS & DownCast() const = 0;
         
         virtual Int AmbientDimension() const = 0;
-        
-        virtual bool RequiresSpaceCurve() const = 0;
         
         virtual std::string Tag() const = 0;
         

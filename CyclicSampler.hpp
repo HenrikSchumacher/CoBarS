@@ -7,6 +7,7 @@
 #include <cstring>
 #include <array>
 
+
 #define EIGEN_USE_BLAS
 #define EIGEN_USE_LAPACKE
 #include <eigen3/Eigen/Dense>
@@ -28,26 +29,13 @@ namespace CyclicSampler {
 //
 //int PD_VERBOSE = 0;
 
+#include "src/SmallSymmetricMatrix.hpp"
+
 #include "src/ShiftMap.hpp"
 #include "src/CyclicSamplerBase.hpp"
 #include "src/CyclicSampler.hpp"
 
-#include "src/RandomVariables/RandomVariableBase.hpp"
-#include "src/RandomVariables/RandomVariable.hpp"
-#include "src/RandomVariables/ChordLength.hpp"
-#include "src/RandomVariables/DiagonalLength.hpp"
-#include "src/RandomVariables/Gyradius.hpp"
-#include "src/RandomVariables/GyradiusP.hpp"
-#include "src/RandomVariables/HydrodynamicRadius.hpp"
-#include "src/RandomVariables/ShiftNorm.hpp"
-#include "src/RandomVariables/TotalCurvature.hpp"
-#include "src/RandomVariables/BendingEnergy.hpp"
-#include "src/RandomVariables/MaxAngle.hpp"
-#include "src/RandomVariables/EdgeSpaceSamplingWeight.hpp"
-#include "src/RandomVariables/EdgeQuotientSpaceSamplingWeight.hpp"
-#include "src/RandomVariables/IterationCount.hpp"
+#include "src/RandomVariables.hpp"
 
-// Only for debugging purposes:
-#include "src/RandomVariables/BarycenterNorm.hpp"
 
 #include "src/MomentPolytopeSampler.hpp"

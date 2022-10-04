@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace CyclicSampler {
 
@@ -123,7 +123,7 @@ namespace CyclicSampler {
                   Real *       w_out,
                   Real *       y_out,
             const Int sample_count,
-            const Int thread_count_ = 0,
+            const Int thread_count = 1,
             bool normalize = true
         ) = 0;
         
@@ -143,6 +143,9 @@ namespace CyclicSampler {
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const = 0;
         
+        
+        
+        virtual const Weights_T & EdgeLengths() const = 0;
         
         virtual const Weights_T & Omega() const = 0;
         
@@ -217,18 +220,26 @@ namespace CyclicSampler {
                   Real * const restrict K_edge_space,
                   Real * const restrict K_edge_quotient_space,
             const Int sample_count,
-            const Int thread_count_ = 0
+            const Int thread_count = 1
         ) const = 0;
         
-        virtual void Sample(
+        virtual void Sample_Binned(
             Real * restrict bins_out,
-            const Int bin_count_,
+            const Int bin_count,
             Real * restrict moments_out,
-            const Int moment_count_,
-            Real * restrict ranges_out,
-            const std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > & F_list_,
+            const Int moment_count,
+            const Real * restrict ranges_out,
+            const std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > & F_list,
             const Int sample_count,
-            const Int thread_count_ = 0
+            const Int thread_count = 1
+        ) const = 0;
+        
+        virtual void NormalizeBinnedSamples(
+            Real * restrict bins,
+            const Int bin_count,
+            Real * restrict moments,
+            const Int moment_count,
+            const Int fun_count
         ) const = 0;
         
         

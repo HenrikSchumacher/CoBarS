@@ -1,4 +1,4 @@
-#pragma  once
+#pragma once
 
 namespace CyclicSampler {
 
@@ -764,6 +764,11 @@ namespace CyclicSampler {
             }
         }
         
+
+        virtual const Weights_T & EdgeLengths() const override
+        {
+            return omega;
+        }
         
         virtual const Weights_T & Omega() const override
         {
@@ -870,21 +875,18 @@ namespace CyclicSampler {
             const Real * const x_in,
                   Real *       w_out,
                   Real *       y_out,
-            const Int smaple_count,
-            const Int thread_count_ = 0,
+            const Int sample_count,
+            const Int thread_count = 1,
             bool normalize = true
         ) override
         {
             ptic(ClassName()+"OptimizeBatch");
             
-            const Int thread_count = (thread_count_==0) ? omp_get_num_threads() : thread_count_;
+            JobPointers<Int> job_ptr ( sample_count, thread_count );
             
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad( smaple_count, thread_count );
-            
-            #pragma omp parallel num_threads( thread_count )
-            {
-                const Int thread = omp_get_thread_num();
-                
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
+            {                
                 const Int k_begin = job_ptr[thread];
                 const Int k_end   = job_ptr[thread+1];
 
@@ -916,24 +918,21 @@ namespace CyclicSampler {
                   Real * const restrict K_edge_space,
                   Real * const restrict K_edge_quotient_space,
             const Int sample_count,
-            const Int thread_count_ = 0
+            const Int thread_count = 1
         ) const override
         {
             ptic(ClassName()+"RandomClosedPolygons");
 
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
-
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
+            JobPointers<Int> job_ptr ( sample_count, thread_count );
 
 //            valprint( "dimension   ", AmbDim       );
 //            valprint( "edge_count  ", edge_count   );
 //            valprint( "sample_count", sample_count );
 //            valprint( "thread_count", thread_count );
 
-            #pragma omp parallel num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
             {
-                const Int thread = omp_get_thread_num();
-                
                 const Int k_begin = job_ptr[thread  ];
                 const Int k_end   = job_ptr[thread+1];
 
@@ -970,176 +969,22 @@ namespace CyclicSampler {
         }
         
         
-        void Sample(
-            Real * restrict bins_out,
-            const Int bin_count_,
-            Real * restrict moments_out,
-            const Int moment_count_,
-            Real * restrict ranges_out,
-            const std::vector< std::unique_ptr<RandomVariable<AmbDim,Real,Int>> > & F_list_,
-            const Int sample_count,
-            const Int thread_count_ = 0
-        ) const
-        {
-            ptic(ClassName()+"Sample");
-
-            const Int fun_count = static_cast<Int>(F_list_.size());
-            
-            const Int moment_count = std::max( static_cast<Int>(3), moment_count_ );
-
-            const Int bin_count = std::max( bin_count_, static_cast<Int>(1) );
-
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
-
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
-
-            valprint( "dimension   ", AmbDim       );
-            valprint( "edge_count  ", edge_count );
-            valprint( "sample_count", sample_count );
-            valprint( "fun_count   ", fun_count );
-            valprint( "bin_count   ", bin_count );
-            valprint( "moment_count", moment_count );
-            valprint( "thread_count", thread_count );
-            
-
-            Tensor3<Real,Int> bins_global   ( 3, fun_count, bin_count,    zero );
-            Tensor2<Real,Int> ranges        (    fun_count, 2                  );
-            Tensor3<Real,Int> moments_global( 3, fun_count, moment_count, zero );
-            Tensor1<Real,Int> factor        (    fun_count                     );
-
-            print("Sampling the following random variables:");
-            for( Int i = 0; i < fun_count; ++ i )
-            {
-                ranges(i,0) = F_list_[i]->MinValue(*this);
-                ranges(i,1) = F_list_[i]->MaxValue(*this);
-
-                factor(i) = static_cast<Real>(bin_count) / ( ranges(i,1) - ranges(i,0) );
-                
-                print("    " + F_list_[i]->Tag());
-            }
-
-            const Int lower = static_cast<Int>(0);
-            const Int upper = static_cast<Int>(bin_count-1);
-
-            #pragma omp parallel num_threads( thread_count )
-            {
-                const Int thread = omp_get_thread_num();
-
-                const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
-
-                CLASS W( edge_count, settings );
-
-                W.ReadOmega( Omega().data() );
-                W.ReadRho( Rho().data() );
-
-                std::vector< std::unique_ptr<RandomVariable<AmbDim,Real,Int>> > F_list;
-
-                for( Int i = 0; i < fun_count; ++ i )
-                {
-                    F_list.push_back( F_list_[i]->Clone() );
-                }
-
-                Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
-                Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
-
-                for( Int k = 0; k < repetitions; ++k )
-                {
-                    W.RandomizeInitialEdgeCoordinates();
-
-                    W.ComputeShiftVector();
-
-                    W.Optimize();
-
-                    W.ComputeSpaceCoordinates();
-                    
-                    W.ComputeEdgeSpaceSamplingWeight();
-                    
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
-                    const Real K = W.EdgeSpaceSamplingWeight();
-
-                    const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();
-
-                    for( Int i = 0; i < fun_count; ++i )
-                    {
-                        auto & F = *F_list[i];
-
-                        const Real val = F(W);
-                        
-                        Real values [3] = {static_cast<Real>(1),K,K_quot};
-                        
-//                        const Int bin_idx = std::clamp(
-//                           static_cast<Int>(std::floor( factor[i] * (val - ranges(i,0)) )),
-//                           lower,
-//                           upper
-//                        );
-                        
-                        const Int bin_idx = static_cast<Int>(std::floor( factor[i] * (val - ranges(i,0)) ));
-                        
-                        if( (bin_idx <= upper) && (bin_idx >= lower) )
-                        {
-                            bins_local(0,i,bin_idx) += static_cast<Real>(1);
-                            bins_local(1,i,bin_idx) += K;
-                            bins_local(2,i,bin_idx) += K_quot;
-                        }
-                        
-                        moments_local(0,i,0) += values[0];
-                        moments_local(1,i,0) += values[1];
-                        moments_local(2,i,0) += values[2];
-
-                        for( Int j = 1; j < moment_count; ++j )
-                        {
-                            values[0] *= val;
-                            values[1] *= val;
-                            values[2] *= val;
-                            moments_local(0,i,j) += values[0];
-                            moments_local(1,i,j) += values[1];
-                            moments_local(2,i,j) += values[2];
-                        }
-                    }
-                }
-
-                #pragma omp critical
-                {
-//                    valprint("thread",thread);
-//                    print( "data_local = " + data_local.ToString() );
-                    for( Int l = 0; l < 3; ++l )
-                    {
-                        for( Int i = 0; i < fun_count; ++i )
-                        {
-                            for( Int j = 0; j < bin_count; ++j )
-                            {
-                                bins_global(l,i,j) += bins_local(l,i,j);
-                            }
-                            
-                            for( Int j = 0; j < moment_count; ++j )
-                            {
-                                moments_global(l,i,j) += moments_local(l,i,j);
-                            }
-                        }
-                    }
-                }
-            }
-
-            bins_global.Write( bins_out );
-            moments_global.Write( moments_out );
-            ranges.Write( ranges_out );
-            
-            ptoc(ClassName()+"::Sample");
-        }
         
-        virtual void Sample(
+        
+        // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
+        // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared CyclicSampler_T C.
+        virtual void Sample_Binned(
             Real * restrict bins_out,
             const Int bin_count_,
             Real * restrict moments_out,
             const Int moment_count_,
-            Real * restrict ranges_out,
+            const Real * restrict ranges,
             const std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > & F_list_,
             const Int sample_count,
-            const Int thread_count_ = 0
+            const Int thread_count = 1
         ) const override
         {
-            ptic(ClassName()+"Sample (polymorphic)");
+            ptic(ClassName()+"Sample_Binned (polymorphic)");
 
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1147,9 +992,7 @@ namespace CyclicSampler {
 
             const Int bin_count = std::max( bin_count_, static_cast<Int>(1) );
 
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
-
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
+            JobPointers<Int> job_ptr ( sample_count, thread_count );
 
             valprint( "dimension   ", AmbDim       );
             valprint( "edge_count  ", edge_count );
@@ -1160,19 +1003,15 @@ namespace CyclicSampler {
             valprint( "thread_count", thread_count );
             
 
-            Tensor3<Real,Int> bins_global   ( 3, fun_count, bin_count,    zero );
-            Tensor2<Real,Int> ranges        (    fun_count, 2                  );
-            Tensor3<Real,Int> moments_global( 3, fun_count, moment_count, zero );
-            Tensor1<Real,Int> factor        (    fun_count                     );
-
+            Tensor3<Real,Int> bins_global   ( bins_out,    3, fun_count, bin_count    );
+            Tensor3<Real,Int> moments_global( moments_out, 3, fun_count, moment_count );
+            Tensor1<Real,Int> factor        (                 fun_count               );
+            
             print("Sampling the following random variables:");
             for( Int i = 0; i < fun_count; ++ i )
             {
                 const size_t i_ = static_cast<size_t>(i);
-                ranges(i,0) = F_list_[i_]->MinValue(*this);
-                ranges(i,1) = F_list_[i_]->MaxValue(*this);
-
-                factor(i) = static_cast<Real>(bin_count) / ( ranges(i,1) - ranges(i,0) );
+                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
                 
                 print("    " + F_list_[i_]->Tag());
             }
@@ -1180,10 +1019,9 @@ namespace CyclicSampler {
             const Int lower = static_cast<Int>(0);
             const Int upper = static_cast<Int>(bin_count-1);
 
-            #pragma omp parallel num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
             {
-                const Int thread = omp_get_thread_num();
-
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
 
                 CLASS W( edge_count, settings );
@@ -1233,7 +1071,7 @@ namespace CyclicSampler {
 //                           upper
 //                        );
                         
-                        const Int bin_idx = static_cast<Int>(std::floor( factor[i] * (val - ranges(i,0)) ));
+                        const Int bin_idx = static_cast<Int>(std::floor( factor[i] * (val - ranges[2*i]) ));
                         
                         if( (bin_idx <= upper) && (bin_idx >= lower) )
                         {
@@ -1282,16 +1120,52 @@ namespace CyclicSampler {
 
             bins_global.Write( bins_out );
             moments_global.Write( moments_out );
-            ranges.Write( ranges_out );
             
-            ptoc(ClassName()+"::Sample (polymorphic)");
+            ptoc(ClassName()+"::Sample_Binned (polymorphic)");
+        }
+        
+        virtual void NormalizeBinnedSamples(
+            Real * restrict bins,
+            const Int bin_count,
+            Real * restrict moments,
+            const Int moment_count,
+            const Int fun_count
+        ) const override
+        {
+            ptic(ClassName()+"::NormalizeBinnedSamples");
+            for( Int i = 0; i < 3; ++i )
+            {
+                for( Int j = 0; j < fun_count; ++j )
+                {
+                    // Normalize bins and moments.
+                    
+                    Real * restrict const bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
+                    
+                    Real * restrict const moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
+                    
+                    // The field for zeroth moment is assumed to contain the total mass.
+                    Real factor = Real(1)/moments_i_j[0];
+
+                    
+                    for( Int k = 0; k < bin_count; ++k )
+                    {
+                        bins_i_j[k] *= factor;
+                    }
+               
+                    for( Int k = 0; k < moment_count; ++k )
+                    {
+                        moments_i_j[k] *= factor;
+                    }
+                }
+            }
+            ptoc(ClassName()+"::NormalizeBinnedSamples");
         }
         
 #if defined(PLCTOPOLOGY_H)
         
         std::map<std::string, std::tuple<Real,Real,Real>> SampleHOMFLY(
             const Int sample_count,
-            const Int thread_count_ = 0
+            const Int thread_count = 1
         ) const
         {
             ptic(ClassName()+"SampleHOMFLY");
@@ -1304,9 +1178,7 @@ namespace CyclicSampler {
                 return map_global;
             }
 
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
-
-            Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
+            JobPointers<Int> job_ptr (sample_count, thread_count);
             
             valprint( "dimension   ", AmbDim       );
             valprint( "edge_count  ", edge_count   );
@@ -1324,10 +1196,9 @@ namespace CyclicSampler {
                 seeds[thread] = (std::numeric_limits<unsigned int>::max()+1) * r() + r();
             }
             
-            #pragma omp parallel num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
             {
-                const Int thread = omp_get_thread_num();
-
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
 
                 CLASS W( edge_count, settings );
@@ -1512,13 +1383,12 @@ namespace CyclicSampler {
             }
             else
             {
-                Tensor1<Int,Int> job_ptr = BalanceWorkLoad(sample_count, thread_count);
+                JobPointers<Int> job_ptr ( sample_count, thread_count );
 
-                #pragma omp parallel num_threads( thread_count )
+                #pragma omp parallel for num_threads( thread_count )
+                for( Int thread = 0; thread < thread_count; ++thread )
                 {
                     Real v [AmbDim];
-
-                    const Int thread = omp_get_thread_num();
 
                     std::random_device r;
                     
@@ -1608,36 +1478,36 @@ namespace CyclicSampler {
     };
     
     
-    template<typename Real = double, typename Int = long long>
-    std::unique_ptr<BASE> MakeCyclicSampler(
-            const int amb_dim,
-            const Int edge_count_,
-            const CyclicSamplerSettings<Real,Int> settings_ = CyclicSamplerSettings<Real,Int>()
-    )
-    {
-        CyclicSamplerSettings<Real,Int> settings (settings_);
-        switch( amb_dim )
-        {
-            case 2:
-            {
-                return std::make_unique<CLASS<2,Real,Int>>(edge_count_,settings);
-            }
-            case 3:
-            {
-                return std::make_unique<CLASS<3,Real,Int>>(edge_count_,settings);
-            }
-            case 4:
-            {
-                return std::make_unique<CLASS<4,Real,Int>>(edge_count_,settings);
-            }
-                
-            default:
-            {
-                eprint("Make"+TO_STD_STRING(CLASS)+": ambient dimension "+ToString(amb_dim)+" not supported. Using default dimension 3.");
-                return std::make_unique<CLASS<3,Real,Int>>(edge_count_,settings);
-            }
-        }
-    }
+//    template<typename Real = double, typename Int = long long>
+//    std::unique_ptr<BASE> MakeCyclicSampler(
+//            const int amb_dim,
+//            const Int edge_count_,
+//            const CyclicSamplerSettings<Real,Int> settings_ = CyclicSamplerSettings<Real,Int>()
+//    )
+//    {
+//        CyclicSamplerSettings<Real,Int> settings (settings_);
+//        switch( amb_dim )
+//        {
+//            case 2:
+//            {
+//                return std::make_unique<CLASS<2,Real,Int>>(edge_count_,settings);
+//            }
+//            case 3:
+//            {
+//                return std::make_unique<CLASS<3,Real,Int>>(edge_count_,settings);
+//            }
+//            case 4:
+//            {
+//                return std::make_unique<CLASS<4,Real,Int>>(edge_count_,settings);
+//            }
+//                
+//            default:
+//            {
+//                eprint("Make"+TO_STD_STRING(CLASS)+": ambient dimension "+ToString(amb_dim)+" not supported. Using default dimension 3.");
+//                return std::make_unique<CLASS<3,Real,Int>>(edge_count_,settings);
+//            }
+//        }
+//    }
         
 #undef BASE
 #undef CLASS
