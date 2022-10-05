@@ -8,7 +8,7 @@ using namespace Tensors;
 int main(int argc, const char * argv[])
 {
     // Some type aliases to make out lives a bit easier.
-    using Real = float64_t;
+    using Real = double;
     using Int  = int32_t;
     
     constexpr Int AmbDim = 3;
