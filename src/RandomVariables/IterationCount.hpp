@@ -1,21 +1,20 @@
 #pragma once
 
+#define CLASS IterationCount
+#define BASE  RandomVariable<AmbDim,Real,Int>
+
 template<int AmbDim, typename Real = double, typename Int = long long>
-class IterationCount : public RandomVariable<AmbDim,Real,Int>
+class CLASS : public BASE
 {
 public:
     
-<<<<<<< HEAD
     using Sampler_T   = typename BASE::Sampler_T;
-=======
-    using Sampler_T = Sampler<AmbDim,Real,Int>;
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
-    IterationCount() = default;
+    CLASS() = default;
     
-    virtual ~IterationCount() override = default;
+    virtual ~CLASS() override = default;
     
-    __ADD_CLONE_CODE__(IterationCount)
+    __ADD_CLONE_CODE__(CLASS)
 
 protected:
     
@@ -38,6 +37,9 @@ public:
 
     virtual std::string Tag() const  override
     {
-        return "IterationCount";
+        return TO_STD_STRING(CLASS);
     }
 };
+    
+#undef BASE
+#undef CLASS

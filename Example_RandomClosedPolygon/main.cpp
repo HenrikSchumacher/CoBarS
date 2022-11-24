@@ -8,23 +8,18 @@ using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
-    
-    using Real = double;
+
+    using Real = float64_t;
     using Int  = int32_t;
     
+    // insert code here...
+    print("Hello, World!");
     constexpr Int d            = 3;
     const     Int edge_count   = 8;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8; // 0 means "automatic"
-
     
-<<<<<<< HEAD
     Sampler<d,Real,Int> S (edge_count);
-=======
-    using Sampler_T = Sampler <d,Real,Int>;
-    
-    Sampler<d,Real,Int> C (edge_count);
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
 
     Tensor3<Real,Int> x      ( sample_count, d, edge_count, 0. );
     Tensor2<Real,Int> w      ( sample_count, d            , 0. );
@@ -39,15 +34,10 @@ int main(int argc, const char * argv[])
     print("");
     valprint("sample_count",sample_count);
     valprint("thread_count",thread_count);
-    valprint("edge_count  ",edge_count  );
     print("");
 
     tic("RandomClosedPolygons");
-<<<<<<< HEAD
         S.RandomClosedPolygons(
-=======
-        C.RandomClosedPolygons(
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc("RandomClosedPolygons");

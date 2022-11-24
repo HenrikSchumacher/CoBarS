@@ -1,29 +1,33 @@
 #pragma once
 
+// Just fill in the name of your new class in the next line; it will be automatically filled in below by the preprocessor.
+#define CLASS ExampleFunction
+
+// Don't touch this.
+#define BASE  RandomVariable<AmbDim,Real,Int>
+
 template<int AmbDim, typename Real = double, typename Int = long long>
-class ExampleFunction : public RandomVariable<AmbDim,Real,Int>
+class CLASS : public BASE
 {
 public:
     
-<<<<<<< HEAD
     // Imports several type aliases from the parent object.
     using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
     using Vector_T          = typename BASE::Vector_T;
-=======
-    using Sampler_T = Sampler<AmbDim,Real,Int>;
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
     // Use this default constructor or write your own one.
-    ExampleFunction() = default;
+    CLASS()
+    {}
     
     // Use this default destructor or write your own one.
-    virtual ~ExampleFunction() = default;
+    virtual ~CLASS()
+    {}
     
     // This inserts code for the Clone() routine.
-    __ADD_CLONE_CODE__(ExampleFunction)
+    __ADD_CLONE_CODE__(CLASS)
 
 protected:
     
@@ -32,22 +36,22 @@ protected:
     // We provide hooks for the most interesting of them.
     virtual Real operator()( const Sampler_T & C ) const override
     {
-        const Int n = C.EdgeCount();
+        const Int edge_count = C.EdgeCount();
         
-        // The space coordinates as a (n+1) x AmbDim matrix.
-        const Real * restrict const p = C.SpaceCoordinates();
+        // The space coordinates as a edge_count x AmbDim matrix.
+        const SpacePoints_T & p = C.SpaceCoordinates();
         
-        // The edge lengths as a vector of length n.
-        const Real * restrict const edge_lengths = C.EdgeLengths();
+        // The edge lengths as a vector of length edge_count.
+        const Weights_T & edge_lengths = C.EdgeLengths();
         
-        // The unit edge vectors of the conformally barycentered curve (array of size n x AmbDim).
-        const Real * restrict const y = C.EdgeCoordinates();
+        // The unit edge vectors of the conformally barycentered curve.
+        const SpherePoints_T & y = C.EdgeCoordinates();
 
-        // The unit edge vectors of the open polygonal curve (array of size n x AmbDim).
-        const Real * restrict const x = C.InitialEdgeCoordinates();
+        // The unit edge vectors of the open polygonal curve.
+        const SpherePoints_T & x = C.InitialEdgeCoordinates();
 
-        // The shift vector (conformal barycenter of x w.r.t. edge_lengths) (array of size n AmbDim).
-        const Real * restrict const w = C.ShiftVector();
+        // The shift vector (conformal barycenter of x w.r.t. edge_lengths).
+        const Vector_T & w = C.ShiftVector();
 
         // DO SOMETHING MEANINGFUL HERE.
         
@@ -71,6 +75,9 @@ public:
     // The name of the function that will appear in generated statistics. Don't modify this; it will be filled-in by the preprocessor.
     virtual std::string Tag() const  override
     {
-        return "ExampleFunction";
+        return TO_STD_STRING(CLASS);
     }
 };
+    
+#undef BASE
+#undef CLASS

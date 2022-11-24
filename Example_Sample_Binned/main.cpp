@@ -16,31 +16,18 @@ int main(int argc, const char * argv[])
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
     // In particular, the ambient dimension has to be known at compile time.
-<<<<<<< HEAD
     using Sampler_T = Sampler<AmbDim,Real,Int>;
     
     using RandomVariableBase_T = typename Sampler_T::RandomVariableBase_T;
     using RandomVariable_T     = typename Sampler_T::RandomVariable_T;
-=======
-    using Sampler_T        = Sampler<AmbDim,Real,Int>;
-    using RandomVariable_T = RandomVariable<AmbDim,Real,Int>;
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
     const     Int edge_count   = 8;
-    const     Int sample_count = 10000000;
+    const     Int sample_count = 1000000;
     const     Int thread_count = 8;
     
-<<<<<<< HEAD
     print("Test program for routine CycleSampler::Sample");
 
     Sampler_T S (edge_count);
-=======
-    
-    print("Hello.");
-    print("Test program for routine CycleSampler::Sample");
-
-    Sampler_T C (edge_count);
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
     // A list of random variables to sample. We start with an empty list.
 
@@ -49,17 +36,10 @@ int main(int argc, const char * argv[])
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-<<<<<<< HEAD
     F_list.push_back( std::make_unique<ShiftNorm     <AmbDim,Real,Int>>()    );
     F_list.push_back( std::make_unique<Gyradius      <AmbDim,Real,Int>>()    );
     F_list.push_back( std::make_unique<ChordLength   <AmbDim,Real,Int>>(0,2) );
     F_list.push_back( std::make_unique<TotalCurvature<AmbDim,Real,Int>>()    );
-=======
-    F_list.push_back( std::make_unique<ShiftNorm<AmbDim,Real,Int>>() );
-    F_list.push_back( std::make_unique<Gyradius<AmbDim,Real,Int>>() );
-    F_list.push_back( std::make_unique<ChordLength<AmbDim,Real,Int>>(0,2) );
-    F_list.push_back( std::make_unique<TotalCurvature<AmbDim,Real,Int>>() );
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;

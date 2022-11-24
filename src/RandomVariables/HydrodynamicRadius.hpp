@@ -1,23 +1,23 @@
 #pragma once
+
+#define CLASS HydrodynamicRadius
+#define BASE  RandomVariable<AmbDim,Real,Int>
+
 template<int AmbDim, typename Real = double, typename Int = long long>
-class HydrodynamicRadius : public RandomVariable<AmbDim,Real,Int>
+class CLASS : public BASE
 {
 public:
     
-<<<<<<< HEAD
     using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
-=======
-    using Sampler_T = Sampler<AmbDim,Real,Int>;
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
-    HydrodynamicRadius() = default;
+    CLASS() = default;
     
-    virtual ~HydrodynamicRadius() override = default;
+    virtual ~CLASS() override = default;
     
-    __ADD_CLONE_CODE__(HydrodynamicRadius)
+    __ADD_CLONE_CODE__(CLASS)
 
     static constexpr Real eps = std::numeric_limits<Real>::min();
     
@@ -29,8 +29,8 @@ protected:
         Real sum = static_cast<Real>(0);
         Real r2  = static_cast<Real>(0);
         
-        const Int n                   = C.EdgeCount();
-        const Real * restrict const p = C.SpaceCoordinates();
+        const Int n             = C.EdgeCount();
+        const SpacePoints_T & p = C.SpaceCoordinates();
         
         for( Int k = 0; k < n; ++k )
         {
@@ -40,7 +40,7 @@ protected:
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real delta = p[AmbDim*l+i] - p[AmbDim*k+i];
+                    const Real delta = p(l,i) - p(k,i);
                     
                     r2 += delta * delta;
                 }
@@ -59,24 +59,16 @@ protected:
     
     virtual Real MaxValue( const Sampler_T & C ) const override
     {
-        const Int n = C.EdgeCount();
-        
-        const Real * restrict r = C.EdgeLengths();
-        
-        Real sum = 0;
-        
-        for( Int i = 0; i < n; ++i )
-        {
-            sum += r[i];
-        }
-        
-        return sum;
+        return C.EdgeLengths().Total();
     }
     
 public:
     
     virtual std::string Tag() const  override
     {
-        return "HydrodynamicRadius";
+        return TO_STD_STRING(CLASS);
     }
 };
+
+#undef BASE
+#undef CLASS

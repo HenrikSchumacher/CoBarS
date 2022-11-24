@@ -16,12 +16,7 @@
 
     #include "Tensors/Tensors.hpp"
 
-<<<<<<< HEAD
     namespace CycleSampler {
-=======
-    namespace CycleSampler
-    {
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
         
         using namespace Tools;
         using namespace Tensors;
@@ -37,6 +32,8 @@
     //#include <plcTopology.h>
     //
     //int PD_VERBOSE = 0;
+
+    #include "src/SmallSymmetricMatrix.hpp"
 
     #include "src/ShiftMap.hpp"
     #include "src/SamplerBase.hpp"

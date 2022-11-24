@@ -1,11 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD
 namespace CycleSampler {
-=======
-namespace CycleSampler
-{
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
 
     template<typename Real, typename Int>
     class RandomVariableBase;
@@ -55,16 +50,13 @@ namespace CycleSampler
         }
     };
     
-<<<<<<< HEAD
 #define CLASS SamplerBase
 
-=======
->>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     template<
         typename Real    = double,
         typename Int     = long long
     >
-    class SamplerBase
+    class CLASS
     {
         ASSERT_INT(Int);
         ASSERT_FLOAT(Real);
@@ -90,18 +82,12 @@ namespace CycleSampler
         
     public:
         
-        SamplerBase()
+        CLASS()
         {
-            std::random_device r;
-            
-            std::seed_seq seed { r(), r(), r(), r() };
-            
-//            std::seed_seq seed {1};
-            
-            random_engine = std::mt19937_64( seed );
+            random_engine = std::mt19937_64( std::random_device()() );
         }
         
-        explicit SamplerBase(
+        explicit CLASS(
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
@@ -110,14 +96,12 @@ namespace CycleSampler
         {
             std::random_device r;
             
-            std::seed_seq seed { r(), r(), r(), r() };
-            
-//            std::seed_seq seed {1};
+            std::seed_seq seed { r(), r(), r(), r()   };
             
             random_engine = std::mt19937_64( seed );
         }
         
-        virtual ~SamplerBase() = default;
+        virtual ~CLASS() = default;
         
     public:
         
@@ -134,9 +118,9 @@ namespace CycleSampler
         virtual void Optimize() = 0;
         
         virtual void OptimizeBatch(
-                  Real * const x_in,
-                  Real * const w_out,
-                  Real * const y_out,
+            const Real * const x_in,
+                  Real *       w_out,
+                  Real *       y_out,
             const Int sample_count,
             const Int thread_count = 1,
             bool normalize = true
@@ -148,41 +132,44 @@ namespace CycleSampler
 //            const bool normalize = true
 //        ) = 0;
         
-        virtual const Real * InitialEdgeCoordinates() const = 0;
+        virtual const SpherePoints_T & InitialEdgeCoordinates() const = 0;
         
         virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) = 0;
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true ) = 0;
+        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int i, bool normalize = true ) = 0;
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out ) const = 0;
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const = 0;
         
         
-        virtual const Real * EdgeLengths() const = 0;
+        
+        virtual const Weights_T & EdgeLengths() const = 0;
         
         virtual void ReadEdgeLengths( const Real * const r_in ) = 0;
         
         
-        virtual const Real * Rho() const = 0;
+        virtual const Weights_T & Rho() const = 0;
         
         virtual void ReadRho( const Real * const rho_in ) = 0;
         
-                
-        virtual const Real * EdgeCoordinates() const = 0;
+        
+//        virtual SpherePoints_T & EdgeCoordinates() = 0;
+        
+        virtual const SpherePoints_T & EdgeCoordinates() const = 0;
         
         virtual void ReadEdgeCoordinates( const Real * const y_in ) = 0;
         
-        virtual void ReadEdgeCoordinates( const Real * const y_in, const Int k ) = 0;
+        virtual void ReadEdgeCoordinates( const Real * const y_in, const Int i ) = 0;
         
-        virtual void WriteEdgeCoordinates( Real * y_out ) const = 0;
+        virtual void WriteEdgeCoordinates( Real * y_in ) const = 0;
         
-        virtual void WriteEdgeCoordinates( Real * y_out, const Int i ) const = 0;
+        virtual void WriteEdgeCoordinates( Real * y_in, const Int i ) const = 0;
         
         
-//        virtual Real * SpaceCoordinates() = 0;
+//        virtual SpacePoints_T & SpaceCoordinates() = 0;
         
-        virtual const Real * SpaceCoordinates() const = 0;
+        virtual const SpacePoints_T & SpaceCoordinates() const = 0;
         
         virtual void WriteSpaceCoordinates( Real * y_in ) const = 0;
         
@@ -257,13 +244,15 @@ namespace CycleSampler
         {
             return settings;
         }
+            
         
     public:
         
         virtual std::string ClassName() const
         {
-            return "SamplerBase<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
+            return TO_STD_STRING(CLASS)+"<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
         }
     };
+#undef CLASS
         
 } // namespace CycleSampler
