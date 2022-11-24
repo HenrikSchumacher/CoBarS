@@ -84,11 +84,11 @@ namespace CycleSampler
         
         SamplerBase()
         {
-//            std::random_device r;
+            std::random_device r;
             
-//            std::seed_seq seed { r(), r(), r(), r()   };
+            std::seed_seq seed { r(), r(), r(), r() };
             
-            std::seed_seq seed {1};
+//            std::seed_seq seed {1};
             
             random_engine = std::mt19937_64( seed );
         }
@@ -100,11 +100,11 @@ namespace CycleSampler
         :   edge_count(edge_count_)
         ,   settings(settings_)
         {
-//            std::random_device r;
+            std::random_device r;
             
-//            std::seed_seq seed { r(), r(), r(), r()   };
+            std::seed_seq seed { r(), r(), r(), r() };
             
-            std::seed_seq seed {1};
+//            std::seed_seq seed {1};
             
             random_engine = std::mt19937_64( seed );
         }
@@ -142,9 +142,9 @@ namespace CycleSampler
         
         virtual const Real * InitialEdgeCoordinates() const = 0;
         
-        virtual void LoadInitialEdgeCoordinates( Real * const x_in, bool normalize = true ) = 0;
+        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) = 0;
         
-        virtual void LoadInitialEdgeCoordinates( Real * const x_in, const Int k, bool normalize = true ) = 0;
+        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true ) = 0;
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out ) const = 0;
         
@@ -163,9 +163,9 @@ namespace CycleSampler
                 
         virtual const Real * EdgeCoordinates() const = 0;
         
-        virtual void LoadEdgeCoordinates( Real * const y_in ) = 0;
+        virtual void ReadEdgeCoordinates( const Real * const y_in ) = 0;
         
-        virtual void LoadEdgeCoordinates( Real * const y_in, const Int k ) = 0;
+        virtual void ReadEdgeCoordinates( const Real * const y_in, const Int k ) = 0;
         
         virtual void WriteEdgeCoordinates( Real * y_out ) const = 0;
         
