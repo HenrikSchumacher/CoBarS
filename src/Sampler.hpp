@@ -16,14 +16,8 @@ namespace CycleSampler
     public:
         
         using Base_T            = SamplerBase<Real,Int>;
-        using Vector_T          = SmallVector<AmbDim,Real,Int>;
         using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
         
-        using HyperbolicPoint_T = Vector_T;
-        
-        using SpherePoints_T = typename Base_T::SpherePoints_T;
-        using SpacePoints_T  = typename Base_T::SpacePoints_T;
-        using Weights_T      = typename Base_T::Weights_T;
         using Setting_T      = typename Base_T::Setting_T;
         
         
@@ -103,9 +97,10 @@ namespace CycleSampler
         
         Real total_r_inv = one;
         
-        Vector_T F;           // right hand side of Newton iteration.
+
         SymmetricMatrix_T DF; // nabla F(0) with respect to measure ys
 
+        Real F [AmbDim];           // right hand side of Newton iteration.
         Real w [AmbDim];           // current point in hyperbolic space.
         Real u [AmbDim];           // update direction
         Real z [AmbDim];           // Multiple purpose buffer.
@@ -332,16 +327,21 @@ namespace CycleSampler
         
         void LineSearch_Hyperbolic_Residual()
         {
-            // 2 F(0)^T.DF(0).u is the derivative of w\mapsto F(w)^T.F(w) at w = 0.
-            const Real slope = two * DF.InnerProduct(F,u);
-                        
+            // slope = 2 F(0)^T.DF(0).u is the derivative of w\mapsto F(w)^T.F(w) at w = 0.
             Real tau = one;
             
             Real uu = 0;
+
+            const Real slope = 0;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
                 uu += u[i] * u[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    slope += F[i] * DF(i,j) * u[j];
+                }
             }
             
             const Real u_norm = std::sqrt(uu);
@@ -493,12 +493,13 @@ namespace CycleSampler
             // Assemble DF = nabla F + regulatization:
             // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
 
+            // First pass: Overwrite.
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = r[0] * y(0,i);
 
-                    F(i) = - factor;
+                    F[i] = - factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
@@ -507,13 +508,14 @@ namespace CycleSampler
                 }
             }
             
+            // Add-in the rest.
             for( Int k = 1; k < edge_count; ++k )
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = r[k] * y(k,i);
 
-                    F(i) -= factor;
+                    F[i] -= factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
@@ -522,22 +524,24 @@ namespace CycleSampler
                 }
             }
             
+            squared_residual = 0;
+            
             // Normalize for case that the weights in r do not sum to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                F(i) *= total_r_inv;
+                F[i] *= total_r_inv;
 
+                squared_residual+= F[i] * F[i];
+                
+                F[i] *= half;
+                
                 for( Int j = i; j < AmbDim; ++j )
                 {
                     DF(i,j) *= total_r_inv;
                 }
             }
-            
-            squared_residual = Dot(F,F);
 
             residual = std::sqrt( squared_residual );
-
-            F *= half;
 
             // Better add the identity afterwards for precision reasons.
             for( Int i = 0; i < AmbDim; ++i )
