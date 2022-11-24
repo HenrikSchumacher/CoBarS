@@ -90,69 +90,7 @@ namespace CycleSampler
             safe_alloc ( rho, edge_count );
             copy_buffer( rho_in, rho, edge_count );
         }
-        
 
-        
-//        // Copy constructor
-//        Sampler( const Sampler & other )
-//        :   Base_T( other.edge_count, other.settings )
-//        ,   x(other.x)
-//        ,   y(other.y)
-//        ,   p(other.p)
-//        ,   r(other.r)
-//        ,   rho(other.rho)
-//        ,   total_r_inv(other.total_r_inv)
-//        ,   w(other.w)
-//        ,   F(other.F)
-//        ,   DF(other.DF)
-//        ,   L(other.L)
-//        ,   u(other.u)
-//        ,   iter(other.iter)
-//        ,   residual(other.residual)
-//        {}
-
-//
-//        friend void swap(Sampler &A, Sampler &B) noexcept
-//        {
-//            // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
-//            using std::swap;
-//
-//            swap(A.edge_count,B.edge_count);
-//            swap(A.x,B.x);
-//            swap(A.y,B.y);
-//            swap(A.p,B.p);
-//            swap(A.r,B.r);
-//            swap(A.rho,B.rho);
-//            swap(A.total_r_inv,B.total_r_inv);
-//
-//            std::swap_ranges(&A.w[0],    &A.w[AmbDim],            &B.w[0]   );
-//            std::swap_ranges(&A.z[0],    &A.z[AmbDim],            &B.z[0]   );
-//            std::swap_ranges(&A.F[0],    &A.F[AmbDim],            &B.F[0]   );
-//            std::swap_ranges(&A.A(0,0),  &A.A(AmbDim-1,AmbDim),   &B.A(0,0) );
-//            std::swap_ranges(&A.u[0],    &A.u[AmbDim],            &B.u[0]   );
-//
-//            swap(A.settings,       B.settings     );
-//            swap(A.iter,           B.iter          );
-//            swap(A.residual,       B.residual      );
-//        }
-//
-//        // Copy assignment operator
-//        Sampler & operator=(Sampler other)
-//        {
-//            // copy-and-swap idiom
-//            // see https://stackoverflow.com/a/3279550/8248900 for details
-//            swap(*this, other);
-//
-//            return *this;
-//        }
-//
-//        /* Move constructor */
-//        Sampler( Sampler && other ) noexcept
-//        :   Sampler()
-//        {
-//            swap(*this, other);
-//        }
-        
 
     protected:
         
@@ -171,7 +109,7 @@ namespace CycleSampler
         SymmetricMatrix_T L;  // storing Cholesky factor.
         Vector_T u;           // update direction
 
-        Vector_T z;           // Multiple purpose buffer.
+        Real z [AmbDim];           // Multiple purpose buffer.
         
         ShiftMap<AmbDim,Real,Int> S;
         
@@ -359,11 +297,17 @@ namespace CycleSampler
         
     protected:
         
-        Real Potential( const Vector_T & z )
+        Real Potential()
         {
             Real value = 0;
             
-            const Real zz = Dot(z,z);
+            Real zz = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                zz += z[i] * z[i];
+            }
+            
             
             const Real a = big_one + zz;
             const Real c = (big_one-zz);
@@ -372,14 +316,14 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Real yz2 = y(k,0) * z[0];
+                Real yz = y(k,0) * z[0];
                 
                 for( Int i = 1; i < AmbDim; ++i )
                 {
-                    yz2 += y(k,i) * z[i];
+                    yz += y(k,i) * z[i];
                 }
                 
-                value += r[k] * std::log(std::abs( (a - two * yz2) * b ) );
+                value += r[k] * std::log(std::abs( (a - two * yz) * b ) );
             }
             
             return value * total_r_inv;
@@ -393,10 +337,25 @@ namespace CycleSampler
                         
             Real tau = one;
             
-            const Real u_norm = u.Norm();
+            Real uu = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                uu += u[i] * u[i];
+            }
+            
+            const Real u_norm = std::sqrt(uu);
+            
 
             // exponential map shooting from 0 to tau * u.
-            Times( tau * tanhc(tau * u_norm), u, z );
+            {
+                const Real scale = tau * tanhc(tau * u_norm);
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    z[i] = scale * u[i];
+                }
+            }
             
             // Shift the point z along -w to get new updated point w .
             InverseShift(z);
@@ -452,8 +411,13 @@ namespace CycleSampler
             const Real u_norm = u.Norm();
 
             // exponential map shooting from 0 to tau * u.
-            
-            Times( tau * tanhc(tau * u_norm), u, z );
+            {
+                const Real scale = tau * tanhc(tau * u_norm);
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    z[i] = scale * u[i];
+                }
+            }
             
             if( linesearchQ )
             {
@@ -471,7 +435,7 @@ namespace CycleSampler
 
 //                const Real phi_0 = Potential(o);
                 
-                Real phi_tau = Potential(z);
+                Real phi_tau = Potential();
 
                 ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
 
@@ -487,16 +451,22 @@ namespace CycleSampler
 
                     tau = std::max( tau_1, tau_2 );
                     
-                    Times( tau * tanhc(tau * u_norm), u, z );
+                    {
+                        const Real scale = tau * tanhc(tau * u_norm);
+                        for( Int i = 0; i < AmbDim; ++i )
+                        {
+                            z[i] = scale * u[i];
+                        }
+                    }
                     
-                    phi_tau = Potential(z);
+                    phi_tau = Potential();
                     
                     ArmijoQ = phi_tau  /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
                 }
             }
 
             // Shift the point z along -w to get new updated point w .
-            InverseShift(z);
+            InverseShift();
 
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -611,38 +581,56 @@ namespace CycleSampler
             
             L.CholeskySolve(F,u);
             
-            u *= -one;
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] *= -one;
+            }
         }
         
         void Gradient_Hyperbolic()
         {
-            Times(-g_factor_inv, F, u);
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] = -g_factor_inv * F[i];
+            }
         }
         
         void Gradient_Planar()
         {
             // The factor 2 is here to reproduce the Abikoff-Ye algorithm (in the absence of linesearch.)
-            Times(-two, F, u);
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] = - F[i];
+            }
         }
         
     public:
         
-        void InverseShift( const Vector_T & s )
+        void InverseShift()
         {
-            // Shift point w along -s.
+            // Shift point w along -z.
 
-            const Real ws2 = two * Dot(w,s);
-            const Real ww  = Dot(w,w);
-            const Real ss  = Dot(s,s);
+            Real ww  = 0;
+            Real wz2 = 0;
+            Real zz  = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                ww  += w[i] * w[i];
+                wz2 += w[i] * z[i];
+                zz  += z[i] * z[i];
+            }
+            
+            wz2 *= two;
 
             const Real a = one - ww;
-            const Real b = one + ss + ws2;
-            const Real c = big_one + ws2 + ww * ss;
+            const Real b = one + zz + wz2;
+            const Real c = big_one + wz2 + ww * zz;
             const Real d = one / c;
 
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w[i] = ( a * s[i] + b * w[i] ) * d;
+                w[i] = ( a * z[i] + b * w[i] ) * d;
             }
         }
         
