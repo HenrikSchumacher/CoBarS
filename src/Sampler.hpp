@@ -7,7 +7,7 @@
 namespace CycleSampler
 {
     
-    template<int AmbDim, typename Real = double, typename Int = long long, bool copy = true >
+    template<int AmbDim, typename Real = double, typename Int = long long, bool copy = false >
     class Sampler : public SamplerBase<Real,Int>
     {
         ASSERT_FLOAT(Real);
@@ -16,7 +16,9 @@ namespace CycleSampler
     public:
         
         using Base_T            = SamplerBase<Real,Int>;
-        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
+//        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
+        
+        using Matrix_T = Eigen::Matrix<Real,AmbDim,AmbDim>;
         
         using Setting_T      = typename Base_T::Setting_T;
         
@@ -59,8 +61,6 @@ namespace CycleSampler
             fill_buffer( r,   edge_count, one / edge_count );
             safe_alloc ( rho, edge_count );
             fill_buffer( rho, edge_count, one );
-            
-            total_r_inv = one;
         }
         
         explicit Sampler(
@@ -79,10 +79,10 @@ namespace CycleSampler
             }
             
             safe_alloc ( r, edge_count );
-            copy_buffer( r_in, r, edge_count );
+            ReadEdgeLengths(r_in);
             
             safe_alloc ( rho, edge_count );
-            copy_buffer( rho_in, rho, edge_count );
+            ReadRho(r_in);
         }
 
 
@@ -97,16 +97,16 @@ namespace CycleSampler
         
         Real total_r_inv = one;
         
-
-        SymmetricMatrix_T DF; // nabla F(0) with respect to measure ys
-
-        Real F [AmbDim];           // right hand side of Newton iteration.
-        Real w [AmbDim];           // current point in hyperbolic space.
-        Real u [AmbDim];           // update direction
-        Real z [AmbDim];           // Multiple purpose buffer.
-        Real A [AmbDim][AmbDim];   // For Cholesky factorization.
+        Real w  [AmbDim];           // current point in hyperbolic space.
+        Real u  [AmbDim];           // update direction
+        Real z  [AmbDim];           // Multiple purpose buffer.
+        Real A  [AmbDim][AmbDim];   // For Cholesky factorization.
+        Real F  [AmbDim];           // right hand side of Newton iteration.
+        Real DF [AmbDim][AmbDim];   // nabla F(0) with respect to measure ys
         
         ShiftMap<AmbDim,Real,Int> S;
+        
+        Eigen::SelfAdjointEigenSolver<Matrix_T> eigs;
         
         Int iter = 0;
         
@@ -166,7 +166,6 @@ namespace CycleSampler
                 DifferentialAndHessian_Hyperbolic();
                 
                 SearchDirection_Hyperbolic();
-                
             }
         }
         
@@ -185,13 +184,11 @@ namespace CycleSampler
         
         void ComputeEdgeQuotientSpaceSamplingCorrection()
         {
-            if( AmbDim == 2)
+            if( AmbDim == 2 )
             {
                 edge_quotient_space_sampling_correction = one;
                 return;
             }
-            
-            Eigen::Matrix<Real,AmbDim,AmbDim> Sigma;
             
             // We fill only the lower triangle of Sigma, because that's the only thing that Eigen' selfadjoint eigensolver needs.
             // Recall that Eigen matrices are column-major by default.
@@ -204,7 +201,7 @@ namespace CycleSampler
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) = factor * y(0,j);
+                        A[j][i] = factor * y(0,j);
                     }
                 }
             }
@@ -218,49 +215,40 @@ namespace CycleSampler
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) += factor * y(k,j);
+                        A[j][i] += factor * y(k,j);
                     }
                 }
             }
             
             // Eigen needs only the lower triangular part. So need not symmetrize.
-            
-//            for( Int i = 0; i < AmbDim; ++i )
-//            {
-//                for( Int j = 0; j < i; ++j )
-//                {
-//                    Sigma(j,i) = Sigma(i,j);
-//                }
-//            }
 
             if( AmbDim == 3)
             {
                 // Exploiting that
                 //      (lambda[0] + lambda[1]) * (lambda[0] + lambda[2]) * (lambda[1] + lambda[2])
                 //      =
-                //      ( tr(Sigma*Sigma) - tr(Sigma)*tr(Sigma) ) *  tr(Sigma)/2 - det(Sigma)
+                //      ( tr(A*A) - tr(A)*tr(A) ) *  tr(A)/2 - det(A)
                 //  Thus, it can be expressed by as third-order polynomial in the entries of the matrix.
                 
-                const Real S_00 = Sigma(0,0)*Sigma(0,0);
-                const Real S_11 = Sigma(1,1)*Sigma(1,1);
-                const Real S_22 = Sigma(2,2)*Sigma(2,2);
+                const Real A_00 = A[0][0]*A[0][0];
+                const Real A_11 = A[1][1]*A[1][1];
+                const Real A_22 = A[2][2]*A[2][2];
                 
-                const Real S_10 = Sigma(1,0)*Sigma(1,0);
-                const Real S_20 = Sigma(2,0)*Sigma(2,0);
-                const Real S_21 = Sigma(2,1)*Sigma(2,1);
+                const Real A_10 = A[1][0]*A[1][0];
+                const Real A_20 = A[2][0]*A[2][0];
+                const Real A_21 = A[2][1]*A[2][1];
                 
                 const Real det = std::abs(
-                      Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
-                    + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
-                    + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
-                    + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
+                      A[0][0] * ( A_11 + A_22 - A_10 - A_20 )
+                    + A[1][1] * ( A_00 + A_22 - A_10 - A_21 )
+                    + A[2][2] * ( A_00 + A_11 - A_20 - A_21 )
+                    + two * ( A[0][0]*A[1][1]*A[2][2] - A[1][0]*A[2][0]*A[2][1] )
                 );
                 edge_quotient_space_sampling_correction = one / std::sqrt(det);
                 return;
             }
             
-            
-            Eigen::SelfAdjointEigenSolver< Eigen::Matrix<Real,AmbDim,AmbDim> > eigs;
+            Matrix_T Sigma (&A[0][0]);
             
             eigs.compute(Sigma);
 
@@ -340,7 +328,7 @@ namespace CycleSampler
                 
                 for( Int j = 0; j < AmbDim; ++j )
                 {
-                    slope += F[i] * DF(i,j) * u[j];
+                    slope += F[i] * DF[i][j] * u[j];
                 }
             }
             
@@ -503,7 +491,7 @@ namespace CycleSampler
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) = - factor * y(0,j);
+                        DF[i][j] = - factor * y(0,j);
                     }
                 }
             }
@@ -519,7 +507,7 @@ namespace CycleSampler
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) -= factor * y(k,j);
+                        DF[i][j] -= factor * y(k,j);
                     }
                 }
             }
@@ -537,7 +525,7 @@ namespace CycleSampler
                 
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    DF(i,j) *= total_r_inv;
+                    DF[i][j] *= total_r_inv;
                 }
             }
 
@@ -546,7 +534,7 @@ namespace CycleSampler
             // Better add the identity afterwards for precision reasons.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                DF(i,i) += one;
+                DF[i][i] += one;
             }
         }
             
@@ -556,7 +544,8 @@ namespace CycleSampler
             if( residual < static_cast<Real>(100.) * settings.tolerance )
             {
                 // We have to compute eigenvalue _before_ we add the regularization.
-                lambda_min = DF.SmallestEigenvalue();
+                lambda_min = SmallestEigenvalue();
+                
                 q = four * residual / (lambda_min * lambda_min);
                 
                 if( q < one )
@@ -591,7 +580,7 @@ namespace CycleSampler
             {
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    A[i][j] = DF(i,j) + static_cast<Real>(i==j) * c;
+                    A[i][j] = DF[i][j] + static_cast<Real>(i==j) * c;
                 }
             }
             
@@ -1557,6 +1546,73 @@ namespace CycleSampler
                 }
                 u[i] /= A[i][i];
             }
+        }
+        
+        Real SmallestEigenvalue()
+        {
+            if( AmbDim == 2)
+            {
+                Real lambda_min = half * (
+                    DF[0][0] + DF[1][1]
+                    - std::sqrt(
+                        std::abs(
+                            (DF[0][0]-DF[1][1])*(DF[0][0]-DF[1][1]) + four * DF[0][1]*DF[0][1]
+                        )
+                    )
+                );
+                
+                return lambda_min;
+            }
+                    
+            if( AmbDim == 3)
+            {
+                Real lambda_min;
+                
+                const Real p1 = DF[0][1]*DF[0][1] + DF[0][2]*DF[0][2] + DF[1][2]*DF[1][2];
+                
+                if( std::sqrt(p1) < eps * std::sqrt( DF[0][0]*DF[0][0] + DF[1][1]*DF[1][1] + DF[2][2]*DF[2][2]) )
+                {
+                    // A is diagonal
+                    lambda_min = std::min( DF[0][0], std::min(DF[1][1],DF[2][2]) );
+                }
+                else
+                {
+                    const Real q         = ( DF[0][0] + DF[1][1] + DF[2][2] ) / three;
+                    const Real delta [3] = { DF[0][0]-q, DF[1][1]-q, DF[2][2]-q } ;
+                    const Real p2   = delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2] + two*p1;
+                    const Real p    = std::sqrt( p2 / static_cast<Real>(6) );
+                    const Real pinv = one/p;
+                    const Real b11  = delta[0] * pinv;
+                    const Real b22  = delta[1] * pinv;
+                    const Real b33  = delta[2] * pinv;
+                    const Real b12  = A[0][1] * pinv;
+                    const Real b13  = A[0][2] * pinv;
+                    const Real b23  = A[1][2] * pinv;
+                    
+                    const Real r = half * (two * b12 * b23 * b13 - b11 * b23 * b23 - b12 *b12 * b33 + b11 * b22 * b33 - b13 *b13 * b22);
+                    
+                    
+                    const Real phi = ( r <= -one )
+                        ? ( static_cast<Real>(M_PI) / three )
+                        : ( ( r >= one ) ? zero : acos(r) / three );
+                    
+                    // The eigenvalues are ordered this way: eig2 <= eig1 <= eig0.
+
+//                    Real eig0 = q + two * p * cos( phi );
+//                    Real eig2 = q + two * p * cos( phi + two * M_PI/ three );
+//                    Real eig1 = three * q - eig0 - eig2;
+                       
+                    lambda_min = q + two * p * cos( phi + two * M_PI/ three );
+                }
+        
+                return lambda_min;
+            }
+
+            Matrix_T Sigma (&DF[0][0]);
+            
+            eigs.compute(Sigma);
+
+            return eigs.eigenvalues()[0];
         }
         
         Real tanhc( const Real t ) const

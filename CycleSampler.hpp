@@ -9,6 +9,7 @@
     #include <array>
 
 
+    #define EIGEN_NO_DEBUG 
     #define EIGEN_USE_BLAS
     #define EIGEN_USE_LAPACKE
     #include <eigen3/Eigen/Dense>
