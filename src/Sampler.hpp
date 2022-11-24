@@ -220,7 +220,7 @@ namespace CycleSampler
         
         void ComputeEdgeSpaceSamplingWeight()
         {
-            edge_space_sampling_weight =  S.EdgeSpaceSamplingWeight(
+            edge_space_sampling_weight = S.EdgeSpaceSamplingWeight(
                 x.data(), w.data(), y.data(), r.data(), rho.data(), edge_count
             );
         }

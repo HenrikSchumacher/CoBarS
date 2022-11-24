@@ -18,10 +18,7 @@ int main(int argc, const char * argv[])
     const     Int thread_count = 8; // 0 means "automatic"
 
     
-    using Sampler_T        = Sampler <d,Real,Int>;
-    using RandomVariable_T = RandomVariableBase<Real,Int>;
-    
-
+    using Sampler_T = Sampler <d,Real,Int>;
     
     Sampler<d,Real,Int> C (edge_count);
 
@@ -30,9 +27,6 @@ int main(int argc, const char * argv[])
     Tensor3<Real,Int> y      ( sample_count, d, edge_count, 0. );
     Tensor1<Real,Int> K      ( sample_count               , 0. );
     Tensor1<Real,Int> K_quot ( sample_count               , 0. );
-
-//    print( "Omega = " + C->Omega().ToString() );
-//    print( "Rho   = " + C->Rho().ToString() );
 
     print("");
     print("Settings:");
@@ -46,13 +40,7 @@ int main(int argc, const char * argv[])
 
     tic("RandomClosedPolygons");
         C.RandomClosedPolygons(
-            x.data(),
-            w.data(),
-            y.data(),
-            K.data(),
-            K_quot.data(),
-            sample_count,
-            thread_count
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc("RandomClosedPolygons");
 
