@@ -1,20 +1,25 @@
 #pragma once
 
 namespace CycleSampler {
+<<<<<<< HEAD
 
 #define CLASS ShiftMap
+=======
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
 
     template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS
+    class ShiftMap
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
+        using SquareMatrix_T = SmallSquareMatrix<AmbDim,Real,Int>;
+        
     public:
         
-        CLASS() = default;
+        ShiftMap() = default;
         
-        virtual ~CLASS(){}
+        virtual ~ShiftMap(){}
         
         static constexpr Real zero              = 0;
         static constexpr Real half              = 0.5;
@@ -31,15 +36,16 @@ namespace CycleSampler {
         static constexpr Real norm_threshold    = 0.99 * 0.99 + 16 * eps;
         static constexpr Real two_pi            = static_cast<Real>(2 * M_PI);
         
-    public:
+    protected:
         
-        using Vector_T          = SmallVector<AmbDim,Real,Int>;
-        using SquareMatrix_T    = SmallSquareMatrix<AmbDim,Real,Int>;
-        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
+        SquareMatrix_T cbar_mat;
+        SquareMatrix_T gamma_mat;
+        
+    public:
         
         void Shift(
             const Real * restrict const x_in,
-            const Real * restrict const s,
+            const Real * restrict const s_in,
                   Real * restrict const y_out,
             const Int                   n,
             const Real                  t = one
@@ -48,16 +54,16 @@ namespace CycleSampler {
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
             
-            Real s_[AmbDim];
-            Real z_[AmbDim];
+            Real s[AmbDim];
+            Real z[AmbDim];
                         
             Real ss = 0;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                s_[i] = t * s[i];
+                s[i] = t * s_in[i];
                 
-                ss += s_[i] * s_[i];
+                ss += s[i] * s[i];
             }
             
             const Real one_minus_ss = big_one - ss;
@@ -72,9 +78,9 @@ namespace CycleSampler {
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        z_[i] = x_in[AmbDim*k+i];
+                        z[i] = x_in[AmbDim*k+i];
                         
-                        sz2 += s_[i] * z_[i];
+                        sz2 += s[i] * z[i];
                     }
                     
                     sz2 *= two;
@@ -85,7 +91,7 @@ namespace CycleSampler {
 
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        y_out[AmbDim*k+i] = (one_minus_ss * z_[i] + sz2_minus_2 * s_[i]) * denom;
+                        y_out[AmbDim*k+i] = (one_minus_ss * z[i] + sz2_minus_2 * s[i]) * denom;
                     }
                 }
             }
@@ -99,9 +105,9 @@ namespace CycleSampler {
                     Real sz2 = 0;
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        z_[i] = x_in[AmbDim*k+i];
+                        z[i] = x_in[AmbDim*k+i];
                         
-                        sz2 += s_[i] * z_[i];
+                        sz2 += s[i] * z[i];
                     }
                     
                     sz2 *= two;
@@ -110,20 +116,20 @@ namespace CycleSampler {
                     
                     const Real sz2_minus_2 = sz2 - two;
 
-                    Real r2 = 0;
+                    Real zz = 0;
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        z_[i] = (one_minus_ss * z_[i] + sz2_minus_2 * s_[i]) * denom;
+                        z[i] = (one_minus_ss * z[i] + sz2_minus_2 * s[i]) * denom;
                         
-                        r2 += z_[i] * z_[i];
+                        zz += z[i] * z[i];
                     }
                     
-                    const Real z_inv_norm = one/sqrt(r2);
+                    const Real z_inv_norm = one/sqrt(zz);
 
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        y_out[AmbDim*k+i] = z_[i] * z_inv_norm;
+                        y_out[AmbDim*k+i] = z[i] * z_inv_norm;
                     }
                 }
             }
@@ -131,7 +137,7 @@ namespace CycleSampler {
         
         void DShiftD1(
             const Real * restrict const x_in,
-            const Real * restrict const s,
+            const Real * restrict const s_in,
                   Real * restrict const a_out,
             const Int                   n,
             const Real                  t = one
@@ -140,16 +146,16 @@ namespace CycleSampler {
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
             
-            Real s_[AmbDim];
-            Real z_[AmbDim];
+            Real s[AmbDim];
+            Real z[AmbDim];
             
             Real ss = 0;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                s_[i] = t * s[i];
+                s[i] = t * s_in[i];
                 
-                ss += s_[i] * s_[i];
+                ss += s[i] * s[i];
             }
             
             const Real one_minus_ss = big_one - ss;
@@ -161,9 +167,9 @@ namespace CycleSampler {
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    z_[i] = x_in[AmbDim*k+i];
+                    z[i] = x_in[AmbDim*k+i];
                     
-                    sz2 += s_[i] * z_[i];
+                    sz2 += s[i] * z[i];
                 }
                 
                 sz2 *= two;
@@ -177,9 +183,9 @@ namespace CycleSampler {
                     for( Int j = 0; j < AmbDim; ++j )
                     {
                         a_out[ AmbDim*AmbDim * k + AmbDim * i + j ] = t * two * denom * (
-                            s_[i] * z_[j] - z_[i] * s_[j]
+                            s[i] * z[j] - z[i] * s[j]
                             +
-                            denom * ( one_minus_ss * z_[i] + sz2_minus_2 * s_[i]) * (z_[j] - s_[j])
+                            denom * ( one_minus_ss * z[i] + sz2_minus_2 * s[i]) * (z[j] - s[j])
                         );
                     }
                 }
@@ -196,7 +202,7 @@ namespace CycleSampler {
         
         void DShiftD2(
             const Real * restrict const x_in,
-            const Real * restrict const s,
+            const Real * restrict const s_in,
                   Real * restrict const b_out,
             const Int                   n,
             const Real                  t = one
@@ -205,16 +211,16 @@ namespace CycleSampler {
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
             
-            Real s_[AmbDim];
-            Real z_[AmbDim];
+            Real s[AmbDim];
+            Real z[AmbDim];
             
             Real ss = 0;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                s_[i] = t * s[i];
+                s[i] = t * s_in[i];
                 
-                ss += s_[i] * s_[i];
+                ss += s[i] * s[i];
             }
             
             const Real one_minus_ss = big_one - ss;
@@ -226,9 +232,9 @@ namespace CycleSampler {
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    z_[i] = x_in[AmbDim*k+i];
+                    z[i] = x_in[AmbDim*k+i];
                     
-                    sz2 += s_[i] * z_[i];
+                    sz2 += s[i] * z[i];
                 }
                 
                 sz2 *= two;
@@ -242,9 +248,9 @@ namespace CycleSampler {
                     for( Int j = 0; j < AmbDim; ++j )
                     {
                         b_out[ AmbDim*AmbDim * k + AmbDim * i + j ] = t * two * denom * (
-                            - s_[i] * (z_[j]-s_[j])
+                            - s[i] * (z[j]-s[j])
                             +
-                            denom * ( one_minus_ss * z_[i] + sz2_minus_2 * s_[i]) * (s_[j] - ss * z_[j])
+                            denom * ( one_minus_ss * z[i] + sz2_minus_2 * s[i]) * (s[j] - ss * z[j])
                         );
                     }
                 }
@@ -351,113 +357,6 @@ namespace CycleSampler {
             }
         }
         
-//        Real EdgeSpaceSamplingWeight(
-//            const Real * restrict const x_in,
-//            const Real * restrict const w_in,
-//            const Real * restrict const y_in,
-//            const Real * restrict const omega_in,
-//            const Real * restrict const rho_in,
-//            const Int                   n
-//        ) const
-//        {
-//            // Shifts all entries of x along y and writes the results to y.
-//            // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
-//
-//            SquareMatrix_T cbar;
-//            SquareMatrix_T gamma;
-//
-//            cbar.SetZero();
-//            gamma.SetZero();
-//
-//            Real prod = one;
-//
-//            Real w [AmbDim];
-//
-//            Real ww = zero;
-//
-//            for( Int i = 0; i < AmbDim; ++i )
-//            {
-//                w[i]  = w_in[i];
-//
-//                ww += w[i] * w[i];
-//            }
-//
-//            const Real one_minus_ww    = big_one - ww;
-//            const Real one_plus_ww     = big_one + ww;
-////            const Real one_plus_ww_inv = one / one_plus_ww;
-//
-//            for( Int k = 0; k < n; ++k )
-//            {
-//                Real y    [AmbDim];
-//                Real x    [AmbDim];
-//
-//                Real a    [AmbDim][AmbDim];
-//                Real b_inv[AmbDim][AmbDim];
-//
-//                Real wy = zero;
-//                Real wx = zero;
-//
-//                for( Int i = 0; i < AmbDim; ++i )
-//                {
-//                    y[i] = y_in[AmbDim*k+i];
-//                    x[i] = x_in[AmbDim*k+i];
-//
-//                    wy += w[i] * y[i];
-//                    wx += w[i] * x[i];
-//                }
-//
-//                const Real factor = one_plus_ww + two * wy;
-//
-//                // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
-////                prod *= factor * one_plus_ww_inv;
-//                prod *= factor;
-//
-//                const Real a_denom     = one / factor;
-//                const Real b_inv_denom = one / ( one_plus_ww - two * wx );
-//
-//
-//                const Real a_diag = two * (one + wy) * a_denom;
-//                const Real b_inv_diag = one_minus_ww * b_inv_denom;
-//
-//                const Real omega_k = omega_in[k];
-//                const Real omega_over_rho_k = omega_k/rho_in[k];
-//                const Real omega_over_rho_k_squared = omega_over_rho_k * omega_over_rho_k;
-//
-//                for( Int i = 0; i < AmbDim; ++i )
-//                {
-//                    for( Int j = 0; j < AmbDim; ++j )
-//                    {
-//
-//                        gamma(i,j) += omega_over_rho_k_squared *( static_cast<Real>(i==j) - y[i]*y[j]);
-//
-//                        a[i][j] = two * a_denom * (
-//                            w[i] * y[j] - y[i] * w[j] - x[i] * ( y[j] + w[j] )
-//                        );
-//
-//                        b_inv[i][j] = two * b_inv_denom * (
-//                            y[i] * (w[j] - ww * x[j])- w[i] * (x[j]-w[j])
-//                        );
-//                    }
-//
-//                    a    [i][i] += a_diag;
-//                    b_inv[i][i] += b_inv_diag;
-//                }
-//
-//                for( Int i = 0; i < AmbDim; ++i )
-//                {
-//                    for( Int l = 0; l < AmbDim; ++l )
-//                    {
-//                        for( Int j = 0; j < AmbDim; ++j )
-//                        {
-//                            cbar(i,j) += omega_k * b_inv[i][l] * a[l][j];
-//                        }
-//                    }
-//                }
-//            }
-//
-//            return MyMath::pow( prod, AmbDim - 1 ) * sqrt(gamma.Det()) / cbar.Det();
-//        }
-        
         Real EdgeSpaceSamplingWeight(
             const Real * restrict const x_in,
             const Real * restrict const w_in,
@@ -465,100 +364,84 @@ namespace CycleSampler {
             const Real * restrict const omega_in,
             const Real * restrict const rho_in,
             const Int                   n
-        ) const
+        )
         {
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
-
-            SquareMatrix_T cbar;
-            SquareMatrix_T gamma;
-
-            cbar.SetZero();
-            gamma.SetZero();
-
+            
+            Real cbar  [AmbDim][AmbDim] = {{}};
+            Real gamma [AmbDim][AmbDim] = {{}};
+            
             Real prod = one;
-
+            
             Real w [AmbDim];
-
+            
             Real ww = zero;
-
+            
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w[i]  = w_in[i];
-
+                w[i] = w_in[i];
+                
                 ww += w[i] * w[i];
             }
-
-//            const Real one_minus_ww    = big_one - ww;
+            
+            //            const Real one_minus_ww    = big_one - ww;
             const Real one_plus_ww     = big_one + ww;
-//            const Real one_plus_ww_inv = one / one_plus_ww;
-
+            //            const Real one_plus_ww_inv = one / one_plus_ww;
+            
             for( Int k = 0; k < n; ++k )
             {
-                Real y    [AmbDim];
-
+                Real y [AmbDim];
+                
                 Real wy = zero;
-
+                
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     y[i] = y_in[AmbDim*k+i];
-
+                    
                     wy += w[i] * y[i];
                 }
-
+                
                 const Real factor = one_plus_ww + two * wy;
-
+                
                 // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
-//                prod *= factor * one_plus_ww_inv;
+                //                prod *= factor * one_plus_ww_inv;
                 prod *= factor;
-
+                
                 const Real omega_k = omega_in[k];
                 const Real omega_over_rho_k = omega_k/rho_in[k];
                 const Real omega_over_rho_k_squared = omega_over_rho_k * omega_over_rho_k;
-
+                
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     for( Int j = 0; j < AmbDim; ++j )
                     {
                         const Real scratch = (static_cast<Real>(i==j) - y[i]*y[j]);
-
-                        gamma(i,j) += omega_over_rho_k_squared * scratch;
-
-                        cbar(i,j)  += omega_k * scratch;
+                        
+                        gamma[i][j] += omega_over_rho_k_squared * scratch;
+                        
+                        cbar[i][j]  += omega_k * scratch;
                     }
                 }
             }
-
-//             We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
-//            {
-//                const Real scratch = static_cast<Real>(2)/(one_minus_ww);
-//
-//                for( Int i = 0; i < AmbDim; ++i )
-//                {
-//                    for( Int j = 0; j < AmbDim; ++j )
-//                    {
-//                        cbar(i,j) *= scratch;
-//                    }
-//                }
-//            }
-
-            return MyMath::pow( prod, static_cast<Int>(AmbDim - 1) ) * sqrt(gamma.Det()) / cbar.Det();
+            
+            gamma_mat.Read(&gamma[0][0]);
+            cbar_mat.Read(&cbar[0][0]);
+            
+            return MyMath::pow( prod, static_cast<Int>(AmbDim - 1) ) * std::sqrt(gamma_mat.Det()) / cbar_mat.Det();
         }
-        
-        
+
     public:
-        
+
         static constexpr Int AmbientDimension()
         {
             return AmbDim;
         }
-        
+
         static std::string ClassName()
         {
             return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
         }
     };
-        
-#undef CLASS
     
 } // namespace CycleSampler

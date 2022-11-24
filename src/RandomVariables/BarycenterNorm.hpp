@@ -1,53 +1,65 @@
 #pragma once
 
-#define CLASS BarycenterNorm
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class BarycenterNorm : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
+<<<<<<< HEAD
     using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
+=======
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
-    CLASS() = default;
+    BarycenterNorm() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~BarycenterNorm() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(BarycenterNorm)
 
 protected:
     
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
+<<<<<<< HEAD
         const SpacePoints_T & p = C.SpaceCoordinates();
+=======
+        const Real * restrict const p = C.SpaceCoordinates();
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
         
-        const Weights_T & r = C.EdgeLengths();
+        const Real * restrict const r = C.EdgeLengths();
         
-        const Int edge_count = C.EdgeCount();
+        const Int n = C.EdgeCount();
         
         Real b[AmbDim];
         
         for( Int i = 0; i < AmbDim; ++i )
         {
-            b[i] = r(edge_count-1) * (p(edge_count,i)+p(0,i));
+            b[i] = r[n-1] * ( p[AmbDim*n+i] + p[AmbDim*0+i] );
         }
         
-        for( Int k = 0; k < edge_count-1; ++ k )
+        for( Int k = 0; k < n-1; ++ k )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                b[i] += r(i) * ( p(k,i) + p(k+1,i) );
+                b[i] += r[i] * ( p[AmbDim*k+i] + p[AmbDim*(k+1)+i] );
             }
         }
         
         Real r2 = static_cast<Real>(0);
         
-        const Real factor = static_cast<Real>(0.5)/r.Total();
+        Real sum = 0;
+        
+        for( Int k = 0; k < n; ++k )
+        {
+            sum += r[k];
+        }
+        
+        const Real factor = static_cast<Real>(0.5)/sum;
         
         for( Int i = 0; i < AmbDim; ++i )
         {
@@ -72,9 +84,6 @@ public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS);
+        return "BarycenterNorm";
     }
 };
-    
-#undef BASE
-#undef CLASS

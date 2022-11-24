@@ -1,39 +1,43 @@
 #pragma once
 
-#define CLASS Gyradius
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class Gyradius : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
+<<<<<<< HEAD
     using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
+=======
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
-    CLASS() = default;
+    Gyradius() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~Gyradius() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(Gyradius)
 
 protected:
     
+<<<<<<< HEAD
     
+=======
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     virtual Real operator()( const Sampler_T & C ) const override
     {
         Real r2 = static_cast<Real>(0);
         
-        const Int n             = C.EdgeCount();
-        const SpacePoints_T & p = C.SpaceCoordinates();
+        const Int n                   = C.EdgeCount();
+        const Real * restrict const p = C.SpaceCoordinates();
         
         for( Int k = 0; k < n; ++k )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                r2 += p(k,i) * p(k,i);
+                r2 += p[AmbDim*k+i] * p[AmbDim*k+i];
             }
         }
         
@@ -47,16 +51,24 @@ protected:
     
     virtual Real MaxValue( const Sampler_T & C ) const override
     {
-        return Total(C.EdgeLengths())/std::sqrt(C.EdgeCount());
+        const Int n = C.EdgeCount();
+        
+        const Real * restrict r = C.EdgeLengths();
+        
+        Real sum = 0;
+        
+        for( Int i = 0; i < n; ++i )
+        {
+            sum += r[i];
+        }
+        
+        return sum / std::sqrt(C.EdgeCount());
     }
     
 public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS);
+        return "Gyradius";
     }
 };
-        
-#undef BASE
-#undef CLASS

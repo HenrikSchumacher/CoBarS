@@ -1,43 +1,44 @@
 #pragma once
 
-#define CLASS MaxAngle
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class MaxAngle : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
+<<<<<<< HEAD
     using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
+=======
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
+>>>>>>> 669f74e1da2608282dcd7df5c05e033802e4cfa6
     
-    CLASS() = default;
+    MaxAngle() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~MaxAngle() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(MaxAngle)
 
 protected:
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
         
-        const Int n              = C.EdgeCount();
-        const SpherePoints_T & y = C.EdgeCoordinates();
+        const Int n                   = C.EdgeCount();
+        const Real * restrict const y = C.EdgeCoordinates();
 
         Real max_angle = static_cast<Real>(0);
         
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( &y[AmbDim*(n-1)], &y[AmbDim*0] );
             
             max_angle = std::max(max_angle,phi);
         }
         
         for( Int k = 0; k < n-1; ++k )
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( &y[AmbDim*k], &y[AmbDim*(k+1)] );
             
             max_angle = std::max(max_angle,phi);
         }
@@ -59,9 +60,6 @@ public:
     
     virtual std::string Tag() const override
     {
-        return TO_STD_STRING(CLASS);
+        return "MaxAngle";
     }
 };
-    
-#undef BASE
-#undef CLASS

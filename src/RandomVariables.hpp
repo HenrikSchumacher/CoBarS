@@ -21,7 +21,7 @@ namespace CycleSampler
     #include "RandomVariables/IterationCount.hpp"
         
         
-    // Add your own random variables here.
+        // Add your own random variables here.
     #include "RandomVariables/ExampleFunction.hpp"
     
 } // namespace CycleSampler
