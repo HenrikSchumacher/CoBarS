@@ -1,36 +1,37 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler
+{
 
-#define CLASS CyclicSampler
-#define BASE  CyclicSamplerBase<Real,Int>
+#define CLASS Sampler
     
     template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public BASE
+    class CLASS : public SamplerBase<Real,Int>
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
     public:
+        using Base_T               = SamplerBase<Real,Int>;
+        using Vector_T             = SmallVector<AmbDim,Real,Int>;
+        using SymmetricMatrix_T    = SmallSymmetricMatrix<AmbDim,Real,Int>;
         
-        using Vector_T          = SmallVector<AmbDim,Real,Int>;
-        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
+        using RandomVariableBase_T = RandomVariableBase<Real,Int>;
+        using RandomVariable_T     = RandomVariable<AmbDim,Real,Int>;
         
-        using HyperbolicPoint_T = Vector_T;
-        
-        using SpherePoints_T = typename BASE::SpherePoints_T;
-        using SpacePoints_T  = typename BASE::SpacePoints_T;
-        using Weights_T      = typename BASE::Weights_T;
-        using Setting_T      = typename BASE::Setting_T;
+        using SpherePoints_T = typename Base_T::SpherePoints_T;
+        using SpacePoints_T  = typename Base_T::SpacePoints_T;
+        using Weights_T      = typename Base_T::Weights_T;
+        using Setting_T      = typename Base_T::Setting_T;
         
         
-        using BASE::settings;
-        using BASE::edge_count;
-        using BASE::Settings;
-        using BASE::random_engine;
-        using BASE::normal_dist;
+        using Base_T::settings;
+        using Base_T::edge_count;
+        using Base_T::Settings;
+        using Base_T::random_engine;
+        using Base_T::normal_dist;
         
-        CLASS() : BASE() {}
+        CLASS() : Base_T() {}
         
         virtual ~CLASS(){}
         
@@ -38,14 +39,14 @@ namespace CyclicSampler {
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
-        :   BASE( edge_count_, settings_ )
+        :   Base_T( edge_count_, settings_ )
         {
             x = SpherePoints_T( edge_count,     AmbDim );
             y = SpherePoints_T( edge_count,     AmbDim );
-            p = SpherePoints_T( edge_count + 1, AmbDim );
+            p = SpacePoints_T ( edge_count + 1, AmbDim );
             
-            r = Weights_T ( edge_count, one / edge_count );
-            rho   = Weights_T ( edge_count, one );
+            r   = Weights_T ( edge_count, one / edge_count );
+            rho = Weights_T ( edge_count, one );
             
             total_r_inv = one;
         }
@@ -56,11 +57,11 @@ namespace CyclicSampler {
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
-        :   BASE( edge_count_, settings_ )
+        :   Base_T( edge_count_, settings_ )
         {
             x = SpherePoints_T( edge_count,     AmbDim );
             y = SpherePoints_T( edge_count,     AmbDim );
-            p = SpherePoints_T( edge_count + 1, AmbDim );
+            p = SpacePoints_T ( edge_count + 1, AmbDim );
             
             r   = Weights_T( edge_count );
             rho = Weights_T( edge_count );
@@ -73,7 +74,7 @@ namespace CyclicSampler {
         
 //        // Copy constructor
 //        CLASS( const CLASS & other )
-//        :   BASE( other.edge_count, other.settings )
+//        :   Base_T( other.edge_count, other.settings )
 //        ,   x(other.x)
 //        ,   y(other.y)
 //        ,   p(other.p)
@@ -305,7 +306,6 @@ namespace CyclicSampler {
                 return;
             }
             
-            
             Eigen::SelfAdjointEigenSolver< Eigen::Matrix<Real,AmbDim,AmbDim> > eigs;
             
             eigs.compute(Sigma);
@@ -394,7 +394,7 @@ namespace CyclicSampler {
                 
                 // Armijo condition for squared residual.
 
-                ArmijoQ = squared_residual - squared_residual_at_0 - settings.Armijo_slope_factor * tau * slope < static_cast<Real>(0);
+                ArmijoQ = squared_residual - squared_residual_at_0 - settings.Armijo_slope_factor * tau * slope < zero;
     
                 while( !ArmijoQ && (backtrackings < settings.max_backtrackings) )
                 {
@@ -967,19 +967,47 @@ namespace CyclicSampler {
         
         
         // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
-        // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared CyclicSampler_T C.
+        // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
+   
         virtual void Sample_Binned(
             Real * restrict bins_out,
             const Int bin_count_,
             Real * restrict moments_out,
             const Int moment_count_,
             const Real * restrict ranges,
-            const std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > & F_list_,
+            const std::vector< std::unique_ptr<RandomVariableBase_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
         ) const override
         {
-            ptic(ClassName()+"Sample_Binned (polymorphic)");
+            std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+            
+            for( size_t i = 0; i < F_list_.size(); ++i )
+            {
+                F_list.push_back(
+                    std::unique_ptr<RandomVariable_T>(
+                        dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().get() )
+                    )
+                );
+            }
+            
+            Sample_Binned(
+                bins_out,bin_count_,moments_out,moment_count_,ranges,F_list,sample_count,thread_count
+            );
+        }
+        
+        void Sample_Binned(
+            Real * restrict bins_out,
+            const Int bin_count_,
+            Real * restrict moments_out,
+            const Int moment_count_,
+            const Real * restrict ranges,
+            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const
+        {
+            ptic(ClassName()+"Sample_Binned");
 
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1024,12 +1052,29 @@ namespace CyclicSampler {
                 W.ReadEdgeLengths( EdgeLengths().data() );
                 W.ReadRho( Rho().data() );
 
-                std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > F_list;
+                std::vector< std::unique_ptr<RandomVariable_T> > F_list;
 
                 for( Int i = 0; i < fun_count; ++ i )
                 {
-                    F_list.push_back( F_list_[static_cast<size_t>(i)]->Clone() );
+                    F_list.push_back(
+                        std::unique_ptr<RandomVariable_T>(
+                            dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().get() )
+                        )
+                    );
                 }
+                
+//                for( Int i = 0; i < fun_count; ++ i )
+//                {
+//                    size_t ii = i;
+//
+//                    // Thread gets its own instances of the RandomVariableBase_T...
+//                    F_list__.push_back( F_list_[ii]->Clone() );
+//
+//                    // ... and a downcast reference to it.
+//                    F_list.push_back(
+//                        dynamic_cast<RandomVariable_T *>( F_list__[ii].get() )
+//                    );
+//                }
 
                 Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
                 Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
@@ -1054,23 +1099,17 @@ namespace CyclicSampler {
 
                     for( Int i = 0; i < fun_count; ++i )
                     {
-                        auto & F = *F_list[static_cast<size_t>(i)];
-
-                        const Real val = F(W);
+                        const Real val = (*F_list[i])(W);
                         
-                        Real values [3] = {static_cast<Real>(1),K,K_quot};
+                        Real values [3] = { one, K, K_quot };
                         
-//                        const Int bin_idx = std::clamp(
-//                           static_cast<Int>(std::floor( factor[i] * (val - ranges(i,0)) )),
-//                           lower,
-//                           upper
-//                        );
-                        
-                        const Int bin_idx = static_cast<Int>(std::floor( factor[i] * (val - ranges[2*i]) ));
+                        const Int bin_idx = static_cast<Int>(
+                            std::floor( factor[i] * (val - ranges[2*i]) )
+                        );
                         
                         if( (bin_idx <= upper) && (bin_idx >= lower) )
                         {
-                            bins_local(0,i,bin_idx) += static_cast<Real>(1);
+                            bins_local(0,i,bin_idx) += one;
                             bins_local(1,i,bin_idx) += K;
                             bins_local(2,i,bin_idx) += K_quot;
                         }
@@ -1093,30 +1132,20 @@ namespace CyclicSampler {
 
                 #pragma omp critical
                 {
-//                    valprint("thread",thread);
-//                    print( "data_local = " + data_local.ToString() );
-                    for( Int l = 0; l < 3; ++l )
-                    {
-                        for( Int i = 0; i < fun_count; ++i )
-                        {
-                            for( Int j = 0; j < bin_count; ++j )
-                            {
-                                bins_global(l,i,j) += bins_local(l,i,j);
-                            }
-                            
-                            for( Int j = 0; j < moment_count; ++j )
-                            {
-                                moments_global(l,i,j) += moments_local(l,i,j);
-                            }
-                        }
-                    }
+                    add_to_buffer(
+                        bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
+                    );
+                    
+                    add_to_buffer(
+                        moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
+                    );
                 }
             }
 
             bins_global.Write( bins_out );
             moments_global.Write( moments_out );
             
-            ptoc(ClassName()+"::Sample_Binned (polymorphic)");
+            ptoc(ClassName()+"::Sample_Binned");
         }
         
         virtual void NormalizeBinnedSamples(
@@ -1140,17 +1169,10 @@ namespace CyclicSampler {
                     
                     // The field for zeroth moment is assumed to contain the total mass.
                     Real factor = Real(1)/moments_i_j[0];
-
                     
-                    for( Int k = 0; k < bin_count; ++k )
-                    {
-                        bins_i_j[k] *= factor;
-                    }
-               
-                    for( Int k = 0; k < moment_count; ++k )
-                    {
-                        moments_i_j[k] *= factor;
-                    }
+                    scale_buffer( factor, bins_i_j,    bin_count    );
+                    
+                    scale_buffer( factor, moments_i_j, moment_count );
                 }
             }
             ptoc(ClassName()+"::NormalizeBinnedSamples");
@@ -1324,7 +1346,7 @@ namespace CyclicSampler {
         {
             for( Int k = 0; k < edge_count; ++k )
             {
-                Real r2 = static_cast<Real>(0);
+                Real r2 = 0;
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
@@ -1357,7 +1379,7 @@ namespace CyclicSampler {
             {
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Real r2 = static_cast<Real>(0);
+                    Real r2 = 0;
 
                     Real v [AmbDim];
                     
@@ -1391,7 +1413,7 @@ namespace CyclicSampler {
                     
                     std::mt19937_64 random_engine_loc { seed };
 
-                    std::normal_distribution<Real> dist { static_cast<Real>(0),static_cast<Real>(1) };
+                    std::normal_distribution<Real> dist { zero, one };
 
                     const Int l_begin = job_ptr[thread];
                     const Int l_end   = job_ptr[thread+1];
@@ -1402,7 +1424,7 @@ namespace CyclicSampler {
 
                         for( Int k = 0; k < edge_count; ++k )
                         {
-                            Real r2 = static_cast<Real>(0);
+                            Real r2 = 0;
 
                             for( Int i = 0; i < AmbDim; ++i )
                             {
@@ -1474,13 +1496,13 @@ namespace CyclicSampler {
     
     
 //    template<typename Real = double, typename Int = long long>
-//    std::unique_ptr<BASE> MakeCyclicSampler(
+//    std::unique_ptr<SamplerBase<Real,Int>> MakeCycleSampler(
 //            const int amb_dim,
 //            const Int edge_count_,
-//            const CyclicSamplerSettings<Real,Int> settings_ = CyclicSamplerSettings<Real,Int>()
+//            const SamplerSettings<Real,Int> settings_ = SamplerSettings<Real,Int>()
 //    )
 //    {
-//        CyclicSamplerSettings<Real,Int> settings (settings_);
+//        SamplerSettings<Real,Int> settings (settings_);
 //        switch( amb_dim )
 //        {
 //            case 2:
@@ -1495,7 +1517,7 @@ namespace CyclicSampler {
 //            {
 //                return std::make_unique<CLASS<4,Real,Int>>(edge_count_,settings);
 //            }
-//                
+//
 //            default:
 //            {
 //                eprint("Make"+TO_STD_STRING(CLASS)+": ambient dimension "+ToString(amb_dim)+" not supported. Using default dimension 3.");
@@ -1503,8 +1525,7 @@ namespace CyclicSampler {
 //            }
 //        }
 //    }
-        
-#undef BASE
+  
 #undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler

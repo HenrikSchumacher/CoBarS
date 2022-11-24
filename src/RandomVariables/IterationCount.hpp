@@ -8,7 +8,7 @@ class CLASS : public BASE
 {
 public:
     
-    using CyclicSampler_T   = typename BASE::CyclicSampler_T;
+    using Sampler_T   = typename BASE::Sampler_T;
     
     CLASS() = default;
     
@@ -18,17 +18,17 @@ public:
 
 protected:
     
-    virtual Real operator()( const CyclicSampler_T & C ) const override
+    virtual Real operator()( const Sampler_T & C ) const override
     {
         return C.IterationCount();
     }
     
-    virtual Real MinValue( const CyclicSampler_T & C ) const override
+    virtual Real MinValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(0);
     }
     
-    virtual Real MaxValue( const CyclicSampler_T & C ) const override
+    virtual Real MaxValue( const Sampler_T & C ) const override
     {
         return C.MaxIterationCount();
     }

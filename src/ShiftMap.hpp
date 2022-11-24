@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler {
 
 #define CLASS ShiftMap
 
@@ -555,10 +555,10 @@ namespace CyclicSampler {
         
         static std::string ClassName()
         {
-            return "ShiftMap<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
+            return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
         }
     };
         
 #undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler

@@ -3,7 +3,7 @@
 
 #define CLASS SmallSymmetricMatrix
 
-namespace CyclicSampler {
+namespace CycleSampler {
         
     template< int AmbDim, typename Real, typename Int>
     struct CLASS
@@ -393,6 +393,6 @@ namespace CyclicSampler {
         
     };
         
-} // namespace CyclicSampler
+} // namespace CycleSampler
 
 #undef CLASS

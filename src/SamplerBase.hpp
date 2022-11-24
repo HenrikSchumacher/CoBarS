@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler {
 
     template<typename Real, typename Int>
     class RandomVariableBase;
@@ -9,7 +9,7 @@ namespace CyclicSampler {
     class RandomVariable;
     
     template<typename Real = double, typename Int = long long>
-    struct CyclicSamplerSettings
+    struct SamplerSettings
     {
         Real tolerance            = std::sqrt(std::numeric_limits<Real>::epsilon());
         Real give_up_tolerance    = 100 * std::numeric_limits<Real>::epsilon();
@@ -22,11 +22,11 @@ namespace CyclicSampler {
         
         bool use_linesearch       = true;
         
-        CyclicSamplerSettings() {}
+        SamplerSettings() {}
         
-        ~CyclicSamplerSettings() = default;
+        ~SamplerSettings() = default;
         
-        CyclicSamplerSettings( const CyclicSamplerSettings & other )
+        SamplerSettings( const SamplerSettings & other )
         :   tolerance(other.tolerance)
         ,   give_up_tolerance(other.give_up_tolerance)
         ,   regularization(other.regularization)
@@ -50,7 +50,7 @@ namespace CyclicSampler {
         }
     };
     
-#define CLASS CyclicSamplerBase
+#define CLASS SamplerBase
 
     template<
         typename Real    = double,
@@ -63,12 +63,11 @@ namespace CyclicSampler {
     
     public:
         
-        
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;
         using Weights_T      = Tensor1<Real,Int>;
         
-        using Setting_T = CyclicSamplerSettings<Real,Int>;
+        using Setting_T = SamplerSettings<Real,Int>;
         
     protected:
         
@@ -256,4 +255,4 @@ namespace CyclicSampler {
     };
 #undef CLASS
         
-} // namespace CyclicSampler
+} // namespace CycleSampler

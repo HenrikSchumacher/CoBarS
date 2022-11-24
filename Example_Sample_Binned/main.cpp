@@ -1,47 +1,52 @@
 
 #include <iostream>
-#include "CyclicSampler.hpp"
+#include "CycleSampler.hpp"
 
 using namespace Tools;
 using namespace Tensors;
+using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
     // Some type aliases to make out lives a bit easier.
-    using Real = double;
+    using Real = float64_t;
     using Int  = int32_t;
     
     constexpr Int AmbDim = 3;
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
     // In particular, the ambient dimension has to be known at compile time.
-    using CyclicSampler_T  = CyclicSampler::CyclicSampler <AmbDim,Real,Int>;
-    using RandomVariable_T = CyclicSampler::RandomVariableBase<Real,Int>;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
+    
+    using RandomVariableBase_T = typename Sampler_T::RandomVariableBase_T;
+    using RandomVariable_T     = typename Sampler_T::RandomVariable_T;
     
     const     Int edge_count   = 8;
     const     Int sample_count = 1000000;
     const     Int thread_count = 8;
     
-    print("Test program for routine CyclicSampler::Sample");
+    print("Test program for routine CycleSampler::Sample");
 
-    CyclicSampler_T C (edge_count);
+    Sampler_T S (edge_count);
     
     // A list of random variables to sample. We start with an empty list.
+
+//    std::vector< std::unique_ptr<RandomVariableBase_T> > F_list;
     std::vector< std::unique_ptr<RandomVariable_T> > F_list;
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-    F_list.push_back( std::make_unique<CyclicSampler::ShiftNorm<AmbDim,Real,Int>>() );
-    F_list.push_back( std::make_unique<CyclicSampler::Gyradius<AmbDim,Real,Int>>() );
-    F_list.push_back( std::make_unique<CyclicSampler::ChordLength<AmbDim,Real,Int>>(0,2) );
-    F_list.push_back( std::make_unique<CyclicSampler::TotalCurvature<AmbDim,Real,Int>>() );
+    F_list.push_back( std::make_unique<ShiftNorm     <AmbDim,Real,Int>>()    );
+    F_list.push_back( std::make_unique<Gyradius      <AmbDim,Real,Int>>()    );
+    F_list.push_back( std::make_unique<ChordLength   <AmbDim,Real,Int>>(0,2) );
+    F_list.push_back( std::make_unique<TotalCurvature<AmbDim,Real,Int>>()    );
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;
     const Int moment_count = 3;
     
     // Now we prepare arrays to store the results.
-    // C.Sample_Binned will _add into_ these arrays, hence we have to make sure that they are initialized appropriately by zeroes.
+    // S.Sample_Binned will _add into_ these arrays, hence we have to make sure that they are initialized appropriately by zeroes.
     
     
     // bins is a 3D-array of size 3 x fun_count x bin_count. Entry bins(i,j,k) will store the sampled weighted sum in bin k of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i:
@@ -57,26 +62,26 @@ int main(int argc, const char * argv[])
     // Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins.
     Tensor2<Real,Int> ranges  ( fun_count, 2 );
 
-    // The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared CyclicSampler_T C.
+    // The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
     
     for( Int j = 0; j < fun_count; ++j )
     {
-        ranges(j,0) = F_list[j]->MinValue( C );
-        ranges(j,1) = F_list[j]->MaxValue( C );
+        ranges(j,0) = F_list[j]->MinValue(S);
+        ranges(j,1) = F_list[j]->MaxValue(S);
     }
 
     print("");
     
     // Print the settings.
     print("Settings:");
-    C.Settings().PrintStats();
+    S.Settings().PrintStats();
 
     print("");
 
     // Perform the actual sampling.
     // The interface operates via raw pointers for more flexibility.
     tic("Sample_Binned");
-        C.Sample_Binned(
+        S.Sample_Binned(
             bins.data(),
             bin_count,
             moments.data(),
@@ -93,7 +98,7 @@ int main(int argc, const char * argv[])
     // In order to get normalized bins.
     
     // The interface operates via raw pointers for more flexibility.
-    C.NormalizeBinnedSamples(
+    S.NormalizeBinnedSamples(
        bins.data(),
        bin_count,
        moments.data(),

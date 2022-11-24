@@ -8,7 +8,7 @@ class CLASS : public BASE
 {
 public:
     
-    using CyclicSampler_T   = typename BASE::CyclicSampler_T;
+    using Sampler_T         = typename BASE::Sampler_T;
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
@@ -24,7 +24,7 @@ public:
 protected:
     
     
-    virtual Real operator()( const CyclicSampler_T & C ) const override
+    virtual Real operator()( const Sampler_T & C ) const override
     {
         Real sum = static_cast<Real>(0);
         Real r2  = static_cast<Real>(0);
@@ -52,12 +52,12 @@ protected:
         return (n * n)/sum;
     }
     
-    virtual Real MinValue( const CyclicSampler_T & C ) const override
+    virtual Real MinValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(0);
     }
     
-    virtual Real MaxValue( const CyclicSampler_T & C ) const override
+    virtual Real MaxValue( const Sampler_T & C ) const override
     {
         return C.EdgeLengths().Total();
     }

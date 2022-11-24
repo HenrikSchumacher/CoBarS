@@ -1,6 +1,7 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler
+{
 
 #define CLASS MomentPolytopeSampler
     
@@ -317,11 +318,11 @@ namespace CyclicSampler {
         
         std::string ClassName()
         {
-            return "MomentPolytopeSampler<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
+            return TO_STD_STRING(CLASS)+"<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
         }
     };
         
 #undef BASE
 #undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler

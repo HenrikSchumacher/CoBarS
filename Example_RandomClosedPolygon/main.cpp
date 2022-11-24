@@ -1,9 +1,10 @@
 
 #include <iostream>
-#include "CyclicSampler.hpp"
+#include "CycleSampler.hpp"
 
 using namespace Tools;
 using namespace Tensors;
+using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
@@ -18,7 +19,7 @@ int main(int argc, const char * argv[])
     const     Int sample_count = 10000000;
     const     Int thread_count = 8; // 0 means "automatic"
     
-    CyclicSampler::CyclicSampler<d,Real,Int> C (edge_count);
+    Sampler<d,Real,Int> S (edge_count);
 
     Tensor3<Real,Int> x      ( sample_count, d, edge_count, 0. );
     Tensor2<Real,Int> w      ( sample_count, d            , 0. );
@@ -26,12 +27,9 @@ int main(int argc, const char * argv[])
     Tensor1<Real,Int> K      ( sample_count               , 0. );
     Tensor1<Real,Int> K_quot ( sample_count               , 0. );
 
-//    print( "Omega = " + C->Omega().ToString() );
-//    print( "Rho   = " + C->Rho().ToString() );
-
     print("");
     print("Settings:");
-    C.Settings().PrintStats();
+    S.Settings().PrintStats();
 
     print("");
     valprint("sample_count",sample_count);
@@ -39,14 +37,8 @@ int main(int argc, const char * argv[])
     print("");
 
     tic("RandomClosedPolygons");
-        C.RandomClosedPolygons(
-            x.data(),
-            w.data(),
-            y.data(),
-            K.data(),
-            K_quot.data(),
-            sample_count,
-            thread_count
+        S.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc("RandomClosedPolygons");
 

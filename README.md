@@ -1,4 +1,4 @@
-# CyclicSampler
+# CycleSampler
 
 by Jason Cantarella and Henrik Schumacher
 

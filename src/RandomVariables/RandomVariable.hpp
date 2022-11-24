@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler {
 
 #define CLASS RandomVariable
 #define BASE  RandomVariableBase<Real,Int>
@@ -13,34 +13,41 @@ namespace CyclicSampler {
         
     public:
         
-        using CyclicSampler_T   = typename BASE::CyclicSampler_T;
-        using SpherePoints_T    = typename CyclicSampler_T::SpherePoints_T;
-        using SpacePoints_T     = typename CyclicSampler_T::SpacePoints_T;
-        using Weights_T         = typename CyclicSampler_T::Weights_T;
-        using Vector_T          = typename CyclicSampler<AmbDim,Real,Int>::Vector_T;
+        using SamplerBase_T     = SamplerBase<Real,Int>;
+        using Sampler_T         = Sampler<AmbDim,Real,Int>;
+        using SpherePoints_T    = typename Sampler_T::SpherePoints_T;
+        using SpacePoints_T     = typename Sampler_T::SpacePoints_T;
+        using Weights_T         = typename Sampler_T::Weights_T;
+        using Vector_T          = typename Sampler_T::Vector_T;
         
         CLASS() = default;
         
         virtual ~CLASS(){}
         
-        virtual Real operator()( const CyclicSampler_T & C ) const override = 0;
+        virtual Real operator()( const SamplerBase_T & C ) const override
+        {
+            return operator()( dynamic_cast<const Sampler_T &>(C) );
+        }
         
-        virtual Real MinValue( const CyclicSampler_T & C ) const override = 0;
+        virtual Real operator()( const Sampler_T & C ) const = 0;
         
-        virtual Real MaxValue( const CyclicSampler_T & C ) const override = 0;
+        
+        virtual Real MinValue( const SamplerBase_T & C ) const override
+        {
+            return MinValue( dynamic_cast<const Sampler_T &>(C) );
+        }
+        virtual Real MinValue( const Sampler_T & C ) const = 0;
+        
+        
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        {
+            return MaxValue( dynamic_cast<const Sampler_T &>(C) );
+        }
+        
+        virtual Real MaxValue( const Sampler_T & C ) const = 0;
         
         __ADD_CLONE_CODE_FOR_ABSTRACT_CLASS__(CLASS)
 
-        virtual CLASS & DownCast() override
-        {
-            return *this;
-        }
-        
-        virtual const CLASS & DownCast() const override
-        {
-            return *this;
-        }
-        
     public:
         
         Int AmbientDimension() const override
@@ -54,4 +61,4 @@ namespace CyclicSampler {
 #undef BASE
 #undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler
