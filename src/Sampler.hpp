@@ -15,9 +15,10 @@ namespace CycleSampler
         
     public:
         
-        using Base_T    = SamplerBase<Real,Int>;
-        using Setting_T = typename Base_T::Setting_T;
-        using Matrix_T  = Eigen::Matrix<Real,AmbDim,AmbDim>;
+        using Base_T           = SamplerBase<Real,Int>;
+        using RandomVariable_T = RandomVariable<AmbDim,Real,Int>;
+        using Setting_T        = typename Base_T::Setting_T;
+        using Matrix_T         = Eigen::Matrix<Real,AmbDim,AmbDim>;
         
         using Base_T::settings;
         using Base_T::edge_count;
@@ -990,6 +991,7 @@ namespace CycleSampler
         
         // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
         // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared CyclicSampler_T C.
+        
         virtual void Sample_Binned(
             Real * restrict bins_out,
             const Int bin_count_,
@@ -1000,6 +1002,43 @@ namespace CycleSampler
             const Int sample_count,
             const Int thread_count = 1
         ) const override
+        {
+            const size_t size = F_list_.size();
+            
+            std::vector< std::unique_ptr<RandomVariable_T> > F_list__ (size);
+            
+            for( size_t i = 0; i < size; ++i )
+            {
+                F_list__[i] = std::unique_ptr<RandomVariable_T>(
+                    dynamic_cast<RandomVariable_T *>(
+                        F_list_[i]->Clone().get()
+                    )
+                );
+                
+                print(F_list__[i]->Tag());
+                
+                if( F_list__[i] == nullptr )
+                {
+                    eprint(ClassName()+"::Sample_Binned: Failed to downcast random variable "+F_list_[i]->Tag()+". Aborting.");
+                    
+                    return;
+                }
+            }
+            
+            Sample_Binned( bins_out, bin_count_, moments_out, moment_count_, ranges, F_list__, sample_count, thread_count
+            );
+        }
+        
+        void Sample_Binned(
+            Real * restrict bins_out,
+            const Int bin_count_,
+            Real * restrict moments_out,
+            const Int moment_count_,
+            const Real * restrict ranges,
+            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const
         {
             ptic(ClassName()+"Sample_Binned (polymorphic)");
 
@@ -1115,10 +1154,6 @@ namespace CycleSampler
 
                 #pragma omp critical
                 {
-//                    valprint("thread",thread);
-//                    print( "data_local = " + data_local.ToString() );
-                    
-                    
                     add_to_buffer(
                         bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
                     );
@@ -1126,22 +1161,6 @@ namespace CycleSampler
                     add_to_buffer(
                         moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
                     );
-                    
-//                    for( Int l = 0; l < 3; ++l )
-//                    {
-//                        for( Int i = 0; i < fun_count; ++i )
-//                        {
-//                            for( Int j = 0; j < bin_count; ++j )
-//                            {
-//                                bins_global(l,i,j) += bins_local(l,i,j);
-//                            }
-//
-//                            for( Int j = 0; j < moment_count; ++j )
-//                            {
-//                                moments_global(l,i,j) += moments_local(l,i,j);
-//                            }
-//                        }
-//                    }
                 }
             }
 
