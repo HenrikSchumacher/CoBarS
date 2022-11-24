@@ -31,11 +31,7 @@ namespace CycleSampler
         static constexpr Real two_pi            = static_cast<Real>(2 * M_PI);
         
     public:
-        
-        using Vector_T          = SmallVector<AmbDim,Real,Int>;
-        using SquareMatrix_T    = SmallSquareMatrix<AmbDim,Real,Int>;
-        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
-        
+                
         void Shift(
             const Real * restrict const x_in,
             const Real * restrict const s,
@@ -282,11 +278,11 @@ namespace CycleSampler
            
             for( Int k = 0; k < n; ++k )
             {
-                Real y    [AmbDim];
-                Real x    [AmbDim];
+                Real y     [AmbDim];
+                Real x     [AmbDim];
                 
-                Real a    [AmbDim][AmbDim];
-                Real b_inv[AmbDim][AmbDim];
+                Real a     [AmbDim][AmbDim];
+                Real b_inv [AmbDim][AmbDim];
                 
                 Real wy = 0;
                 Real wx = 0;
@@ -467,12 +463,9 @@ namespace CycleSampler
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
 
-            SquareMatrix_T cbar;
-            SquareMatrix_T gamma;
-
-            cbar.SetZero();
-            gamma.SetZero();
-
+            Real cbar  [AmbDim][AmbDim] = {};
+            Real gamma [AmbDim][AmbDim] = {};
+            
             Real prod = one;
 
             Real w [AmbDim];
@@ -519,9 +512,9 @@ namespace CycleSampler
                     {
                         const Real scratch = (static_cast<Real>(i==j) - y[i]*y[j]);
 
-                        gamma(i,j) += omega_over_rho_k_squared * scratch;
+                        gamma[i][j] += omega_over_rho_k_squared * scratch;
 
-                        cbar(i,j)  += omega_k * scratch;
+                        cbar[i][j]  += omega_k * scratch;
                     }
                 }
             }
@@ -539,7 +532,20 @@ namespace CycleSampler
 //                }
 //            }
 
-            return MyMath::pow( prod, static_cast<Int>(AmbDim - 1) ) * sqrt(gamma.Det()) / cbar.Det();
+            SmallSquareMatrix<AmbDim,Real,Int> cbar_mat;
+            SmallSquareMatrix<AmbDim,Real,Int> gamma_mat;
+
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    cbar_mat (i,j) = cbar [i][j];
+                    gamma_mat(i,j) = gamma[i][j];
+                }
+            }
+
+            
+            return MyMath::pow( prod, static_cast<Int>(AmbDim - 1) ) * sqrt(gamma_mat.Det()) / cbar_mat.Det();
         }
         
         

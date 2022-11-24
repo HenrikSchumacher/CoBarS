@@ -243,15 +243,17 @@ namespace CycleSampler
             // We fill only the lower triangle of Sigma, because that's the only thing that Eigen' selfadjoint eigensolver needs.
             // Recall that Eigen matrices are column-major by default.
             
+            const Real * restrict y_ = y.data();
+            
             {
                 const Real rho_squared = rho[0] * rho[0];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y(0,i);
+                    const Real factor = rho_squared * y_[AmbDim*0+i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) = factor * y(0,j);
+                        Sigma(j,i) = factor * y_[AmbDim*0+j];
                     }
                 }
             }
@@ -261,11 +263,11 @@ namespace CycleSampler
                 const Real rho_squared = rho[k] * rho[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y(k,i);
+                    const Real factor = rho_squared * y_[AmbDim*k+i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) += factor * y(k,j);
+                        Sigma(j,i) += factor * y_[AmbDim*k+j];
                     }
                 }
             }
@@ -341,6 +343,8 @@ namespace CycleSampler
         
         Real Potential( const Vector_T & z )
         {
+            const Real * restrict const y_ = y.data();
+            
             Real value = 0;
             
             const Real zz = Dot(z,z);
@@ -352,11 +356,11 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Real yz2 = y(k,0) * z[0];
+                Real yz2 = y_[AmbDim*k+0] * z[0];
                 
                 for( Int i = 1; i < AmbDim; ++i )
                 {
-                    yz2 += y(k,i) * z[i];
+                    yz2 += y_[AmbDim*k+i] * z[i];
                 }
                 
                 value += r[k] * std::log(std::abs( (a - two * yz2) * b ) );
@@ -489,16 +493,18 @@ namespace CycleSampler
             // Assemble DF = nabla F + regulatization:
             // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
 
+            const Real * restrict const y_ = y.data();
+            
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[0] * y(0,i);
+                    const Real factor = r[0] * y_[AmbDim*0+i];
 
                     F(i) = - factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) = - factor * y(0,j);
+                        DF(i,j) = - factor * y_[AmbDim*0+j];
                     }
                 }
             }
@@ -507,13 +513,13 @@ namespace CycleSampler
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[k] * y(k,i);
+                    const Real factor = r[k] * y_[AmbDim*k+i];
 
                     F(i) -= factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) -= factor * y(k,j);
+                        DF(i,j) -= factor * y_[AmbDim*k+j];
                     }
                 }
             }
@@ -643,6 +649,8 @@ namespace CycleSampler
         {
             x.Read( x_in );
             
+            Real * restrict const x_ = x.data();
+            
             if( normalize )
             {
                 for( Int k = 0; k < edge_count; ++k )
@@ -651,14 +659,14 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        r2 += x(k,i) * x(k,i);
+                        r2 += x_[AmbDim*k+i] * x_[AmbDim*k+i];
                     }
                     
                     const Real scale = one/std::sqrt(r2);
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        x(k,i) *= scale;
+                        x_[AmbDim*k+i] *= scale;
                     }
                 }
             }
@@ -735,13 +743,16 @@ namespace CycleSampler
             Real barycenter        [AmbDim] = {};
             Real point_accumulator [AmbDim] = {};
             
+            const Real * restrict const y_ = y.data();
+                  Real * restrict const p_ = p.data();
+            
             for( Int k = 0; k < edge_count; ++k )
             {
                 const Real r_k = r[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real offset = r_k * y(k,i);
+                    const Real offset = r_k * y_[AmbDim*k+i];
                     
                     barycenter[i] += (point_accumulator[i] + half * offset);
                     
@@ -751,7 +762,7 @@ namespace CycleSampler
 
             for( Int i = 0; i < AmbDim; ++i )
             {
-                p(0,i) = -barycenter[i]/edge_count;
+                p_[AmbDim*0+i] = -barycenter[i]/edge_count;
             }
 
             for( Int k = 0; k < edge_count; ++k )
@@ -760,7 +771,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p(k+1,i) = p(k,i) + r_k * y(k,i);
+                    p_[AmbDim*(k+1)+i] = p_[AmbDim*k+i] + r_k * y_[AmbDim*k+i];
                 }
             }
         }
@@ -794,12 +805,14 @@ namespace CycleSampler
         {
             Real w_ [AmbDim] = {};
             
+            const Real * restrict const x_ = x.data();
+            
             for( Int k = 0; k < edge_count; ++k )
             {
                 const Real r_k = r[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w_[i] += x(k,i) * r_k;
+                    w_[i] += x_[AmbDim*k+i] * r_k;
                 }
             }
             
@@ -1260,6 +1273,8 @@ namespace CycleSampler
 
                 auto & p = W.SpaceCoordinates();
                 
+                const Real * restrict const p_ = p.data();
+                
                 for( Int l = 0; l < repetitions; ++l )
                 {
 //                    valprint("l",l);
@@ -1288,7 +1303,7 @@ namespace CycleSampler
 
                         for( int i = 0; i < 3; ++i )
                         {
-                            v[i] = p(k,i);
+                            v[i] = p_[AmbDim*k+i];
                         }
                     }
                     
@@ -1363,6 +1378,8 @@ namespace CycleSampler
         
         void RandomizeInitialEdgeCoordinates() override
         {
+            Real * restrict const x_ = x.data();
+            
             for( Int k = 0; k < edge_count; ++k )
             {
                 Real r2 = static_cast<Real>(0);
@@ -1371,7 +1388,7 @@ namespace CycleSampler
                 {
                     const Real z = normal_dist( random_engine );
                     
-                    x(k,i) = z;
+                    x_[AmbDim*k+i] = z;
                     
                     r2 += z * z;
                 }
@@ -1380,7 +1397,7 @@ namespace CycleSampler
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    x(k,i) *= r_inv;
+                    x_[AmbDim*k+i] *= r_inv;
                 }
             }
         }
