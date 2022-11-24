@@ -132,7 +132,7 @@ namespace CycleSampler
 //            const bool normalize = true
 //        ) = 0;
         
-        virtual const SpherePoints_T & InitialEdgeCoordinates() const = 0;
+//        virtual const SpherePoints_T & InitialEdgeCoordinates() const = 0;
         
         virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) = 0;
         
@@ -144,19 +144,19 @@ namespace CycleSampler
         
         
         
-        virtual const Weights_T & EdgeLengths() const = 0;
+//        virtual const Weights_T & EdgeLengths() const = 0;
         
         virtual void ReadEdgeLengths( const Real * const r_in ) = 0;
         
         
-        virtual const Weights_T & Rho() const = 0;
+//        virtual const Weights_T & Rho() const = 0;
         
         virtual void ReadRho( const Real * const rho_in ) = 0;
         
         
 //        virtual SpherePoints_T & EdgeCoordinates() = 0;
         
-        virtual const SpherePoints_T & EdgeCoordinates() const = 0;
+//        virtual const SpherePoints_T & EdgeCoordinates() const = 0;
         
         virtual void ReadEdgeCoordinates( const Real * const y_in ) = 0;
         
@@ -169,7 +169,7 @@ namespace CycleSampler
         
 //        virtual SpacePoints_T & SpaceCoordinates() = 0;
         
-        virtual const SpacePoints_T & SpaceCoordinates() const = 0;
+//        virtual const SpacePoints_T & SpaceCoordinates() const = 0;
         
         virtual void WriteSpaceCoordinates( Real * y_in ) const = 0;
         

@@ -12,18 +12,15 @@ namespace CycleSampler
     public:
         
         using Base_T            = SamplerBase<Real,Int>;
-        using Vector_T          = SmallVector<AmbDim,Real,Int>;
-        using SymmetricMatrix_T = SmallSymmetricMatrix<AmbDim,Real,Int>;
         
-        using HyperbolicPoint_T = Vector_T;
-        
-        using SpherePoints_T = typename Base_T::SpherePoints_T;
-        using SpacePoints_T  = typename Base_T::SpacePoints_T;
-        using Weights_T      = typename Base_T::Weights_T;
+//        using SpherePoints_T = typename Base_T::SpherePoints_T;
+//        using SpacePoints_T  = typename Base_T::SpacePoints_T;
         using Setting_T      = typename Base_T::Setting_T;
         
         using RandomVariableBase_T = RandomVariableBase<Real,Int>;
         using RandomVariable_T     = RandomVariable<AmbDim,Real,Int>;
+        
+        using Vector_T  = SmallVector<AmbDim, Real, Int>;
         
         using Base_T::settings;
         using Base_T::edge_count;
@@ -33,7 +30,14 @@ namespace CycleSampler
         
         Sampler() : Base_T() {}
         
-        virtual ~Sampler(){}
+        virtual ~Sampler()
+        {
+            safe_free(x);
+            safe_free(y);
+            safe_free(p);
+            safe_free(r);
+            safe_free(rho);
+        }
         
         explicit Sampler(
             const Int edge_count_,
@@ -41,12 +45,16 @@ namespace CycleSampler
         )
         :   Base_T( edge_count_, settings_ )
         {
-            x   = SpherePoints_T( edge_count,     AmbDim );
-            y   = SpherePoints_T( edge_count,     AmbDim );
-            p   = SpherePoints_T( edge_count + 1, AmbDim );
+            safe_alloc( x,  edge_count    * AmbDim );
+            safe_alloc( y,  edge_count    * AmbDim );
+            safe_alloc( p, (edge_count+1) * AmbDim );
             
-            r   = Weights_T ( edge_count, one / edge_count );
-            rho = Weights_T ( edge_count, one );
+            safe_alloc (r, edge_count );
+            fill_buffer(r, edge_count, one / edge_count);
+
+            safe_alloc (rho, edge_count );
+            fill_buffer(rho, edge_count, one / edge_count);
+            
             
             total_r_inv = one;
         }
@@ -59,12 +67,12 @@ namespace CycleSampler
         )
         :   Base_T( edge_count_, settings_ )
         {
-            x = SpherePoints_T( edge_count,     AmbDim );
-            y = SpherePoints_T( edge_count,     AmbDim );
-            p = SpherePoints_T( edge_count + 1, AmbDim );
+            safe_alloc( x,  edge_count    * AmbDim );
+            safe_alloc( y,  edge_count    * AmbDim );
+            safe_alloc( p, (edge_count+1) * AmbDim );
             
-            r   = Weights_T( edge_count );
-            rho = Weights_T( edge_count );
+            safe_alloc( r, edge_count );
+            safe_alloc( rho, edge_count );
             
             ReadEdgeLengths(r_in);
             ReadRho(rho_in);
@@ -135,23 +143,22 @@ namespace CycleSampler
 
     protected:
         
-        SpherePoints_T x {0,AmbDim};
-        SpherePoints_T y {0,AmbDim};
-        
-        mutable SpacePoints_T p {0,AmbDim};
-        
-        Weights_T r {0};
-        Weights_T rho   {0};
+        Real restrict * x = nullptr;
+        Real restrict * y = nullptr;
+        Real restrict * p = nullptr;
+
+        Real restrict * r   = nullptr;
+        Real restrict * rho = nullptr;
         
         Real total_r_inv = one;
         
-        Vector_T w;           // current point in hyperbolic space.
-        Vector_T F;           // right hand side of Newton iteration.
-        SymmetricMatrix_T DF; // nabla F(0) with respect to measure ys
-        SymmetricMatrix_T L;  // storing Cholesky factor.
-        Vector_T u;           // update direction
-
-        Vector_T z;           // Multiple purpose buffer.
+        Real DF [AmbDim][AmbDim];  // nabla F(0) with respect to measure ys
+        Real L  [AmbDim][AmbDim];  // storing Cholesky factor.
+        
+        Real w [AmbDim];           // current point in hyperbolic space.
+        Real F [AmbDim];           // right hand side of Newton iteration.
+        Real u [AmbDim];           // update direction
+        Real z [AmbDim];           // Multiple purpose buffer.
         
         ShiftMap<AmbDim,Real,Int> S;
         
@@ -221,7 +228,7 @@ namespace CycleSampler
         void ComputeEdgeSpaceSamplingWeight()
         {
             edge_space_sampling_weight = S.EdgeSpaceSamplingWeight(
-                x.data(), w.data(), y.data(), r.data(), rho.data(), edge_count
+                x, &w[0], y, r, rho, edge_count
             );
         }
         
@@ -243,17 +250,15 @@ namespace CycleSampler
             // We fill only the lower triangle of Sigma, because that's the only thing that Eigen' selfadjoint eigensolver needs.
             // Recall that Eigen matrices are column-major by default.
             
-            const Real * restrict y_ = y.data();
-            
             {
                 const Real rho_squared = rho[0] * rho[0];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y_[AmbDim*0+i];
+                    const Real factor = rho_squared * y[AmbDim*0+i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) = factor * y_[AmbDim*0+j];
+                        Sigma(j,i) = factor * y[AmbDim*0+j];
                     }
                 }
             }
@@ -263,11 +268,11 @@ namespace CycleSampler
                 const Real rho_squared = rho[k] * rho[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y_[AmbDim*k+i];
+                    const Real factor = rho_squared * y[AmbDim*k+i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) += factor * y_[AmbDim*k+j];
+                        Sigma(j,i) += factor * y[AmbDim*k+j];
                     }
                 }
             }
@@ -340,14 +345,223 @@ namespace CycleSampler
         
         
     protected:
-        
-        Real Potential( const Vector_T & z )
+
+        Real Dot_ww() const
         {
-            const Real * restrict const y_ = y.data();
+            Real ww = 0;
             
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                ww += w[i] * w[i];
+            }
+            return ww;
+        }
+        
+        Real Dot_zz() const
+        {
+            Real zz = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                zz += z[i] * z[i];
+            }
+            return zz;
+        }
+        
+        Real Dot_wz() const
+        {
+            Real wz = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                wz += w[i] * z[i];
+            }
+            return wz;
+        }
+        
+        Real Dot_uu() const
+        {
+            Real uu = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                uu += u[i] * u[i];
+            }
+            return uu;
+        }
+        
+        Real Dot_Fu() const
+        {
+            Real Fu = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                Fu += F[i] * u[i];
+            }
+            return Fu;
+        }
+        
+        Real Dot_FF() const
+        {
+            Real FF = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                FF += F[i] * F[i];
+            }
+            return FF;
+        }
+        
+        Real Dot_FDFu() const
+        {
+            Real result = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                Real z_i = 0;
+                for( Int j = 0; j < i; ++j )
+                {
+                    z_i += DF[j][i] * u[j];
+                }
+                for( Int j = i; j < AmbDim; ++j )
+                {
+                    z_i += DF[i][j] * u[j];
+                }
+                
+                result += F[i] * z_i;
+                
+            }
+            
+            return result;
+        }
+        
+        void L_Cholesky()
+        {
+            for( Int k = 0; k < AmbDim; ++k )
+            {
+                const Real a = L[k][k] = std::sqrt(L[k][k]);
+                const Real ainv = one/a;
+
+                for( Int j = k+1; j < AmbDim; ++j )
+                {
+                    L[k][j] *= ainv;
+                }
+
+                for( Int i = k+1; i < AmbDim; ++i )
+                {
+                    for( Int j = i; j < AmbDim; ++j )
+                    {
+                        L[i][j] -= L[k][i] * L[k][j];
+                    }
+                }
+            }
+        }
+        
+        void L_CholeskySolve_Fu()
+        {
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] = F[i];
+            }
+            //In-place solve.
+            
+            // Lower triangular back substitution
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                for( Int j = 0; j < i; ++j )
+                {
+                    u[i] -= L[j][i] * u[j];
+                }
+                u[i] /= L[i][i];
+            }
+            
+            // Upper triangular back substitution
+            for( Int i = AmbDim-1; i > -1; --i )
+            {
+                for( Int j = i+1; j < AmbDim; ++j )
+                {
+                    u[i] -= L[i][j] * u[j];
+                }
+                u[i] /= L[i][i];
+            }
+        }
+        
+        Real DF_SmallestEigenValue() const
+        {
+            if( AmbDim == 2)
+            {
+                Real lambda_min = half * (
+                    DF[0][0] + DF[1][1]
+                    - std::sqrt(
+                        std::abs(
+                            (DF[0][0]-DF[1][1])*(DF[0][0]-DF[1][1]) + four * DF[0][1]*DF[0][1]
+                        )
+                    )
+                );
+                
+                return lambda_min;
+            }
+                    
+            if( AmbDim == 3)
+            {
+                Real lambda_min;
+                
+                const Real p1 = DF[0][1]*DF[0][1] + DF[0][2]*DF[0][2] + DF[1][2]*DF[1][2];
+                
+                if( std::sqrt(p1) < eps * std::sqrt( DF[0][0]*DF[0][0] + DF[1][1]*DF[1][1] + DF[2][2]*DF[2][2]) )
+                {
+                    // DF is diagonal
+                    lambda_min = std::min( DF[0][0], std::min(DF[1][1],DF[2][2]) );
+                }
+                else
+                {
+                    const Real q         = ( DF[0][0] + DF[1][1] + DF[2][2] ) / three;
+                    const Real delta [3] = { DF[0][0]-q, DF[1][1]-q, DF[2][2]-q } ;
+                    const Real p2   = delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2] + two*p1;
+                    const Real p    = std::sqrt( p2 / static_cast<Real>(6) );
+                    const Real pinv = one/p;
+                    const Real b11  = delta[0] * pinv;
+                    const Real b22  = delta[1] * pinv;
+                    const Real b33  = delta[2] * pinv;
+                    const Real b12  = DF[0][1] * pinv;
+                    const Real b13  = DF[0][2] * pinv;
+                    const Real b23  = DF[1][2] * pinv;
+                    
+                    const Real r = half * (two * b12 * b23 * b13 - b11 * b23 * b23 - b12 *b12 * b33 + b11 * b22 * b33 - b13 *b13 * b22);
+                    
+                    
+                    const Real phi = ( r <= -one )
+                        ? ( static_cast<Real>(M_PI) / three )
+                        : ( ( r >= one ) ? zero : acos(r) / three );
+                    
+                    // The eigenvalues are ordered this way: eig2 <= eig1 <= eig0.
+
+//                    Real eig0 = q + two * p * cos( phi );
+//                    Real eig2 = q + two * p * cos( phi + two * M_PI/ three );
+//                    Real eig1 = three * q - eig0 - eig2;
+                       
+                    lambda_min = q + two * p * cos( phi + two * M_PI/ three );
+                }
+        
+                return lambda_min;
+            }
+                    
+            using Matrix_T = Eigen::Matrix<Real,AmbDim,AmbDim>;
+
+            Matrix_T Sigma (&DF[0][0]);
+            
+            Eigen::SelfAdjointEigenSolver<Matrix_T> eigs;
+            
+            eigs.compute(Sigma);
+
+            return eigs.eigenvalues()[0];
+        }
+        
+        Real Potential()
+        {
             Real value = 0;
             
-            const Real zz = Dot(z,z);
+            const Real zz = Dot_zz();
             
             const Real a = big_one + zz;
             const Real c = (big_one-zz);
@@ -356,11 +570,11 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Real yz2 = y_[AmbDim*k+0] * z[0];
+                Real yz2 = y[AmbDim*k+0] * z[0];
                 
                 for( Int i = 1; i < AmbDim; ++i )
                 {
-                    yz2 += y_[AmbDim*k+i] * z[i];
+                    yz2 += y[AmbDim*k+i] * z[i];
                 }
                 
                 value += r[k] * std::log(std::abs( (a - two * yz2) * b ) );
@@ -373,17 +587,19 @@ namespace CycleSampler
         void LineSearch_Hyperbolic_Residual()
         {
             // 2 F(0)^T.DF(0).u is the derivative of w\mapsto F(w)^T.F(w) at w = 0.
-            const Real slope = two * DF.InnerProduct(F,u);
+
+            //            const Real slope = two * DF.InnerProduct(F,u);
+            const Real slope = two * Dot_FDFu();
                         
             Real tau = one;
             
-            const Real u_norm = u.Norm();
+            const Real u_norm = std::sqrt(Dot_uu());
 
             // exponential map shooting from 0 to tau * u.
             Times( tau * tanhc(tau * u_norm), u, z );
             
             // Shift the point z along -w to get new updated point w .
-            InverseShift(z);
+            InverseShift();
             
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -415,7 +631,7 @@ namespace CycleSampler
                     Times( tau * tanhc(tau * u_norm), u, z );
                     
                     // Shift the point z along -w to get new updated point w .
-                    InverseShift(z);
+                    InverseShift();
                     
                     // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
                     Shift();
@@ -433,11 +649,19 @@ namespace CycleSampler
         {
             Real tau = one;
 
-            const Real u_norm = u.Norm();
+            const Real u_norm = std::sqrt(Dot_uu());
 
             // exponential map shooting from 0 to tau * u.
             
-            Times( tau * tanhc(tau * u_norm), u, z );
+//            Times( tau * tanhc(tau * u_norm), u, z );
+            {
+                const Real scale = tau * tanhc(tau * u_norm);
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    z[i] = scale * u[i];
+                }
+            }
             
             if( linesearchQ )
             {
@@ -447,7 +671,9 @@ namespace CycleSampler
                 
                 const Real sigma = settings.Armijo_slope_factor;
                 
-                const Real Dphi_0 = g_factor * Dot(F,u);
+//                const Real Dphi_0 = g_factor * Dot(F,u);
+                
+                const Real Dphi_0 = g_factor * Dot_Fu();
                 
                 Int backtrackings = 0;
 
@@ -455,7 +681,7 @@ namespace CycleSampler
 
 //                const Real phi_0 = Potential(o);
                 
-                Real phi_tau = Potential(z);
+                Real phi_tau = Potential();
 
                 ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
 
@@ -471,16 +697,25 @@ namespace CycleSampler
 
                     tau = std::max( tau_1, tau_2 );
                     
-                    Times( tau * tanhc(tau * u_norm), u, z );
+//                    Times( tau * tanhc(tau * u_norm), u, z );
                     
-                    phi_tau = Potential(z);
+                    {
+                        const Real scale = tau * tanhc(tau * u_norm);
+                        
+                        for( Int i = 0; i < AmbDim; ++i )
+                        {
+                            z[i] = scale * u[i];
+                        }
+                    }
+                    
+                    phi_tau = Potential();
                     
                     ArmijoQ = phi_tau  /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
                 }
             }
 
             // Shift the point z along -w to get new updated point w .
-            InverseShift(z);
+            InverseShift();
 
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -493,18 +728,16 @@ namespace CycleSampler
             // Assemble DF = nabla F + regulatization:
             // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
 
-            const Real * restrict const y_ = y.data();
-            
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[0] * y_[AmbDim*0+i];
+                    const Real factor = r[0] * y[AmbDim*0+i];
 
-                    F(i) = - factor;
+                    F[i] = - factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) = - factor * y_[AmbDim*0+j];
+                        DF[i][j] = - factor * y[AmbDim*0+j];
                     }
                 }
             }
@@ -513,13 +746,13 @@ namespace CycleSampler
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[k] * y_[AmbDim*k+i];
+                    const Real factor = r[k] * y[AmbDim*k+i];
 
-                    F(i) -= factor;
+                    F[i] -= factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF(i,j) -= factor * y_[AmbDim*k+j];
+                        DF[i][j] -= factor * y[AmbDim*k+j];
                     }
                 }
             }
@@ -527,24 +760,23 @@ namespace CycleSampler
             // Normalize for case that the weights in r do not sum to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                F(i) *= total_r_inv;
+                F[i] *= total_r_inv;
 
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    DF(i,j) *= total_r_inv;
+                    DF[i][j] *= total_r_inv;
                 }
             }
             
-            squared_residual = Dot(F,F);
+            squared_residual = Dot_FF();
 
             residual = std::sqrt( squared_residual );
 
-            F *= half;
-
-            // Better add the identity afterwards for precision reasons.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                DF(i,i) += one;
+                F[i] *= half;
+                // Better add the identity afterwards for precision reasons.
+                DF[i][i] += one;
             }
         }
             
@@ -554,7 +786,12 @@ namespace CycleSampler
             if( residual < static_cast<Real>(100.) * settings.tolerance )
             {
                 // We have to compute eigenvalue _before_ we add the regularization.
-                lambda_min = DF.SmallestEigenvalue();
+
+                //                lambda_min = DF.SmallestEigenvalue();
+                
+                lambda_min = DF_SmallestEigenValue();
+
+                
                 q = four * residual / (lambda_min * lambda_min);
                 
                 if( q < one )
@@ -589,15 +826,23 @@ namespace CycleSampler
             {
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    L(i,j) = DF(i,j) + static_cast<Real>(i==j) * c;
+                    L[i][j] = DF[i][j] + static_cast<Real>(i==j) * c;
                 }
             }
             
-            L.Cholesky();
+//            L.Cholesky();
             
-            L.CholeskySolve(F,u);
+            L_Cholesky();
             
-            u *= -one;
+            
+//            L.CholeskySolve(F,u);
+            L_CholeskySolve_Fu();
+            
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] *= -one;
+            }
         }
         
         void Gradient_Hyperbolic()
@@ -613,43 +858,41 @@ namespace CycleSampler
         
     public:
         
-        void InverseShift( const Vector_T & s )
+        void InverseShift()
         {
-            // Shift point w along -s.
+            // Shift point w along -z.
 
-            const Real ws2 = two * Dot(w,s);
-            const Real ww  = Dot(w,w);
-            const Real ss  = Dot(s,s);
+            const Real wz2 = two * Dot_wz();
+            const Real ww  = Dot_ww();
+            const Real zz  = Dot_zz();
 
             const Real a = one - ww;
-            const Real b = one + ss + ws2;
-            const Real c = big_one + ws2 + ww * ss;
+            const Real b = one + zz + wz2;
+            const Real c = big_one + wz2 + ww * zz;
             const Real d = one / c;
 
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w[i] = ( a * s[i] + b * w[i] ) * d;
+                w[i] = ( a * z[i] + b * w[i] ) * d;
             }
         }
         
         void Shift()
         {
-            S.Shift( x.data(), w.data(), y.data(), edge_count, one );
+            S.Shift( x, &w[0], y, edge_count, one );
         }
         
     public:
 
-        
-        virtual const SpherePoints_T & InitialEdgeCoordinates() const override
-        {
-            return x;
-        }
+//
+//        virtual const SpherePoints_T & InitialEdgeCoordinates() const override
+//        {
+//            return x;
+//        }
         
         virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) override
         {
-            x.Read( x_in );
-            
-            Real * restrict const x_ = x.data();
+            copy_buffer(x_in, x, edge_count * AmbDim );
             
             if( normalize )
             {
@@ -659,14 +902,14 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        r2 += x_[AmbDim*k+i] * x_[AmbDim*k+i];
+                        r2 += x[AmbDim*k+i] * x[AmbDim*k+i];
                     }
                     
                     const Real scale = one/std::sqrt(r2);
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        x_[AmbDim*k+i] *= scale;
+                        x[AmbDim*k+i] *= scale;
                     }
                 }
             }
@@ -679,7 +922,7 @@ namespace CycleSampler
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out ) const override
         {
-            x.Write(x_out);
+            copy_buffer( x, x_out, edge_count * AmbDim );
         }
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const override
@@ -693,14 +936,14 @@ namespace CycleSampler
 //            return y;
 //        }
         
-        virtual const SpherePoints_T & EdgeCoordinates() const override
-        {
-            return y;
-        }
+//        virtual const SpherePoints_T & EdgeCoordinates() const override
+//        {
+//            return y;
+//        }
         
         virtual void ReadEdgeCoordinates( const Real * const y_in ) override
         {
-            y.Read(y_in);
+            copy_buffer( y_in, y, edge_count * AmbDim );
         }
         
         virtual void ReadEdgeCoordinates( const Real * const y_in, const Int k ) override
@@ -710,7 +953,7 @@ namespace CycleSampler
         
         virtual void WriteEdgeCoordinates( Real * y_out ) const override
         {
-            y.Write(y_out);
+            copy_buffer( y, y_out, edge_count * AmbDim );
         }
         
         virtual void WriteEdgeCoordinates( Real * y_out, const Int k ) const override
@@ -720,14 +963,14 @@ namespace CycleSampler
         
         
         
-        virtual const SpacePoints_T & SpaceCoordinates() const override
-        {
-            return p;
-        }
+//        virtual const SpacePoints_T & SpaceCoordinates() const override
+//        {
+//            return p;
+//        }
                 
         virtual void WriteSpaceCoordinates( Real * p_out ) const  override
         {
-            p.Write(p_out);
+            copy_buffer( p, p_out, (edge_count+1)*AmbDim );
         }
         
         virtual void WriteSpaceCoordinates( Real * p_out, const Int k ) const override
@@ -743,16 +986,13 @@ namespace CycleSampler
             Real barycenter        [AmbDim] = {};
             Real point_accumulator [AmbDim] = {};
             
-            const Real * restrict const y_ = y.data();
-                  Real * restrict const p_ = p.data();
-            
             for( Int k = 0; k < edge_count; ++k )
             {
                 const Real r_k = r[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real offset = r_k * y_[AmbDim*k+i];
+                    const Real offset = r_k * y[AmbDim*k+i];
                     
                     barycenter[i] += (point_accumulator[i] + half * offset);
                     
@@ -762,7 +1002,7 @@ namespace CycleSampler
 
             for( Int i = 0; i < AmbDim; ++i )
             {
-                p_[AmbDim*0+i] = -barycenter[i]/edge_count;
+                p[AmbDim*0+i] = -barycenter[i]/edge_count;
             }
 
             for( Int k = 0; k < edge_count; ++k )
@@ -771,33 +1011,28 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p_[AmbDim*(k+1)+i] = p_[AmbDim*k+i] + r_k * y_[AmbDim*k+i];
+                    p[AmbDim*(k+1)+i] = p[AmbDim*k+i] + r_k * y[AmbDim*k+i];
                 }
             }
         }
         
-
-        virtual const Weights_T & EdgeLengths() const override
-        {
-            return r;
-        }
-        
         virtual void ReadEdgeLengths( const Real * const r_in ) override
         {
-            r.Read(r_in);
+            copy_buffer(r_in, r, edge_count);
             
-            total_r_inv = one / r.Total();
-        }
-        
-        
-        virtual const Weights_T & Rho() const override
-        {
-            return rho;
+            Real sum = 0;
+            
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                sum += r[k];
+            }
+            
+            total_r_inv = one / sum;
         }
         
         virtual void ReadRho( const Real * const rho_in ) override
         {
-            rho.Read(rho_in);
+            copy_buffer(rho_in, rho, edge_count);
         }
         
         
@@ -805,32 +1040,28 @@ namespace CycleSampler
         {
             Real w_ [AmbDim] = {};
             
-            const Real * restrict const x_ = x.data();
-            
             for( Int k = 0; k < edge_count; ++k )
             {
                 const Real r_k = r[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w_[i] += x_[AmbDim*k+i] * r_k;
+                    w_[i] += x[AmbDim*k+i] * r_k;
                 }
             }
             
             // Normalize in that case that r does not sum up to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w_[i] *= total_r_inv;
+                w[i] = w_[i] * total_r_inv;
             }
-            
-            w.Read(&w_[0]);
         }
         
         virtual void ReadShiftVector( const Real * const w_in ) override
         {
-            w.Read(w_in);
+            copy_buffer(&w_in[0], &w[0], AmbDim);
             
             // Use Euclidean barycenter as initial guess if the supplied initial guess does not make sense.
-            if( Dot(w,w) > small_one )
+            if( Dot_ww() > small_one )
             {
                 ComputeShiftVector();
             }
@@ -843,19 +1074,13 @@ namespace CycleSampler
         
         virtual void WriteShiftVector( Real * w_out ) const override
         {
-            w.Write(w_out);
+            copy_buffer(&w[0],&w_out[0],AmbDim);
         }
         
         virtual void WriteShiftVector( Real * w_out, const Int k ) const override
         {
-            w.Write(&w_out[ AmbDim * k]);
+            copy_buffer(&w[0],&w_out[ AmbDim * k],AmbDim);
         }
-        
-        const Vector_T & ShiftVector() const
-        {
-            return w;
-        }
-        
         
         virtual Real Residual() const override
         {
@@ -901,7 +1126,7 @@ namespace CycleSampler
 
                 Sampler W( edge_count, settings );
                 
-                W.ReadEdgeLengths( EdgeLengths().data() );
+                W.ReadEdgeLengths( r );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
@@ -947,8 +1172,8 @@ namespace CycleSampler
 
                 Sampler W( edge_count, settings );
 
-                W.ReadEdgeLengths( EdgeLengths().data() );
-                W.ReadRho( Rho().data() );
+                W.ReadEdgeLengths( r );
+                W.ReadRho( rho );
 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
@@ -1037,8 +1262,8 @@ namespace CycleSampler
 
                 Sampler W( edge_count, settings );
 
-                W.ReadEdgeLengths( EdgeLengths().data() );
-                W.ReadRho( Rho().data() );
+                W.ReadEdgeLengths( r );
+                W.ReadRho( rho );
 
                 std::vector< std::unique_ptr<RandomVariable_T> > F_list (fun_count);
 
@@ -1252,8 +1477,8 @@ namespace CycleSampler
 
                 Sampler W( edge_count, settings );
 
-                W.ReadEdgeLengths( EdgeLengths().data() );
-                W.ReadRho( Rho().data() );
+                W.ReadEdgeLengths( r );
+                W.ReadRho( rho );
 
                 std::map<std::string, std::tuple<Real,Real,Real>> map_loc;
 
@@ -1272,8 +1497,6 @@ namespace CycleSampler
 //                auto * p = &Gamma->cp[0].vt[0];
 
                 auto & p = W.SpaceCoordinates();
-                
-                const Real * restrict const p_ = p.data();
                 
                 for( Int l = 0; l < repetitions; ++l )
                 {
@@ -1303,7 +1526,7 @@ namespace CycleSampler
 
                         for( int i = 0; i < 3; ++i )
                         {
-                            v[i] = p_[AmbDim*k+i];
+                            v[i] = p[AmbDim*k+i];
                         }
                     }
                     
@@ -1378,8 +1601,6 @@ namespace CycleSampler
         
         void RandomizeInitialEdgeCoordinates() override
         {
-            Real * restrict const x_ = x.data();
-            
             for( Int k = 0; k < edge_count; ++k )
             {
                 Real r2 = static_cast<Real>(0);
@@ -1388,7 +1609,7 @@ namespace CycleSampler
                 {
                     const Real z = normal_dist( random_engine );
                     
-                    x_[AmbDim*k+i] = z;
+                    x[AmbDim*k+i] = z;
                     
                     r2 += z * z;
                 }
@@ -1397,7 +1618,7 @@ namespace CycleSampler
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    x_[AmbDim*k+i] *= r_inv;
+                    x[AmbDim*k+i] *= r_inv;
                 }
             }
         }
@@ -1456,7 +1677,7 @@ namespace CycleSampler
 
                     for( Int l = l_begin; l < l_end; ++l )
                     {
-                        Real * restrict x_ = &x_out[AmbDim * edge_count * l];
+                        Real * restrict x = &x_out[AmbDim * edge_count * l];
 
                         for( Int k = 0; k < edge_count; ++k )
                         {
@@ -1473,7 +1694,7 @@ namespace CycleSampler
 
                             for( Int i = 0; i < AmbDim; ++i )
                             {
-                                x_[ AmbDim * k + i ] = v[i] * r_inv;
+                                x[ AmbDim * k + i ] = v[i] * r_inv;
                             }
                         }
                     }

@@ -485,7 +485,7 @@ namespace CycleSampler
 
             for( Int k = 0; k < n; ++k )
             {
-                Real y    [AmbDim];
+                Real y [AmbDim];
 
                 Real wy = zero;
 
