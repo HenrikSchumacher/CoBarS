@@ -126,9 +126,9 @@ namespace CycleSampler
         virtual void Optimize() = 0;
         
         virtual void OptimizeBatch(
-            const Real * const x_in,
-                  Real *       w_out,
-                  Real *       y_out,
+                  Real * const x_in,
+                  Real * const w_out,
+                  Real * const y_out,
             const Int sample_count,
             const Int thread_count = 1,
             bool normalize = true
@@ -142,9 +142,9 @@ namespace CycleSampler
         
         virtual const Real * InitialEdgeCoordinates() const = 0;
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) = 0;
+        virtual void LoadInitialEdgeCoordinates( Real * const x_in, bool normalize = true ) = 0;
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int i, bool normalize = true ) = 0;
+        virtual void LoadInitialEdgeCoordinates( Real * const x_in, const Int k, bool normalize = true ) = 0;
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out ) const = 0;
         
@@ -163,13 +163,13 @@ namespace CycleSampler
                 
         virtual const Real * EdgeCoordinates() const = 0;
         
-        virtual void ReadEdgeCoordinates( const Real * const y_in ) = 0;
+        virtual void LoadEdgeCoordinates( Real * const y_in ) = 0;
         
-        virtual void ReadEdgeCoordinates( const Real * const y_in, const Int i ) = 0;
+        virtual void LoadEdgeCoordinates( Real * const y_in, const Int k ) = 0;
         
-        virtual void WriteEdgeCoordinates( Real * y_in ) const = 0;
+        virtual void WriteEdgeCoordinates( Real * y_out ) const = 0;
         
-        virtual void WriteEdgeCoordinates( Real * y_in, const Int i ) const = 0;
+        virtual void WriteEdgeCoordinates( Real * y_out, const Int i ) const = 0;
         
         
 //        virtual Real * SpaceCoordinates() = 0;

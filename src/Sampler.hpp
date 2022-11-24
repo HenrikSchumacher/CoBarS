@@ -4,13 +4,10 @@
 #define y(k,i) y_buffer[AmbDim*k+i]
 #define p(k,i) p_buffer[AmbDim*k+i]
 
-//#define x(k,i) x_buffer(k,i)
-//#define y(k,i) y_buffer(k,i)
-//#define p(k,i) p_buffer(k,i)
-
-namespace CycleSampler {
+namespace CycleSampler
+{
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
+    template<int AmbDim, typename Real = double, typename Int = long long, bool copy = true >
     class Sampler : public SamplerBase<Real,Int>
     {
         ASSERT_FLOAT(Real);
@@ -40,9 +37,15 @@ namespace CycleSampler {
         
         virtual ~Sampler()
         {
-            safe_free( x_buffer );
-            safe_free( y_buffer );
-            safe_free( p_buffer );
+            if constexpr ( copy )
+            {
+                safe_free( x_buffer );
+                safe_free( y_buffer );
+                safe_free( p_buffer );
+            }
+            
+            safe_free( r );
+            safe_free( rho );
         }
         
         explicit Sampler(
@@ -51,9 +54,12 @@ namespace CycleSampler {
         )
         :   Base_T( edge_count_, settings_ )
         {
-            safe_alloc( x_buffer,  edge_count    * AmbDim );
-            safe_alloc( y_buffer,  edge_count    * AmbDim );
-            safe_alloc( p_buffer, (edge_count+1) * AmbDim );
+            if constexpr ( copy )
+            {
+                safe_alloc( x_buffer,  edge_count    * AmbDim );
+                safe_alloc( y_buffer,  edge_count    * AmbDim );
+                safe_alloc( p_buffer, (edge_count+1) * AmbDim );
+            }
             
             safe_alloc ( r,   edge_count );
             fill_buffer( r,   edge_count, one / edge_count );
@@ -71,9 +77,12 @@ namespace CycleSampler {
         )
         :   Base_T( edge_count_, settings_ )
         {
-            safe_alloc( x_buffer,  edge_count    * AmbDim );
-            safe_alloc( y_buffer,  edge_count    * AmbDim );
-            safe_alloc( p_buffer, (edge_count+1) * AmbDim );
+            if constexpr ( copy )
+            {
+                safe_alloc( x_buffer,  edge_count    * AmbDim );
+                safe_alloc( y_buffer,  edge_count    * AmbDim );
+                safe_alloc( p_buffer, (edge_count+1) * AmbDim );
+            }
             
             safe_alloc ( r, edge_count );
             copy_buffer( r_in, r, edge_count );
@@ -644,40 +653,51 @@ namespace CycleSampler {
         
     public:
 
+        void Normalize()
+        {
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                Real r2 = 0;
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    r2 += x(k,i) * x(k,i);
+                }
+                
+                const Real scale = one/std::sqrt(r2);
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    x(k,i) *= scale;
+                }
+            }
+        }
         
         virtual const Real * InitialEdgeCoordinates() const override
         {
             return x_buffer;
         }
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) override
+        virtual void LoadInitialEdgeCoordinates( Real * const x_in, bool normalize = true ) override
         {
-            copy_buffer( x_in, x_buffer, edge_count * AmbDim );
+            if constexpr ( copy )
+            {
+                copy_buffer( x_in, x_buffer, edge_count * AmbDim );
+            }
+            else
+            {
+                x_buffer = x_in;
+            }
             
             if( normalize )
             {
-                for( Int k = 0; k < edge_count; ++k )
-                {
-                    Real r2 = 0;
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        r2 += x(k,i) * x(k,i);
-                    }
-                    
-                    const Real scale = one/std::sqrt(r2);
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        x(k,i) *= scale;
-                    }
-                }
+                Normalize();
             }
         }
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true ) override
+        virtual void LoadInitialEdgeCoordinates( Real * const x_in, const Int k, bool normalize = true ) override
         {
-            ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize);
+            LoadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize);
         }
         
         virtual void WriteInitialEdgeCoordinates( Real * x_out ) const override
@@ -701,14 +721,21 @@ namespace CycleSampler {
             return y_buffer;
         }
         
-        virtual void ReadEdgeCoordinates( const Real * const y_in ) override
+        virtual void LoadEdgeCoordinates( Real * const y_in ) override
         {
-            copy_buffer( y_in, y_buffer, edge_count * AmbDim );
+            if constexpr ( copy )
+            {
+                copy_buffer( y_in, y_buffer, edge_count * AmbDim );
+            }
+            else
+            {
+                y_buffer = y_in;
+            }
         }
         
-        virtual void ReadEdgeCoordinates( const Real * const y_in, const Int k ) override
+        virtual void LoadEdgeCoordinates( Real * const y_in, const Int k ) override
         {
-            ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
+            LoadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
         }
         
         virtual void WriteEdgeCoordinates( Real * y_out ) const override
@@ -886,9 +913,9 @@ namespace CycleSampler {
     public:
         
         virtual void OptimizeBatch(
-            const Real * const x_in,
-                  Real *       w_out,
-                  Real *       y_out,
+                  Real * const x_in,
+                  Real * const w_out,
+                  Real * const y_out,
             const Int sample_count,
             const Int thread_count = 1,
             bool normalize = true
@@ -910,15 +937,23 @@ namespace CycleSampler {
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
-                    W.ReadInitialEdgeCoordinates( x_in, k, normalize );
-
+                    W.LoadInitialEdgeCoordinates( x_in, k, normalize );
+                    
+                    if constexpr ( !copy )
+                    {
+                        W.LoadEdgeCoordinates( y_out, k );
+                    }
+                    
                     W.ComputeShiftVector();
                     
                     W.Optimize();
                     
                     W.WriteShiftVector( w_out, k );
-
-                    W.WriteEdgeCoordinates( y_out, k );
+                    
+                    if constexpr ( copy )
+                    {
+                        W.WriteEdgeCoordinates( y_out, k );
+                    }
                 }
             }
             
@@ -957,17 +992,29 @@ namespace CycleSampler {
 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
+                    if constexpr ( !copy )
+                    {
+                        W.LoadInitialEdgeCoordinates( x_out, k );
+                        W.LoadEdgeCoordinates( y_out, k );
+                    }
+                    
                     W.RandomizeInitialEdgeCoordinates();
 
-                    W.WriteInitialEdgeCoordinates(x_out, k);
+                    if constexpr ( copy )
+                    {
+                        W.WriteInitialEdgeCoordinates( x_out, k );
+                    }
                     
                     W.ComputeShiftVector();
 
                     W.Optimize();
                     
-                    W.WriteShiftVector(w_out, k);
+                    W.WriteShiftVector( w_out, k );
                     
-                    W.WriteEdgeCoordinates(y_out, k);
+                    if constexpr ( copy )
+                    {
+                        W.WriteEdgeCoordinates(y_out, k);
+                    }
                     
                     W.ComputeEdgeSpaceSamplingWeight();
 
