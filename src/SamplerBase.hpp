@@ -84,7 +84,13 @@ namespace CycleSampler
         
         SamplerBase()
         {
-            random_engine = std::mt19937_64( std::random_device()() );
+//            std::random_device r;
+            
+//            std::seed_seq seed { r(), r(), r(), r()   };
+            
+            std::seed_seq seed {1};
+            
+            random_engine = std::mt19937_64( seed );
         }
         
         explicit SamplerBase(
@@ -94,9 +100,11 @@ namespace CycleSampler
         :   edge_count(edge_count_)
         ,   settings(settings_)
         {
-            std::random_device r;
+//            std::random_device r;
             
-            std::seed_seq seed { r(), r(), r(), r()   };
+//            std::seed_seq seed { r(), r(), r(), r()   };
+            
+            std::seed_seq seed {1};
             
             random_engine = std::mt19937_64( seed );
         }
@@ -132,7 +140,7 @@ namespace CycleSampler
 //            const bool normalize = true
 //        ) = 0;
         
-//        virtual const SpherePoints_T & InitialEdgeCoordinates() const = 0;
+        virtual const Real * InitialEdgeCoordinates() const = 0;
         
         virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) = 0;
         
@@ -143,20 +151,17 @@ namespace CycleSampler
         virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const = 0;
         
         
-        
-//        virtual const Weights_T & EdgeLengths() const = 0;
+        virtual const Real * EdgeLengths() const = 0;
         
         virtual void ReadEdgeLengths( const Real * const r_in ) = 0;
         
         
-//        virtual const Weights_T & Rho() const = 0;
+        virtual const Real * Rho() const = 0;
         
         virtual void ReadRho( const Real * const rho_in ) = 0;
         
-        
-//        virtual SpherePoints_T & EdgeCoordinates() = 0;
-        
-//        virtual const SpherePoints_T & EdgeCoordinates() const = 0;
+                
+        virtual const Real * EdgeCoordinates() const = 0;
         
         virtual void ReadEdgeCoordinates( const Real * const y_in ) = 0;
         
@@ -167,9 +172,9 @@ namespace CycleSampler
         virtual void WriteEdgeCoordinates( Real * y_in, const Int i ) const = 0;
         
         
-//        virtual SpacePoints_T & SpaceCoordinates() = 0;
+//        virtual Real * SpaceCoordinates() = 0;
         
-//        virtual const SpacePoints_T & SpaceCoordinates() const = 0;
+        virtual const Real * SpaceCoordinates() const = 0;
         
         virtual void WriteSpaceCoordinates( Real * y_in ) const = 0;
         
@@ -244,7 +249,6 @@ namespace CycleSampler
         {
             return settings;
         }
-            
         
     public:
         

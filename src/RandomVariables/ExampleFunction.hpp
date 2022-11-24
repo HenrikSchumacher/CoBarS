@@ -23,21 +23,21 @@ protected:
     // We provide hooks for the most interesting of them.
     virtual Real operator()( const Sampler_T & C ) const override
     {
-        const Int edge_count = C.EdgeCount();
+        const Int n = C.EdgeCount();
         
-        // The space coordinates as a edge_count x AmbDim matrix.
+        // The space coordinates as a (n+1) x AmbDim matrix.
         const Real * restrict const p = C.SpaceCoordinates();
         
-        // The edge lengths as a vector of length edge_count.
+        // The edge lengths as a vector of length n.
         const Real * restrict const edge_lengths = C.EdgeLengths();
         
-        // The unit edge vectors of the conformally barycentered curve.
+        // The unit edge vectors of the conformally barycentered curve (array of size n x AmbDim).
         const Real * restrict const y = C.EdgeCoordinates();
 
-        // The unit edge vectors of the open polygonal curve.
+        // The unit edge vectors of the open polygonal curve (array of size n x AmbDim).
         const Real * restrict const x = C.InitialEdgeCoordinates();
 
-        // The shift vector (conformal barycenter of x w.r.t. edge_lengths).
+        // The shift vector (conformal barycenter of x w.r.t. edge_lengths) (array of size n AmbDim).
         const Real * restrict const w = C.ShiftVector();
 
         // DO SOMETHING MEANINGFUL HERE.
