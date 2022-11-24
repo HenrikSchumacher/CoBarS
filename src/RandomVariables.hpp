@@ -4,7 +4,7 @@
 #include "RandomVariables/RandomVariableBase.hpp"
 #include "RandomVariables/RandomVariable.hpp"
 
-namespace CyclicSampler
+namespace CycleSampler
 {
     #include "RandomVariables/BarycenterNorm.hpp"   // Should always evaluate to 0.
     #include "RandomVariables/ChordLength.hpp"
@@ -21,6 +21,7 @@ namespace CyclicSampler
     #include "RandomVariables/IterationCount.hpp"
         
         
-    // Add your own random variables here.
+        // Add your own random variables here.
     #include "RandomVariables/ExampleFunction.hpp"
-}
+    
+} // namespace CycleSampler

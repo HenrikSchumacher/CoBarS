@@ -1,41 +1,39 @@
 #pragma once
 
-#define CLASS BendingEnergy
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class BendingEnergy : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using CyclicSampler_T   = typename BASE::CyclicSampler_T;
-    using SpherePoints_T    = typename BASE::SpherePoints_T;
-    using SpacePoints_T     = typename BASE::SpacePoints_T;
-    using Weights_T         = typename BASE::Weights_T;
+    using Base_T            = RandomVariable<AmbDim,Real,Int>;
+    using Sampler_T         = typename Base_T::Sampler_T;
+    using SpherePoints_T    = typename Base_T::SpherePoints_T;
+    using SpacePoints_T     = typename Base_T::SpacePoints_T;
+    using Weights_T         = typename Base_T::Weights_T;
     
-    explicit CLASS( const Real p_ )
+    explicit BendingEnergy( const Real p_ )
     :   p( p_ )
     {}
     
     // Copy constructor
-    explicit CLASS( const CLASS & other )
+    explicit BendingEnergy( const BendingEnergy & other )
     :   p( other.p )
     {}
 
     // Move constructor
-    explicit CLASS( CLASS && other ) noexcept
+    explicit BendingEnergy( BendingEnergy && other ) noexcept
     :   p( other.p )
     {}
     
-    virtual ~CLASS() override = default;
+    virtual ~BendingEnergy() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(BendingEnergy)
 
 protected:
     
     const Real p;
     
-    virtual Real operator()( const CyclicSampler_T & C ) const override
+    virtual Real operator()( const Sampler_T & C ) const override
     {
         const Int n              = C.EdgeCount();
         const SpherePoints_T & y = C.EdgeCoordinates();
@@ -63,12 +61,12 @@ protected:
         return sum/p;
     }
     
-    virtual Real MinValue( const CyclicSampler_T & C ) const override
+    virtual Real MinValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(0);
     }
     
-    virtual Real MaxValue( const CyclicSampler_T & C ) const override
+    virtual Real MaxValue( const Sampler_T & C ) const override
     {
         const Int n         = C.EdgeCount();
         const Weights_T & r = C.EdgeLengths();
@@ -100,10 +98,7 @@ public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS)+"("+ToString(p)+")";
+        return "BendingEnergy("+ToString(p)+")";
     }
 };
-
-#undef BASE
-#undef CLASS
     

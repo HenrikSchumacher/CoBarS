@@ -1,17 +1,17 @@
 #pragma once
 
 #define CLASS MaxAngle
-#define BASE  RandomVariable<AmbDim,Real,Int>
 
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class CLASS : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using CyclicSampler_T   = typename BASE::CyclicSampler_T;
-    using SpherePoints_T    = typename BASE::SpherePoints_T;
-    using SpacePoints_T     = typename BASE::SpacePoints_T;
-    using Weights_T         = typename BASE::Weights_T;
+    using Base_T            = RandomVariable<AmbDim,Real,Int>;
+    using Sampler_T         = typename Base_T::Sampler_T;
+    using SpherePoints_T    = typename Base_T::SpherePoints_T;
+    using SpacePoints_T     = typename Base_T::SpacePoints_T;
+    using Weights_T         = typename Base_T::Weights_T;
     
     CLASS() = default;
     
@@ -21,7 +21,7 @@ public:
 
 protected:
     
-    virtual Real operator()( const CyclicSampler_T & C ) const override
+    virtual Real operator()( const Sampler_T & C ) const override
     {
         
         const Int n              = C.EdgeCount();
@@ -45,12 +45,12 @@ protected:
         return max_angle;
     }
     
-    virtual Real MinValue( const CyclicSampler_T & C ) const override
+    virtual Real MinValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(0);
     }
     
-    virtual Real MaxValue( const CyclicSampler_T & C ) const override
+    virtual Real MaxValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(M_PI);
     }

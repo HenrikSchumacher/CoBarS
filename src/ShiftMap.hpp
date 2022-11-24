@@ -1,20 +1,19 @@
 #pragma once
 
-namespace CyclicSampler {
-
-#define CLASS ShiftMap
+namespace CycleSampler
+{
 
     template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS
+    class ShiftMap
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
     public:
         
-        CLASS() = default;
+        ShiftMap() = default;
         
-        virtual ~CLASS(){}
+        virtual ~ShiftMap(){}
         
         static constexpr Real zero              = 0;
         static constexpr Real half              = 0.5;
@@ -65,7 +64,6 @@ namespace CyclicSampler {
 
             if( ss <= norm_threshold )
             {
-//                #pragma clang loop vectorize(assume_safety)
                 for( Int k = 0; k < n; ++k )
                 {
                     Real sz2 = 0;
@@ -93,7 +91,6 @@ namespace CyclicSampler {
             {
                 // If w lies close to the boundary of the ball, then normalizing the output is a good idea.
 
-//                #pragma clang loop vectorize(assume_safety)
                 for( Int k = 0; k < n; ++k )
                 {
                     Real sz2 = 0;
@@ -558,7 +555,5 @@ namespace CyclicSampler {
             return "ShiftMap<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
         }
     };
-        
-#undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler

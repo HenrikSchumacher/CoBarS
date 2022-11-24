@@ -1,8 +1,8 @@
-# CyclicSampler
+# CycleSampler
 
 by Jason Cantarella and Henrik Schumacher
 
-A program for Monte-Carlo sampling of cylic polygons with prescribed edge lengths.
+A program for Monte-Carlo sampling of cyclic polygons with prescribed edge lengths.
 
 # Installation
 

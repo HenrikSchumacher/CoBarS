@@ -1,14 +1,14 @@
 #pragma once
 
 #define CLASS EdgeSpaceSamplingWeight
-#define BASE  RandomVariable<AmbDim,Real,Int>
 
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+class CLASS : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using CyclicSampler_T   = typename BASE::CyclicSampler_T;
+    using Base_T      = RandomVariable<AmbDim,Real,Int>;
+    using Sampler_T   = typename Base_T::Sampler_T;
     
     CLASS() = default;
     
@@ -19,17 +19,17 @@ public:
 protected:
     
     
-    virtual Real operator()( const CyclicSampler_T & C ) const override
+    virtual Real operator()( const Sampler_T & C ) const override
     {
         return C.EdgeSpaceSamplingWeight();
     }
     
-    virtual Real MinValue( const CyclicSampler_T & C ) const override
+    virtual Real MinValue( const Sampler_T & C ) const override
     {
         return static_cast<Real>(0);
     }
     
-    virtual Real MaxValue( const CyclicSampler_T & C ) const override
+    virtual Real MaxValue( const Sampler_T & C ) const override
     {
 //            return static_cast<Real>(1)/( std::pow( C.EdgeCount(), AmbDim-1) );
         return static_cast<Real>(1)/( C.EdgeCount() );

@@ -1,12 +1,11 @@
 #pragma once
 
 
-#define CLASS SmallSymmetricMatrix
-
-namespace CyclicSampler {
+namespace CycleSampler
+{
         
     template< int AmbDim, typename Real, typename Int>
-    struct CLASS
+    struct SmallSymmetricMatrix
     {
     public:
         
@@ -25,17 +24,17 @@ namespace CyclicSampler {
         
         Real A [AmbDim][AmbDim] = {};
         
-         CLASS() = default;
+        SmallSymmetricMatrix() = default;
        
-        ~CLASS() = default;
+        ~SmallSymmetricMatrix() = default;
         
-        explicit CLASS( const Real init )
+        explicit SmallSymmetricMatrix( const Real init )
         {
             Fill(init);
         }
         
         // Copy constructor
-        CLASS( const CLASS & other )
+        SmallSymmetricMatrix( const SmallSymmetricMatrix & other )
         {
             Read( &other.A[0][0] );
         }
@@ -70,9 +69,12 @@ namespace CyclicSampler {
             return A[i][j];
         }
         
-        friend CLASS operator+( const CLASS & x, const CLASS & y )
+        friend SmallSymmetricMatrix operator+(
+            const SmallSymmetricMatrix & x,
+            const SmallSymmetricMatrix & y
+        )
         {
-            CLASS z;
+            SmallSymmetricMatrix z;
             for( Int i = 0; i < AmbDim; ++i )
             {
                 for( Int j = i; j < AmbDim; ++j )
@@ -83,7 +85,7 @@ namespace CyclicSampler {
             return z;
         }
         
-        void operator+=( const CLASS & B )
+        void operator+=( const SmallSymmetricMatrix & B )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -94,7 +96,7 @@ namespace CyclicSampler {
             }
         }
         
-        void operator*=( const CLASS & B )
+        void operator*=( const SmallSymmetricMatrix & B )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -105,7 +107,7 @@ namespace CyclicSampler {
             }
         }
         
-        CLASS & operator=( const CLASS & B )
+        SmallSymmetricMatrix & operator=( const SmallSymmetricMatrix & B )
         {
             Read(&B.A[0][0]);
             
@@ -377,7 +379,7 @@ namespace CyclicSampler {
 //                return sign * M(AmbDim-1,AmbDim-1);
 //            }
         
-//            #pragma omp declare reduction( + : CLASS : omp_out+=omp_in )
+//            #pragma omp declare reduction( + : SmallSymmetricMatrix : omp_out+=omp_in )
         
     public:
         
@@ -388,11 +390,10 @@ namespace CyclicSampler {
         
         static std::string ClassName()
         {
-            return "CLASS<"+std::to_string(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
+            return "SmallSymmetricMatrix<"+std::to_string(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+">";
         }
         
     };
         
-} // namespace CyclicSampler
+} // namespace CycleSampler
 
-#undef CLASS

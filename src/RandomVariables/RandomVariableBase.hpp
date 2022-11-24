@@ -1,6 +1,7 @@
 #pragma once
 
-namespace CyclicSampler {
+namespace CycleSampler
+{
     
 #define CLASS RandomVariableBase
 
@@ -15,15 +16,15 @@ namespace CyclicSampler {
     
     public:
         
-        using CyclicSampler_T = CyclicSamplerBase<Real,Int>;
+        using Sampler_T = SamplerBase<Real,Int>;
         
         virtual ~CLASS() {}
             
-        virtual Real operator()( const CyclicSampler_T & C ) const = 0;
+        virtual Real operator()( const Sampler_T & C ) const = 0;
         
-        virtual Real MinValue( const CyclicSampler_T & C ) const = 0;
+        virtual Real MinValue( const Sampler_T & C ) const = 0;
         
-        virtual Real MaxValue( const CyclicSampler_T & C ) const = 0;
+        virtual Real MaxValue( const Sampler_T & C ) const = 0;
         
         __ADD_CLONE_CODE_FOR_BASE_CLASS__(CLASS)
         
@@ -39,4 +40,4 @@ namespace CyclicSampler {
     };
 #undef CLASS
         
-} // namespace CyclicSampler
+} // namespace CycleSampler

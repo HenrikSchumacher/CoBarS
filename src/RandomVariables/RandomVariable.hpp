@@ -1,42 +1,57 @@
 #pragma once
 
-namespace CyclicSampler {
-
-#define CLASS RandomVariable
-#define BASE  RandomVariableBase<Real,Int>
+namespace CycleSampler
+{
 
     template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public BASE
+    class RandomVariable : public RandomVariableBase<Real,Int>
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
     public:
         
-        using CyclicSampler_T   = typename BASE::CyclicSampler_T;
-        using SpherePoints_T    = typename CyclicSampler_T::SpherePoints_T;
-        using SpacePoints_T     = typename CyclicSampler_T::SpacePoints_T;
-        using Weights_T         = typename CyclicSampler_T::Weights_T;
-        using Vector_T          = typename CyclicSampler<AmbDim,Real,Int>::Vector_T;
+        using SamplerBase_T     = SamplerBase<Real,Int>;
+        using Sampler_T         = Sampler<AmbDim,Real,Int>;
+        using SpherePoints_T    = typename Sampler_T::SpherePoints_T;
+        using SpacePoints_T     = typename Sampler_T::SpacePoints_T;
+        using Weights_T         = typename Sampler_T::Weights_T;
+        using Vector_T          = typename Sampler_T::Vector_T;
         
-        CLASS() = default;
+        RandomVariable() = default;
         
-        virtual ~CLASS(){}
+        virtual ~RandomVariable(){}
         
-        virtual Real operator()( const CyclicSampler_T & C ) const override = 0;
+        virtual Real operator()( const SamplerBase_T & S ) const override
+        {
+            return this->operator()( dynamic_cast<const Sampler_T&>(S) );
+        }
         
-        virtual Real MinValue( const CyclicSampler_T & C ) const override = 0;
+        virtual Real operator()( const Sampler_T & S ) const = 0;
         
-        virtual Real MaxValue( const CyclicSampler_T & C ) const override = 0;
+        virtual Real MinValue( const SamplerBase_T & S ) const override
+        {
+            return this->MinValue( dynamic_cast<const Sampler_T&>(S) );
+        }
         
-        __ADD_CLONE_CODE_FOR_ABSTRACT_CLASS__(CLASS)
+        virtual Real MinValue( const Sampler_T & S ) const = 0;
+        
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
+        {
+            return this->MinValue( dynamic_cast<const Sampler_T&>(S) );
+        }
+        
+        virtual Real MaxValue( const Sampler_T & S ) const = 0;
 
-        virtual CLASS & DownCast() override
+        
+        __ADD_CLONE_CODE_FOR_ABSTRACT_CLASS__(RandomVariable)
+
+        virtual RandomVariable & DownCast() override
         {
             return *this;
         }
         
-        virtual const CLASS & DownCast() const override
+        virtual const RandomVariable & DownCast() const override
         {
             return *this;
         }
@@ -50,8 +65,5 @@ namespace CyclicSampler {
         
         virtual std::string Tag() const override = 0;
     };
-        
-#undef BASE
-#undef CLASS
     
-} // namespace CyclicSampler
+} // namespace CycleSampler
