@@ -158,7 +158,7 @@ namespace CycleSampler
         {
             for( Int k = 0; k < AmbDim; ++k )
             {
-                const Real a = A[k][k] = sqrt(A[k][k]);
+                const Real a = A[k][k] = std::sqrt(A[k][k]);
                 const Real ainv = one/a;
 
                 for( Int j = k+1; j < AmbDim; ++j )

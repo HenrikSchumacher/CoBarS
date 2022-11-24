@@ -103,13 +103,13 @@ namespace CycleSampler
         
         Real total_r_inv = one;
         
-        Vector_T w;           // current point in hyperbolic space.
         Vector_T F;           // right hand side of Newton iteration.
         SymmetricMatrix_T DF; // nabla F(0) with respect to measure ys
-        SymmetricMatrix_T L;  // storing Cholesky factor.
-        Vector_T u;           // update direction
 
+        Real w [AmbDim];           // current point in hyperbolic space.
+        Real u [AmbDim];           // update direction
         Real z [AmbDim];           // Multiple purpose buffer.
+        Real A [AmbDim][AmbDim];   // For Cholesky factorization.
         
         ShiftMap<AmbDim,Real,Int> S;
         
@@ -179,7 +179,7 @@ namespace CycleSampler
         void ComputeEdgeSpaceSamplingWeight()
         {
             edge_space_sampling_weight =  S.EdgeSpaceSamplingWeight(
-                x_buffer, w.data(), y_buffer, r, rho, edge_count
+                x_buffer, &w[0], y_buffer, r, rho, edge_count
             );
         }
         
@@ -408,7 +408,14 @@ namespace CycleSampler
         {
             Real tau = one;
 
-            const Real u_norm = u.Norm();
+            Real uu = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                uu += u[i] * u[i];
+            }
+            
+            const Real u_norm = std::sqrt(uu);
 
             // exponential map shooting from 0 to tau * u.
             {
@@ -427,7 +434,14 @@ namespace CycleSampler
                 
                 const Real sigma = settings.Armijo_slope_factor;
                 
-                const Real Dphi_0 = g_factor * Dot(F,u);
+                Real Dphi_0 = 0;
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    Dphi_0 += F[i] * u[i];
+                }
+                
+                Dphi_0 *= g_factor;
                 
                 Int backtrackings = 0;
 
@@ -573,18 +587,18 @@ namespace CycleSampler
             {
                 for( Int j = i; j < AmbDim; ++j )
                 {
-                    L(i,j) = DF(i,j) + static_cast<Real>(i==j) * c;
+                    A[i][j] = DF(i,j) + static_cast<Real>(i==j) * c;
                 }
             }
             
-            L.Cholesky();
-            
-            L.CholeskySolve(F,u);
+            Cholesky();
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                u[i] *= -one;
+                u[i] = -F[i];
             }
+            
+            CholeskySolve();
         }
         
         void Gradient_Hyperbolic()
@@ -636,7 +650,7 @@ namespace CycleSampler
         
         void Shift()
         {
-            S.Shift( x_buffer, w.data(), y_buffer, edge_count, one );
+            S.Shift( x_buffer, &w[0], y_buffer, edge_count, one );
         }
         
     public:
@@ -839,18 +853,23 @@ namespace CycleSampler
             // Normalize in that case that r does not sum up to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w_[i] *= total_r_inv;
+                w[i] = w_[i] * total_r_inv;
             }
-            
-            w.Read(&w_[0]);
         }
         
         virtual void ReadShiftVector( const Real * const w_in ) override
         {
-            w.Read(w_in);
+            Real ww = 0;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                w[i] = w_in[i];
+                
+                ww += w[i] * w[i];
+            }
             
             // Use Euclidean barycenter as initial guess if the supplied initial guess does not make sense.
-            if( Dot(w,w) > small_one )
+            if( ww > small_one )
             {
                 ComputeShiftVector();
             }
@@ -863,17 +882,20 @@ namespace CycleSampler
         
         virtual void WriteShiftVector( Real * w_out ) const override
         {
-            w.Write(w_out);
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                w_out[i] = w[i];
+            }
         }
         
         virtual void WriteShiftVector( Real * w_out, const Int k ) const override
         {
-            w.Write(&w_out[ AmbDim * k]);
+            WriteShiftVector(&w_out[ AmbDim * k]);
         }
         
-        const Vector_T & ShiftVector() const
+        const Real * ShiftVector() const
         {
-            return w;
+            return &w[0];
         }
         
         
@@ -1485,6 +1507,53 @@ namespace CycleSampler
         }
         
     protected:
+        
+        void Cholesky()
+        {
+            for( Int k = 0; k < AmbDim; ++k )
+            {
+                const Real a = A[k][k] = std::sqrt(A[k][k]);
+                const Real ainv = one/a;
+
+                for( Int j = k+1; j < AmbDim; ++j )
+                {
+                    A[k][j] *= ainv;
+                }
+
+                for( Int i = k+1; i < AmbDim; ++i )
+                {
+                    for( Int j = i; j < AmbDim; ++j )
+                    {
+                        A[i][j] -= A[k][i] * A[k][j];
+                    }
+                }
+            }
+        }
+        
+        void CholeskySolve()
+        {
+            //In-place solve.
+            
+            // Lower triangular back substitution
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                for( Int j = 0; j < i; ++j )
+                {
+                    u[i] -= A[j][i] * u[j];
+                }
+                u[i] /= A[i][i];
+            }
+            
+            // Upper triangular back substitution
+            for( Int i = AmbDim-1; i > -1; --i )
+            {
+                for( Int j = i+1; j < AmbDim; ++j )
+                {
+                    u[i] -= A[i][j] * u[j];
+                }
+                u[i] /= A[i][i];
+            }
+        }
         
         Real tanhc( const Real t ) const
         {
