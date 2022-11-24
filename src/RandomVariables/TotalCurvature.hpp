@@ -1,44 +1,37 @@
 #pragma once
 
-#define CLASS TotalCurvature
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public RandomVariable<AmbDim,Real,Int>
+class TotalCurvature : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using Base_T            = RandomVariable<AmbDim,Real,Int>;
-    using Sampler_T         = typename Base_T::Sampler_T;
-    using SpherePoints_T    = typename Base_T::SpherePoints_T;
-    using SpacePoints_T     = typename Base_T::SpacePoints_T;
-    using Weights_T         = typename Base_T::Weights_T;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
     
-    CLASS() = default;
+    TotalCurvature() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~TotalCurvature() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(TotalCurvature)
 
 protected:
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
         
-        const Int n              = C.EdgeCount();
-        const SpherePoints_T & y = C.EdgeCoordinates();
+        const Int n                   = C.EdgeCount();
+        const Real * restrict const y = C.EdgeCoordinates();
 
         Real sum;
         
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( &y[AmbDim*(n-1)], &y[AmbDim*0] );
             
             sum = phi;
         }
         
         for( Int k = 0; k < n-1; ++k )
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( &y[AmbDim*k], &y[AmbDim*(k+1)] );
             
             sum += phi;
         }
@@ -60,9 +53,6 @@ public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS);
+        return "TotalCurvature";
     }
 };
-
-#undef BASE
-#undef CLASS

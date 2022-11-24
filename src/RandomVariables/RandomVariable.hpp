@@ -2,21 +2,13 @@
 
 namespace CycleSampler
 {
-
     template<int AmbDim, typename Real = double, typename Int = long long>
     class RandomVariable : public RandomVariableBase<Real,Int>
     {
-        ASSERT_FLOAT(Real);
-        ASSERT_INT(Int);
-        
     public:
         
         using SamplerBase_T     = SamplerBase<Real,Int>;
         using Sampler_T         = Sampler<AmbDim,Real,Int>;
-        using SpherePoints_T    = typename Sampler_T::SpherePoints_T;
-        using SpacePoints_T     = typename Sampler_T::SpacePoints_T;
-        using Weights_T         = typename Sampler_T::Weights_T;
-        using Vector_T          = typename Sampler_T::Vector_T;
         
         RandomVariable() = default;
         
@@ -45,16 +37,6 @@ namespace CycleSampler
 
         
         __ADD_CLONE_CODE_FOR_ABSTRACT_CLASS__(RandomVariable)
-
-        virtual RandomVariable & DownCast() override
-        {
-            return *this;
-        }
-        
-        virtual const RandomVariable & DownCast() const override
-        {
-            return *this;
-        }
         
     public:
         

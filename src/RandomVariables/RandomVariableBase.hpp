@@ -2,14 +2,8 @@
 
 namespace CycleSampler
 {
-    
-#define CLASS RandomVariableBase
-
-    template<
-        typename Real    = double,
-        typename Int     = long long
-    >
-    class CLASS
+    template< typename Real = double, typename Int = long long >
+    class RandomVariableBase
     {
         ASSERT_INT(Int);
         ASSERT_FLOAT(Real);
@@ -18,7 +12,7 @@ namespace CycleSampler
         
         using Sampler_T = SamplerBase<Real,Int>;
         
-        virtual ~CLASS() {}
+        virtual ~RandomVariableBase() {}
             
         virtual Real operator()( const Sampler_T & C ) const = 0;
         
@@ -26,18 +20,13 @@ namespace CycleSampler
         
         virtual Real MaxValue( const Sampler_T & C ) const = 0;
         
-        __ADD_CLONE_CODE_FOR_BASE_CLASS__(CLASS)
+        __ADD_CLONE_CODE_FOR_BASE_CLASS__(RandomVariableBase)
         
     public:
-        
-        virtual CLASS & DownCast() = 0;
-
-        virtual const CLASS & DownCast() const = 0;
         
         virtual Int AmbientDimension() const = 0;
         
         virtual std::string Tag() const = 0;
     };
-#undef CLASS
         
 } // namespace CycleSampler

@@ -1,26 +1,19 @@
 #pragma once
 
-#define CLASS EdgeQuotientSpaceSamplingWeight
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public RandomVariable<AmbDim,Real,Int>
+class EdgeQuotientSpaceSamplingWeight : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using Base_T            = RandomVariable<AmbDim,Real,Int>;
-    using Sampler_T         = typename Base_T::Sampler_T;
-    using SpherePoints_T    = typename Base_T::SpherePoints_T;
-    using SpacePoints_T     = typename Base_T::SpacePoints_T;
-    using Weights_T         = typename Base_T::Weights_T;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
     
-    CLASS() = default;
+    EdgeQuotientSpaceSamplingWeight() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~EdgeQuotientSpaceSamplingWeight() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(EdgeQuotientSpaceSamplingWeight)
 
 protected:
-    
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
@@ -40,9 +33,6 @@ protected:
 public:
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS);
+        return "EdgeQuotientSpaceSamplingWeight";
     }
 };
-        
-#undef BASE
-#undef CLASS

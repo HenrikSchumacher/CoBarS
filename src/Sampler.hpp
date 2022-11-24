@@ -45,12 +45,12 @@ namespace CycleSampler
         )
         :   Base_T( edge_count_, settings_ )
         {
-            safe_alloc( x,  edge_count    * AmbDim );
-            safe_alloc( y,  edge_count    * AmbDim );
-            safe_alloc( p, (edge_count+1) * AmbDim );
+            safe_alloc ( x,  edge_count    * AmbDim );
+            safe_alloc ( y,  edge_count    * AmbDim );
+            safe_alloc ( p, (edge_count+1) * AmbDim );
             
-            safe_alloc (r, edge_count );
-            fill_buffer(r, edge_count, one / edge_count);
+            safe_alloc (r,   edge_count );
+            fill_buffer(r,   edge_count, one / edge_count);
 
             safe_alloc (rho, edge_count );
             fill_buffer(rho, edge_count, one / edge_count);
@@ -71,7 +71,7 @@ namespace CycleSampler
             safe_alloc( y,  edge_count    * AmbDim );
             safe_alloc( p, (edge_count+1) * AmbDim );
             
-            safe_alloc( r, edge_count );
+            safe_alloc( r,   edge_count );
             safe_alloc( rho, edge_count );
             
             ReadEdgeLengths(r_in);
@@ -220,7 +220,6 @@ namespace CycleSampler
                 DifferentialAndHessian_Hyperbolic();
                 
                 SearchDirection_Hyperbolic();
-                
             }
         }
         
@@ -346,7 +345,7 @@ namespace CycleSampler
         
     protected:
 
-        Real Dot_ww() const
+        force_inline Real Dot_ww() const
         {
             Real ww = 0;
             
@@ -357,7 +356,7 @@ namespace CycleSampler
             return ww;
         }
         
-        Real Dot_zz() const
+        force_inline Real Dot_zz() const
         {
             Real zz = 0;
             
@@ -368,7 +367,7 @@ namespace CycleSampler
             return zz;
         }
         
-        Real Dot_wz() const
+        force_inline Real Dot_wz() const
         {
             Real wz = 0;
             
@@ -379,7 +378,7 @@ namespace CycleSampler
             return wz;
         }
         
-        Real Dot_uu() const
+        force_inline Real Dot_uu() const
         {
             Real uu = 0;
             
@@ -390,7 +389,7 @@ namespace CycleSampler
             return uu;
         }
         
-        Real Dot_Fu() const
+        force_inline Real Dot_Fu() const
         {
             Real Fu = 0;
             
@@ -401,7 +400,7 @@ namespace CycleSampler
             return Fu;
         }
         
-        Real Dot_FF() const
+        force_inline Real Dot_FF() const
         {
             Real FF = 0;
             
@@ -412,7 +411,7 @@ namespace CycleSampler
             return FF;
         }
         
-        Real Dot_FDFu() const
+        force_inline Real Dot_FDFu() const
         {
             Real result = 0;
             
@@ -459,11 +458,9 @@ namespace CycleSampler
         
         void L_CholeskySolve_Fu()
         {
-            for( Int i = 0; i < AmbDim; ++i )
-            {
-                u[i] = F[i];
-            }
-            //In-place solve.
+            copy_buffer( &F[0], &u[0], AmbDim);
+
+            // Now solve in-place.
             
             // Lower triangular back substitution
             for( Int i = 0; i < AmbDim; ++i )
@@ -476,7 +473,7 @@ namespace CycleSampler
             }
             
             // Upper triangular back substitution
-            for( Int i = AmbDim-1; i > -1; --i )
+            for( Int i = AmbDim; i --> 0; )
             {
                 for( Int j = i+1; j < AmbDim; ++j )
                 {
@@ -588,7 +585,6 @@ namespace CycleSampler
         {
             // 2 F(0)^T.DF(0).u is the derivative of w\mapsto F(w)^T.F(w) at w = 0.
 
-            //            const Real slope = two * DF.InnerProduct(F,u);
             const Real slope = two * Dot_FDFu();
                         
             Real tau = one;
@@ -596,7 +592,14 @@ namespace CycleSampler
             const Real u_norm = std::sqrt(Dot_uu());
 
             // exponential map shooting from 0 to tau * u.
-            Times( tau * tanhc(tau * u_norm), u, z );
+            {
+                const Real scale = tau * tanhc(tau * u_norm);
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    z[i] = scale * u[i];
+                }
+            }
             
             // Shift the point z along -w to get new updated point w .
             InverseShift();
@@ -628,7 +631,14 @@ namespace CycleSampler
                     
                     tau = std::max( tau_1, tau_2 );
                                         
-                    Times( tau * tanhc(tau * u_norm), u, z );
+                    {
+                        const Real scale = tau * tanhc(tau * u_norm);
+                        
+                        for( Int i = 0; i < AmbDim; ++i )
+                        {
+                            z[i] = scale * u[i];
+                        }
+                    }
                     
                     // Shift the point z along -w to get new updated point w .
                     InverseShift();
@@ -652,8 +662,6 @@ namespace CycleSampler
             const Real u_norm = std::sqrt(Dot_uu());
 
             // exponential map shooting from 0 to tau * u.
-            
-//            Times( tau * tanhc(tau * u_norm), u, z );
             {
                 const Real scale = tau * tanhc(tau * u_norm);
                 
@@ -671,8 +679,6 @@ namespace CycleSampler
                 
                 const Real sigma = settings.Armijo_slope_factor;
                 
-//                const Real Dphi_0 = g_factor * Dot(F,u);
-                
                 const Real Dphi_0 = g_factor * Dot_Fu();
                 
                 Int backtrackings = 0;
@@ -683,7 +689,7 @@ namespace CycleSampler
                 
                 Real phi_tau = Potential();
 
-                ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
+                ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0; // phi_0 == 0
 
 
                 while( !ArmijoQ && (backtrackings < settings.max_backtrackings) )
@@ -697,8 +703,6 @@ namespace CycleSampler
 
                     tau = std::max( tau_1, tau_2 );
                     
-//                    Times( tau * tanhc(tau * u_norm), u, z );
-                    
                     {
                         const Real scale = tau * tanhc(tau * u_norm);
                         
@@ -710,7 +714,7 @@ namespace CycleSampler
                     
                     phi_tau = Potential();
                     
-                    ArmijoQ = phi_tau  /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
+                    ArmijoQ = phi_tau  /*- phi_0*/ - sigma * tau * Dphi_0 < 0; // phi_0 == 0
                 }
             }
 
@@ -728,6 +732,7 @@ namespace CycleSampler
             // Assemble DF = nabla F + regulatization:
             // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
 
+            // Overwrite F and DF by contribution of first element of y.
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
@@ -742,6 +747,7 @@ namespace CycleSampler
                 }
             }
             
+            // Add-in the contributions of the other elements of y.
             for( Int k = 1; k < edge_count; ++k )
             {
                 for( Int i = 0; i < AmbDim; ++i )
@@ -775,7 +781,7 @@ namespace CycleSampler
             for( Int i = 0; i < AmbDim; ++i )
             {
                 F[i] *= half;
-                // Better add the identity afterwards for precision reasons.
+                // We better add the identity for precision reasons here -- after the other computations.
                 DF[i][i] += one;
             }
         }
@@ -787,10 +793,7 @@ namespace CycleSampler
             {
                 // We have to compute eigenvalue _before_ we add the regularization.
 
-                //                lambda_min = DF.SmallestEigenvalue();
-                
                 lambda_min = DF_SmallestEigenValue();
-
                 
                 q = four * residual / (lambda_min * lambda_min);
                 
@@ -830,14 +833,9 @@ namespace CycleSampler
                 }
             }
             
-//            L.Cholesky();
-            
             L_Cholesky();
             
-            
-//            L.CholeskySolve(F,u);
-            L_CholeskySolve_Fu();
-            
+            L_CholeskySolve_Fu();            
             
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -847,13 +845,19 @@ namespace CycleSampler
         
         void Gradient_Hyperbolic()
         {
-            Times(-g_factor_inv, F, u);
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] = -g_factor_inv * F[i];
+            }
         }
         
         void Gradient_Planar()
         {
             // The factor 2 is here to reproduce the Abikoff-Ye algorithm (in the absence of linesearch.)
-            Times(-two, F, u);
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                u[i] = -two * F[i];
+            }
         }
         
     public:

@@ -1,36 +1,30 @@
 #pragma once
 
-#define CLASS GyradiusP
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public RandomVariable<AmbDim,Real,Int>
+class GyradiusP : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using Base_T            = RandomVariable<AmbDim,Real,Int>;
-    using Sampler_T         = typename Base_T::Sampler_T;
-    using SpherePoints_T    = typename Base_T::SpherePoints_T;
-    using SpacePoints_T     = typename Base_T::SpacePoints_T;
-    using Weights_T         = typename Base_T::Weights_T;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
     
-    CLASS( const Real exponent_ )
+    GyradiusP( const Real exponent_ )
     :   exponent( exponent_ )
     {}
     
     // Copy constructor
-    CLASS( const CLASS & other )
+    GyradiusP( const GyradiusP & other )
     :   exponent(other.exponent)
     {}
 
     // Move constructor
-    CLASS( CLASS && other ) noexcept
+    GyradiusP( GyradiusP && other ) noexcept
     :
         exponent(other.exponent)
     {}
     
-    virtual ~CLASS() override = default;
+    virtual ~GyradiusP() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(GyradiusP)
 
 protected:
     
@@ -43,8 +37,8 @@ protected:
         
         const Real power = exponent/2;
         
-        const Int n             = C.EdgeCount();
-        const SpacePoints_T & p = C.SpaceCoordinates();
+        const Int n                   = C.EdgeCount();
+        const Real * restrict const p = C.SpaceCoordinates();
         
         for( Int k = 0; k < n; ++k )
         {
@@ -54,7 +48,7 @@ protected:
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real delta = p(l,i) - p(k,i);
+                    const Real delta = p[AmbDim*l+i] - p[AmbDim*k+i];
                     
                     r2 += delta * delta;
                 }
@@ -73,16 +67,24 @@ protected:
     
     virtual Real MaxValue( const Sampler_T & C ) const override
     {
-        return Total(C.EdgeLengths())/std::pow(C.EdgeCount(),static_cast<Real>(1)/exponent);
+        const Int n = C.EdgeCount();
+        
+        const Real * restrict r = C.EdgeLengths();
+        
+        Real sum = 0;
+        
+        for( Int i = 0; i < n; ++i )
+        {
+            sum += r[i];
+        }
+        
+        return sum / std::pow(C.EdgeCount(),static_cast<Real>(1)/exponent);
     }
     
 public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS)+"("+ToString(exponent)+")";
+        return "GyradiusP("+ToString(exponent)+")";
     }
 };
-    
-#undef BASE
-#undef CLASS

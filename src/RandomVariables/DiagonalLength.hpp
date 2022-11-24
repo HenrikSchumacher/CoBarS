@@ -1,23 +1,17 @@
 #pragma once
 
-#define CLASS DiagonalLength
-
 template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public RandomVariable<AmbDim,Real,Int>
+class DiagonalLength : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using Base_T            = RandomVariable<AmbDim,Real,Int>;
-    using Sampler_T         = typename Base_T::Sampler_T;
-    using SpherePoints_T    = typename Base_T::SpherePoints_T;
-    using SpacePoints_T     = typename Base_T::SpacePoints_T;
-    using Weights_T         = typename Base_T::Weights_T;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
     
-    CLASS() = default;
+    DiagonalLength() = default;
     
-    virtual ~CLASS() override = default;
+    virtual ~DiagonalLength() override = default;
     
-    __ADD_CLONE_CODE__(CLASS)
+    __ADD_CLONE_CODE__(DiagonalLength)
 
 protected:
     
@@ -25,13 +19,13 @@ protected:
     {
         Real r2 = static_cast<Real>(0);
         
-        const SpacePoints_T & p = C.SpaceCoordinates();
+        const Real * restrict const p = C.SpaceCoordinates();
         
         const Int last_vertex = C.EdgeCount()/2;
         
         for( Int i = 0; i < AmbDim; ++i )
         {
-            const Real delta = p(last_vertex,i) - p(0,i);
+            const Real delta = p[AmbDim * last_vertex+i] - p[AmbDim*0+i];
             r2 += delta * delta;
         }
         
@@ -45,7 +39,7 @@ protected:
     
     virtual Real MaxValue( const Sampler_T & C ) const override
     {
-        const Weights_T & r = C.EdgeLengths();
+        const Real * restrict const r = C.EdgeLengths();
         
         Real L = static_cast<Real>(0);
         
@@ -63,9 +57,6 @@ public:
     
     virtual std::string Tag() const  override
     {
-        return TO_STD_STRING(CLASS);
+        return "DiagonalLength";
     }
 };
-
-#undef BASE
-#undef CLASS

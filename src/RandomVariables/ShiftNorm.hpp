@@ -5,8 +5,7 @@ class ShiftNorm : public RandomVariable<AmbDim,Real,Int>
 {
 public:
     
-    using Base_T            = RandomVariable<AmbDim,Real,Int>;
-    using Sampler_T         = typename Base_T::Sampler_T;
+    using Sampler_T = Sampler<AmbDim,Real,Int>;
     
     ShiftNorm() = default;
     
