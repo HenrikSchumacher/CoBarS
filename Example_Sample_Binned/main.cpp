@@ -23,7 +23,7 @@ int main(int argc, const char * argv[])
     
     const     Int edge_count   = 8;
     const     Int sample_count = 10000000;
-    const     Int thread_count = 1;
+    const     Int thread_count = 8;
     
     print("Test program for routine CycleSampler::Sample");
 
