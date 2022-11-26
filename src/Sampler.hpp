@@ -13,7 +13,9 @@ namespace CycleSampler
         
     public:
         using Base_T               = SamplerBase<Real,Int>;
-        using Vector_T             = SmallVector<AmbDim,Real,Int>;
+        
+        using Vector_T             = SmallVector         <AmbDim,Real,Int>;
+        using SquareMatrix_T       = SmallSquareMatrix   <AmbDim,Real,Int>;
         using SymmetricMatrix_T    = SmallSymmetricMatrix<AmbDim,Real,Int>;
         
         using RandomVariableBase_T = RandomVariableBase<Real,Int>;
@@ -22,6 +24,7 @@ namespace CycleSampler
         using SpherePoints_T = typename Base_T::SpherePoints_T;
         using SpacePoints_T  = typename Base_T::SpacePoints_T;
         using Weights_T      = typename Base_T::Weights_T;
+        
         using Setting_T      = typename Base_T::Setting_T;
         
         
@@ -137,11 +140,10 @@ namespace CycleSampler
         
         SpherePoints_T x {0,AmbDim};
         SpherePoints_T y {0,AmbDim};
+        SpacePoints_T  p {0,AmbDim};
         
-        mutable SpacePoints_T p {0,AmbDim};
-        
-        Weights_T r {0};
-        Weights_T rho   {0};
+        Weights_T      r {0};
+        Weights_T    rho {0};
         
         Real total_r_inv = one;
         
@@ -153,8 +155,6 @@ namespace CycleSampler
 
         Vector_T z;           // Multiple purpose buffer.
         
-        ShiftMap<AmbDim,Real,Int> S;
-        
         Int iter = 0;
         
         Real squared_residual = 1;
@@ -163,7 +163,8 @@ namespace CycleSampler
         
         Real edge_space_sampling_weight = 0;
         Real edge_quotient_space_sampling_correction = 0;
-
+        bool edge_space_sampling_weight_computed = false;
+        bool edge_quotient_space_sampling_correction_computed = false;
         
         Real lambda_min = eps;
         Real q = one;
@@ -213,128 +214,65 @@ namespace CycleSampler
                 DifferentialAndHessian_Hyperbolic();
                 
                 SearchDirection_Hyperbolic();
-                
             }
+            
+//            CheckSolution();
         }
         
-        
-        void ComputeEdgeSpaceSamplingWeight()
+        virtual Real EdgeSpaceSamplingWeight() override
         {
-            edge_space_sampling_weight =  S.EdgeSpaceSamplingWeight(
-                x.data(), w.data(), y.data(), r.data(), rho.data(), edge_count
-            );
-        }
-        
-        virtual Real EdgeSpaceSamplingWeight() const override
-        {
+            RequireEdgeSpaceSamplingWeight();
+            
             return edge_space_sampling_weight;
         }
-        
-        void ComputeEdgeQuotientSpaceSamplingCorrection()
+
+        virtual Real EdgeQuotientSpaceSamplingCorrection() override
         {
-            if( AmbDim == 2)
-            {
-                edge_quotient_space_sampling_correction = one;
-                return;
-            }
+            RequireEdgeQuotientSpaceSamplingCorrection();
             
-            Eigen::Matrix<Real,AmbDim,AmbDim> Sigma;
-            
-            // We fill only the lower triangle of Sigma, because that's the only thing that Eigen' selfadjoint eigensolver needs.
-            // Recall that Eigen matrices are column-major by default.
-            
-            {
-                const Real rho_squared = rho[0] * rho[0];
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    const Real factor = rho_squared * y(0,i);
-                    
-                    for( Int j = i; j < AmbDim; ++j )
-                    {
-                        Sigma(j,i) = factor * y(0,j);
-                    }
-                }
-            }
-            
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                const Real rho_squared = rho[k] * rho[k];
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    const Real factor = rho_squared * y(k,i);
-                    
-                    for( Int j = i; j < AmbDim; ++j )
-                    {
-                        Sigma(j,i) += factor * y(k,j);
-                    }
-                }
-            }
-            
-            // Eigen needs only the lower triangular part. So need not symmetrize.
-            
-//            for( Int i = 0; i < AmbDim; ++i )
-//            {
-//                for( Int j = 0; j < i; ++j )
-//                {
-//                    Sigma(j,i) = Sigma(i,j);
-//                }
-//            }
-
-            if( AmbDim == 3)
-            {
-                // Exploiting that
-                //      (lambda[0] + lambda[1]) * (lambda[0] + lambda[2]) * (lambda[1] + lambda[2])
-                //      =
-                //      ( tr(Sigma*Sigma) - tr(Sigma)*tr(Sigma) ) *  tr(Sigma)/2 - det(Sigma)
-                //  Thus, it can be expressed by as third-order polynomial in the entries of the matrix.
-                
-                const Real S_00 = Sigma(0,0)*Sigma(0,0);
-                const Real S_11 = Sigma(1,1)*Sigma(1,1);
-                const Real S_22 = Sigma(2,2)*Sigma(2,2);
-                
-                const Real S_10 = Sigma(1,0)*Sigma(1,0);
-                const Real S_20 = Sigma(2,0)*Sigma(2,0);
-                const Real S_21 = Sigma(2,1)*Sigma(2,1);
-                
-                const Real det = std::abs(
-                      Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
-                    + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
-                    + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
-                    + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
-                );
-                edge_quotient_space_sampling_correction = one / std::sqrt(det);
-                return;
-            }
-            
-            Eigen::SelfAdjointEigenSolver< Eigen::Matrix<Real,AmbDim,AmbDim> > eigs;
-            
-            eigs.compute(Sigma);
-
-            auto & lambda = eigs.eigenvalues();
-
-            Real det = one;
-
-            for( Int i = 0; i < AmbDim; ++i )
-            {
-                for( Int j = i+1; j < AmbDim; ++j )
-                {
-                    det *= (lambda(i)+lambda(j));
-                }
-            }
-            
-            edge_quotient_space_sampling_correction = one / std::sqrt(det);
-        }
-
-        virtual Real EdgeQuotientSpaceSamplingCorrection() const override
-        {
             return edge_quotient_space_sampling_correction;
         }
         
-        virtual Real EdgeQuotientSpaceSamplingWeight() const override
+        virtual Real EdgeQuotientSpaceSamplingWeight() override
         {
             return EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
         }
         
+        
+        void CheckSolution()
+        {
+            Vector_T v;
+            
+            v.SetZero();
+            
+            Real max_norm_dev = 0;
+            
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                Real yy = 0;
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    yy   += y(k,i) * y(k,i);
+                    
+                    v[i] +=   r[i] * y(k,i);
+                }
+                
+                max_norm_dev = std::max( max_norm_dev, std::abs(one - std::sqrt(yy)));
+            }
+            
+            if( max_norm_dev > 0.01 )
+            {
+                dump(max_norm_dev);
+            }
+            
+            const Real v_Norm = v.Norm();
+            
+            if( v_Norm > 0.01 )
+            {
+                dump(v_Norm);
+            }
+        }
         
     protected:
         
@@ -358,7 +296,7 @@ namespace CycleSampler
                     yz2 += y(k,i) * z[i];
                 }
                 
-                value += r[k] * std::log(std::abs( (a - two * yz2) * b ) );
+                value += r[k] * std::log( std::abs( (a - two * yz2) * b ) );
             }
             
             return value * total_r_inv;
@@ -377,8 +315,9 @@ namespace CycleSampler
             // exponential map shooting from 0 to tau * u.
             Times( tau * tanhc(tau * u_norm), u, z );
             
-            // Shift the point z along -w to get new updated point w .
-            InverseShift(z);
+            // TODO: Isn't it vice versa?
+            // Shift the point z along -w to get new updated point w
+            InverseShift(z,w);
             
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -389,7 +328,6 @@ namespace CycleSampler
             
             if( linesearchQ )
             {
-                
                 Int backtrackings = 0;
                 
                 // Armijo condition for squared residual.
@@ -409,8 +347,9 @@ namespace CycleSampler
                                         
                     Times( tau * tanhc(tau * u_norm), u, z );
                     
+                    // TODO: Isn't it vice versa?
                     // Shift the point z along -w to get new updated point w .
-                    InverseShift(z);
+                    InverseShift(z,w);
                     
                     // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
                     Shift();
@@ -474,8 +413,9 @@ namespace CycleSampler
                 }
             }
 
+            // TODO: Isn't it vice versa?
             // Shift the point z along -w to get new updated point w .
-            InverseShift(z);
+            InverseShift(z,w);
 
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -604,30 +544,290 @@ namespace CycleSampler
             Times(-two, F, u);
         }
         
-    public:
-        
-        void InverseShift( const Vector_T & s )
+        void InverseShift( const Vector_T & z, Vector_T & w )
         {
-            // Shift point w along -s.
+            // Shift point w along -z.
+            
+            Real ww  = 0;
+            Real wz2 = 0;
+            Real zz  = 0;
 
-            const Real ws2 = two * Dot(w,s);
-            const Real ww  = Dot(w,w);
-            const Real ss  = Dot(s,s);
-
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                ww  += w[i] * w[i];
+                wz2 += w[i] * z[i];
+                zz  += z[i] * z[i];
+            }
+            
+            wz2 *= two;
+            
             const Real a = one - ww;
-            const Real b = one + ss + ws2;
-            const Real c = big_one + ws2 + ww * ss;
+            const Real b = one + zz + wz2;
+            const Real c = big_one + wz2 + ww * zz;
             const Real d = one / c;
 
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w[i] = ( a * s[i] + b * w[i] ) * d;
+                w[i] = ( a * z[i] + b * w[i] ) * d;
             }
         }
         
-        void Shift()
+        void Shift(
+//            const SpherePoints_T & x_in,
+//            const Vector_T       & w,
+//                  SpherePoints_T & y_out,
+//            const Real             t = one
+        )
         {
-            S.Shift( x.data(), w.data(), y.data(), edge_count, one );
+            // Shifts all entries of x along w and writes the results to y.
+            Real z_ [AmbDim];
+                        
+            Real ww = Dot(w,w);
+            
+            const Real one_minus_ww = big_one - ww;
+            const Real one_plus_ww  = big_one + ww;
+
+            if( ww <= norm_threshold )
+            {
+                for( Int k = 0; k < edge_count; ++k )
+                {
+                    Real wz2 = 0;
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        z_[i] = x(k,i);
+                        
+                        wz2 += w[i] * z_[i];
+                    }
+                    
+                    wz2 *= two;
+                    
+                    const Real denom = one / ( one_plus_ww - wz2 );
+                    
+                    const Real wz2_minus_2 = wz2 - two;
+
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        y(k,i) = (one_minus_ww * z_[i] + wz2_minus_2 * w[i]) * denom;
+                    }
+                }
+            }
+            else
+            {
+                // If w lies close to the boundary of the ball, then normalizing the output is a good idea.
+
+                for( Int k = 0; k < edge_count; ++k )
+                {
+                    Real wz2 = 0;
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        z_[i] = x(k,i);
+                        
+                        wz2 += w[i] * z_[i];
+                    }
+                    
+                    wz2 *= two;
+                    
+                    const Real denom = one / ( one_plus_ww - wz2 );
+                    
+                    const Real wz2_minus_2 = wz2 - two;
+
+                    Real r2 = 0;
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        z_[i] = (one_minus_ww * z_[i] + wz2_minus_2 * w[i]) * denom;
+                        
+                        r2 += z_[i] * z_[i];
+                    }
+                    
+                    const Real z_inv_norm = one/sqrt(r2);
+
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        y(k,i) = z_[i] * z_inv_norm;
+                    }
+                }
+            }
+        }
+        
+        void RequireEdgeSpaceSamplingWeight()
+        {
+            // Shifts all entries of x along y and writes the results to y.
+            // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
+            
+            if( !edge_space_sampling_weight )
+            {
+                edge_space_sampling_weight = true;
+                
+                SquareMatrix_T cbar;
+                SquareMatrix_T gamma;
+                
+                cbar.SetZero();
+                gamma.SetZero();
+                
+                Real prod = one;
+                
+                Real ww = Dot(w,w);
+                
+                
+                //            const Real one_minus_ww    = big_one - ww;
+                const Real one_plus_ww     = big_one + ww;
+                //            const Real one_plus_ww_inv = one / one_plus_ww;
+                
+                for( Int k = 0; k < edge_count; ++k )
+                {
+                    Real y_   [AmbDim];
+                    
+                    Real wy = zero;
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        y_[i] = y(k,i);
+                        
+                        wy += w[i] * y_[i];
+                    }
+                    
+                    const Real factor = one_plus_ww + two * wy;
+                    
+                    // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
+                    //                prod *= factor * one_plus_ww_inv;
+                    prod *= factor;
+                    
+                    const Real r_k = r[k];
+                    const Real r_over_rho_k = r_k/rho[k];
+                    const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        for( Int j = 0; j < AmbDim; ++j )
+                        {
+                            const Real scratch = (static_cast<Real>(i==j) - y_[i]*y_[j]);
+                            
+                            gamma(i,j) += r_over_rho_k_squared * scratch;
+                            
+                            cbar(i,j)  += r_k * scratch;
+                        }
+                    }
+                }
+                
+                //             We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
+                //            {
+                //                const Real scratch = static_cast<Real>(2)/(one_minus_ww);
+                //
+                //                for( Int i = 0; i < AmbDim; ++i )
+                //                {
+                //                    for( Int j = 0; j < AmbDim; ++j )
+                //                    {
+                //                        cbar(i,j) *= scratch;
+                //                    }
+                //                }
+                //            }
+                
+                edge_space_sampling_weight = MyMath::pow(prod, static_cast<Int>(AmbDim-1)) * sqrt(gamma.Det()) / cbar.Det();
+                
+            }
+        }
+        
+        void RequireEdgeQuotientSpaceSamplingCorrection()
+        {
+            if( !edge_space_sampling_weight_computed)
+            {
+                edge_space_sampling_weight_computed = true;
+                
+                if constexpr ( AmbDim == 2)
+                {
+                    edge_quotient_space_sampling_correction = one;
+                    return;
+                }
+                
+                Eigen::Matrix<Real,AmbDim,AmbDim> Sigma;
+                
+                // We fill only the lower triangle of Sigma, because that's the only thing that Eigen' selfadjoint eigensolver needs.
+                // Recall that Eigen matrices are column-major by default.
+                
+                {
+                    const Real rho_squared = rho[0] * rho[0];
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real factor = rho_squared * y(0,i);
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            Sigma(j,i) = factor * y(0,j);
+                        }
+                    }
+                }
+                
+                for( Int k = 0; k < edge_count; ++k )
+                {
+                    const Real rho_squared = rho[k] * rho[k];
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real factor = rho_squared * y(k,i);
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            Sigma(j,i) += factor * y(k,j);
+                        }
+                    }
+                }
+                
+                // Eigen needs only the lower triangular part. So need not symmetrize.
+                
+                //            for( Int i = 0; i < AmbDim; ++i )
+                //            {
+                //                for( Int j = 0; j < i; ++j )
+                //                {
+                //                    Sigma(j,i) = Sigma(i,j);
+                //                }
+                //            }
+                
+                if constexpr ( AmbDim == 3)
+                {
+                    // Exploiting that
+                    //      (lambda[0] + lambda[1]) * (lambda[0] + lambda[2]) * (lambda[1] + lambda[2])
+                    //      =
+                    //      ( tr(Sigma*Sigma) - tr(Sigma)*tr(Sigma) ) *  tr(Sigma)/2 - det(Sigma)
+                    //  Thus, it can be expressed by as third-order polynomial in the entries of the matrix.
+                    
+                    const Real S_00 = Sigma(0,0)*Sigma(0,0);
+                    const Real S_11 = Sigma(1,1)*Sigma(1,1);
+                    const Real S_22 = Sigma(2,2)*Sigma(2,2);
+                    
+                    const Real S_10 = Sigma(1,0)*Sigma(1,0);
+                    const Real S_20 = Sigma(2,0)*Sigma(2,0);
+                    const Real S_21 = Sigma(2,1)*Sigma(2,1);
+                    
+                    const Real det = std::abs(
+                                              Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
+                                              + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
+                                              + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
+                                              + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
+                                              );
+                    edge_quotient_space_sampling_correction = one / std::sqrt(det);
+                    return;
+                }
+                
+                Eigen::SelfAdjointEigenSolver< Eigen::Matrix<Real,AmbDim,AmbDim> > eigs;
+                
+                eigs.compute(Sigma);
+                
+                auto & lambda = eigs.eigenvalues();
+                
+                Real det = one;
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    for( Int j = i+1; j < AmbDim; ++j )
+                    {
+                        det *= (lambda(i)+lambda(j));
+                    }
+                }
+                
+                edge_quotient_space_sampling_correction = one / std::sqrt(det);
+                
+            }
         }
         
     public:
@@ -641,6 +841,8 @@ namespace CycleSampler
         virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) override
         {
             x.Read( x_in );
+            
+            ClearCache();
             
             if( normalize )
             {
@@ -678,11 +880,33 @@ namespace CycleSampler
             WriteInitialEdgeCoordinates( &x_out[ AmbDim * edge_count * k ]);
         }
         
+        void RandomizeInitialEdgeCoordinates() override
+        {
+            ClearCache();
+            
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                Real r2 = 0;
+
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    const Real z = normal_dist( random_engine );
+                    
+                    x(k,i) = z;
+                    
+                    r2 += z * z;
+                }
+
+                Real r_inv = one/std::sqrt(r2);
+
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    x(k,i) *= r_inv;
+                }
+            }
+        }
         
-//        virtual SpherePoints_T & EdgeCoordinates() override
-//        {
-//            return y;
-//        }
+        
         
         virtual const SpherePoints_T & EdgeCoordinates() const override
         {
@@ -691,6 +915,8 @@ namespace CycleSampler
         
         virtual void ReadEdgeCoordinates( const Real * const y_in ) override
         {
+            ClearCache();
+            
             y.Read(y_in);
         }
         
@@ -716,7 +942,7 @@ namespace CycleSampler
             return p;
         }
                 
-        virtual void WriteSpaceCoordinates( Real * p_out ) const  override
+        virtual void WriteSpaceCoordinates( Real * p_out ) const override
         {
             p.Write(p_out);
         }
@@ -726,7 +952,7 @@ namespace CycleSampler
             WriteSpaceCoordinates( &p_out[ (edge_count+1) * AmbDim * k ]);
         }
         
-        void ComputeSpaceCoordinates() const override
+        virtual void ComputeSpaceCoordinates() override
         {
             //Caution: This gives only have the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
@@ -791,24 +1017,21 @@ namespace CycleSampler
         
         virtual void ComputeShiftVector() override
         {
-            Real w_ [AmbDim] = {};
+            w.SetZero();
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                const Real r_k = r[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w_[i] += x(k,i) * r_k;
+                    w[i] += x(k,i) * r[k];
                 }
             }
             
             // Normalize in that case that r does not sum up to 1.
             for( Int i = 0; i < AmbDim; ++i )
             {
-                w_[i] *= total_r_inv;
+                w[i] *= total_r_inv;
             }
-            
-            w.Read(&w_[0]);
         }
         
         virtual void ReadShiftVector( const Real * const w_in ) override
@@ -914,7 +1137,7 @@ namespace CycleSampler
                   Real * const restrict K_edge_quotient_space,
             const Int sample_count,
             const Int thread_count = 1
-        ) const override
+        ) override
         {
             ptic(ClassName()+"RandomClosedPolygons");
 
@@ -940,6 +1163,8 @@ namespace CycleSampler
                 {
                     W.RandomizeInitialEdgeCoordinates();
 
+                    ClearCache();
+                    
                     W.WriteInitialEdgeCoordinates(x_out, k);
                     
                     W.ComputeShiftVector();
@@ -950,10 +1175,6 @@ namespace CycleSampler
                     
                     W.WriteEdgeCoordinates(y_out, k);
                     
-                    W.ComputeEdgeSpaceSamplingWeight();
-
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
-
                     K_edge_space[k] = W.EdgeSpaceSamplingWeight();
 
                     K_edge_quotient_space[k] = W.EdgeQuotientSpaceSamplingWeight();
@@ -978,7 +1199,7 @@ namespace CycleSampler
             const std::vector< std::unique_ptr<RandomVariableBase_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
-        ) const override
+        ) override
         {
             std::vector< std::unique_ptr<RandomVariable_T> > F_list;
             
@@ -1058,23 +1279,10 @@ namespace CycleSampler
                 {
                     F_list.push_back(
                         std::unique_ptr<RandomVariable_T>(
-                            dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().get() )
+                            dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().release() )
                         )
                     );
                 }
-                
-//                for( Int i = 0; i < fun_count; ++ i )
-//                {
-//                    size_t ii = i;
-//
-//                    // Thread gets its own instances of the RandomVariableBase_T...
-//                    F_list__.push_back( F_list_[ii]->Clone() );
-//
-//                    // ... and a downcast reference to it.
-//                    F_list.push_back(
-//                        dynamic_cast<RandomVariable_T *>( F_list__[ii].get() )
-//                    );
-//                }
 
                 Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
                 Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
@@ -1086,13 +1294,9 @@ namespace CycleSampler
                     W.ComputeShiftVector();
 
                     W.Optimize();
-
+                    
                     W.ComputeSpaceCoordinates();
-                    
-                    W.ComputeEdgeSpaceSamplingWeight();
-                    
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
+
                     const Real K = W.EdgeSpaceSamplingWeight();
 
                     const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();
@@ -1154,7 +1358,7 @@ namespace CycleSampler
             Real * restrict moments,
             const Int moment_count,
             const Int fun_count
-        ) const override
+        ) override
         {
             ptic(ClassName()+"::NormalizeBinnedSamples");
             for( Int i = 0; i < 3; ++i )
@@ -1340,119 +1544,13 @@ namespace CycleSampler
         
 #endif
         
-    public:
-        
-        void RandomizeInitialEdgeCoordinates() override
-        {
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                Real r2 = 0;
-
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    const Real z = normal_dist( random_engine );
-                    
-                    x(k,i) = z;
-                    
-                    r2 += z * z;
-                }
-
-                Real r_inv = one/std::sqrt(r2);
-
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    x(k,i) *= r_inv;
-                }
-            }
-        }
-        
-        
-        void RandomSphericalPoints(
-            Real * restrict x_out,
-            const Int sample_count,
-            const Int thread_count_ = 1
-        ) const override
-        {
-            const Int thread_count = (thread_count_<=0) ? omp_get_num_threads() : thread_count_;
-
-            if( thread_count == 1 )
-            {
-                for( Int k = 0; k < edge_count; ++k )
-                {
-                    Real r2 = 0;
-
-                    Real v [AmbDim];
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        v[i] = normal_dist( random_engine );
-
-                        r2 += v[i] * v[i];
-                    }
-
-                    Real r_inv = one/std::sqrt(r2);
-
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        x_out[ AmbDim * k + i ] = v[i] * r_inv;
-                    }
-                }
-            }
-            else
-            {
-                JobPointers<Int> job_ptr ( sample_count, thread_count );
-
-                #pragma omp parallel for num_threads( thread_count )
-                for( Int thread = 0; thread < thread_count; ++thread )
-                {
-                    Real v [AmbDim];
-
-                    std::random_device r;
-                    
-                    std::seed_seq seed { r(), r(), r(), r() };
-                    
-                    std::mt19937_64 random_engine_loc { seed };
-
-                    std::normal_distribution<Real> dist { zero, one };
-
-                    const Int l_begin = job_ptr[thread];
-                    const Int l_end   = job_ptr[thread+1];
-
-                    for( Int l = l_begin; l < l_end; ++l )
-                    {
-                        Real * restrict x_ = &x_out[AmbDim * edge_count * l];
-
-                        for( Int k = 0; k < edge_count; ++k )
-                        {
-                            Real r2 = 0;
-
-                            for( Int i = 0; i < AmbDim; ++i )
-                            {
-                                v[i] = dist( random_engine_loc );
-
-                                r2 += v[i] * v[i];
-                            }
-
-                            Real r_inv = one/std::sqrt(r2);
-
-                            for( Int i = 0; i < AmbDim; ++i )
-                            {
-                                x_[ AmbDim * k + i ] = v[i] * r_inv;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
     protected:
         
-        ShiftMap<AmbDim,Real,Int> & Shifter()
+        void ClearCache()
         {
-            return S;
+            edge_space_sampling_weight_computed = false;
+            edge_quotient_space_sampling_correction_computed = false;
         }
-        
-    protected:
         
         Real tanhc( const Real t ) const
         {
@@ -1488,9 +1586,18 @@ namespace CycleSampler
             return AmbDim;
         }
         
-        virtual std::string ClassName() const override
+    private:
+
+        std::string className() const
         {
             return TO_STD_STRING(CLASS)+"<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
+        }
+        
+    public:
+        
+        virtual std::string ClassName() const override
+        {
+            return this->className();
         }
     };
     

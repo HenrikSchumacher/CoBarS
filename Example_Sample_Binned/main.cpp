@@ -22,8 +22,8 @@ int main(int argc, const char * argv[])
     using RandomVariable_T     = typename Sampler_T::RandomVariable_T;
     
     const     Int edge_count   = 8;
-    const     Int sample_count = 1000000;
-    const     Int thread_count = 8;
+    const     Int sample_count = 10000000;
+    const     Int thread_count = 1;
     
     print("Test program for routine CycleSampler::Sample");
 

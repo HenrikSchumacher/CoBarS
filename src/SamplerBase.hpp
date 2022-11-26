@@ -79,7 +79,6 @@ namespace CycleSampler {
         
         Setting_T settings;
         
-        
     public:
         
         CLASS()
@@ -154,7 +153,6 @@ namespace CycleSampler {
         virtual void ReadRho( const Real * const rho_in ) = 0;
         
         
-//        virtual SpherePoints_T & EdgeCoordinates() = 0;
         
         virtual const SpherePoints_T & EdgeCoordinates() const = 0;
         
@@ -167,7 +165,6 @@ namespace CycleSampler {
         virtual void WriteEdgeCoordinates( Real * y_in, const Int i ) const = 0;
         
         
-//        virtual SpacePoints_T & SpaceCoordinates() = 0;
         
         virtual const SpacePoints_T & SpaceCoordinates() const = 0;
         
@@ -175,7 +172,7 @@ namespace CycleSampler {
         
         virtual void WriteSpaceCoordinates( Real * y_in, const Int i ) const = 0;
         
-        virtual void ComputeSpaceCoordinates() const = 0;
+        virtual void ComputeSpaceCoordinates() = 0;
         
         
         
@@ -199,16 +196,14 @@ namespace CycleSampler {
 
         virtual Int AmbientDimension() const = 0;
         
-        virtual void RandomSphericalPoints( Real * restrict x_out, const Int m, const Int thread_count = 1 ) const = 0;
-        
         virtual void RandomizeInitialEdgeCoordinates() = 0;
         
         
-        virtual Real EdgeSpaceSamplingWeight() const = 0;
+        virtual Real EdgeSpaceSamplingWeight() = 0;
         
-        virtual Real EdgeQuotientSpaceSamplingCorrection() const = 0;
+        virtual Real EdgeQuotientSpaceSamplingCorrection() = 0;
         
-        virtual Real EdgeQuotientSpaceSamplingWeight() const = 0;
+        virtual Real EdgeQuotientSpaceSamplingWeight() = 0;
 
         virtual void RandomClosedPolygons(
                   Real * const restrict x_out,
@@ -218,7 +213,7 @@ namespace CycleSampler {
                   Real * const restrict K_edge_quotient_space,
             const Int sample_count,
             const Int thread_count = 1
-        ) const = 0;
+        ) = 0;
         
         virtual void Sample_Binned(
             Real * restrict bins_out,
@@ -229,7 +224,7 @@ namespace CycleSampler {
             const std::vector< std::unique_ptr<RandomVariableBase<Real,Int>> > & F_list,
             const Int sample_count,
             const Int thread_count = 1
-        ) const = 0;
+        ) = 0;
         
         virtual void NormalizeBinnedSamples(
             Real * restrict bins,
@@ -237,7 +232,7 @@ namespace CycleSampler {
             Real * restrict moments,
             const Int moment_count,
             const Int fun_count
-        ) const = 0;
+        ) = 0;
         
         
         const Setting_T & Settings() const
