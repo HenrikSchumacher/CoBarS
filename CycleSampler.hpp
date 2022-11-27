@@ -33,9 +33,6 @@
     //
     //int PD_VERBOSE = 0;
 
-    #include "src/SmallSymmetricMatrix.hpp"
-
-//    #include "src/ShiftMap.hpp"
     #include "src/SamplerBase.hpp"
     #include "src/Sampler.hpp"
 

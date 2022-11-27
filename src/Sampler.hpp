@@ -14,9 +14,9 @@ namespace CycleSampler
     public:
         using Base_T               = SamplerBase<Real,Int>;
         
-        using Vector_T             = SmallVector         <AmbDim,Real,Int>;
-        using SquareMatrix_T       = SmallSquareMatrix   <AmbDim,Real,Int>;
-        using SymmetricMatrix_T    = SmallSymmetricMatrix<AmbDim,Real,Int>;
+        using Vector_T             = Small::Vector         <AmbDim,Real,Int>;
+        using SquareMatrix_T       = Small::SquareMatrix   <AmbDim,Real,Int>;
+        using SymmetricMatrix_T    = Small::SymmetricMatrix<AmbDim,Real,Int>;
         
         using RandomVariableBase_T = RandomVariableBase<Real,Int>;
         using RandomVariable_T     = RandomVariable<AmbDim,Real,Int>;
