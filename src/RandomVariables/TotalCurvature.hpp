@@ -29,15 +29,16 @@ protected:
 
         Real sum;
         
+        // Handle wrap-around.
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
             
             sum = phi;
         }
         
         for( Int k = 0; k < n-1; ++k )
         {
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
             
             sum += phi;
         }

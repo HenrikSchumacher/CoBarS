@@ -23,15 +23,15 @@ protected:
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
-        Real r2 = static_cast<Real>(0);
-        
         const SpacePoints_T & p = C.SpaceCoordinates();
         
         const Int last_vertex = C.EdgeCount()/2;
         
+        Real r2 = static_cast<Real>(0);
+        
         for( Int i = 0; i < AmbDim; ++i )
         {
-            const Real delta = p(last_vertex,i) - p(0,i);
+            const Real delta = p[last_vertex][i] - p[0][i];
             r2 += delta * delta;
         }
         

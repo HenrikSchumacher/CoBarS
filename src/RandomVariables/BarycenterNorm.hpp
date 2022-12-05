@@ -12,6 +12,7 @@ public:
     using SpherePoints_T    = typename BASE::SpherePoints_T;
     using SpacePoints_T     = typename BASE::SpacePoints_T;
     using Weights_T         = typename BASE::Weights_T;
+    using Vector_T          = typename BASE::Vector_T;
     
     CLASS() = default;
     
@@ -30,32 +31,25 @@ protected:
         
         const Int edge_count = C.EdgeCount();
         
-        Real b[AmbDim];
+        Vector_T b;
         
+        // Handle wrap-around.
         for( Int i = 0; i < AmbDim; ++i )
         {
-            b[i] = r(edge_count-1) * (p(edge_count,i)+p(0,i));
+            b[i] = r[edge_count-1] * ( p[edge_count][i]+p[0][i] );
         }
         
         for( Int k = 0; k < edge_count-1; ++ k )
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                b[i] += r(i) * ( p(k,i) + p(k+1,i) );
+                b[i] += r[i] * ( p[k][i] + p[k+1][i] );
             }
         }
         
-        Real r2 = static_cast<Real>(0);
-        
         const Real factor = static_cast<Real>(0.5)/r.Total();
         
-        for( Int i = 0; i < AmbDim; ++i )
-        {
-            b[i] *= factor;
-            r2 += b[i] * b[i];
-        }
-        
-        return std::sqrt( r2 );
+        return b.Norm() * factor;
     }
     
     virtual Real MinValue( const Sampler_T & C ) const override

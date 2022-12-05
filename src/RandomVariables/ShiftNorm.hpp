@@ -8,7 +8,7 @@ class CLASS : public BASE
 {
 public:
     
-    using Sampler_T   = typename BASE::Sampler_T;
+    using Sampler_T = typename BASE::Sampler_T;
     
     CLASS() = default;
     
@@ -20,18 +20,7 @@ protected:
     
     virtual Real operator()( const Sampler_T & C ) const override
     {
-        Real r2 = static_cast<Real>(0);
-        
-        Real w[AmbDim];
-        
-        C.WriteShiftVector( &w[0] );
-        
-        for( Int i = 0; i < AmbDim; ++i )
-        {
-            r2 += w[i] * w[i];
-        }
-        
-        return std::sqrt( r2 );
+        return C.ShiftVector().Norm();
     }
     
     virtual Real MinValue( const Sampler_T & C ) const override

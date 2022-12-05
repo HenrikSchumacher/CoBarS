@@ -33,7 +33,7 @@ protected:
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                r2 += p(k,i) * p(k,i);
+                r2 += p[k][i] * p[k][i];
             }
         }
         

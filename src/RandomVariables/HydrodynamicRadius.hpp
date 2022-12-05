@@ -40,7 +40,7 @@ protected:
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real delta = p(l,i) - p(k,i);
+                    const Real delta = p[l][i] - p[k][i];
                     
                     r2 += delta * delta;
                 }

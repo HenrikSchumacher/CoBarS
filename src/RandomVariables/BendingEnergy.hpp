@@ -46,7 +46,7 @@ protected:
         {
             const Real len = static_cast<Real>(0.5)*(r[n-1]+r[0]);
             
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(n-1), y.data(0) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
             
             sum = std::pow( phi / len, p ) * len;
         }
@@ -55,7 +55,7 @@ protected:
         {
             const Real len = static_cast<Real>(0.5)*(r[k]+r[k+1]);
             
-            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y.data(k), y.data(k+1) );
+            const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
             
             sum += std::pow( phi / len, p ) * len;
         }

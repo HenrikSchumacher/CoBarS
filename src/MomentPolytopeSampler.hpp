@@ -18,6 +18,8 @@ namespace CycleSampler
         
         static constexpr Int AmbDim = 3;
         
+        using Vector_T = Tensors::Small::Vector<AmbDim,Real,Int>;
+        
         CLASS() = default;
         
         ~CLASS(){}
@@ -167,13 +169,19 @@ namespace CycleSampler
             p[5] = zero;
             
             // Unit vector pointing to position of currect vertex..
-            Real e [3] = {one, zero, zero};
+            Vector_T e;
+            e[0] = one;
+            e[1] = zero;
+            e[2] = zero;
             
             // Some buffer for the cross product in Rodrigue's formula.
-            Real v [3];
+            Vector_T v;
             
             // The current triangle's normal.
-            Real nu[3] = {zero, zero, one };
+            Vector_T nu;
+            e[0] = zero;
+            e[1] = zero;
+            e[2] = one;
             
             for( Int i = 0; i < n-3; ++i )
             {
@@ -190,7 +198,7 @@ namespace CycleSampler
                 v[1] = nu[2] * e[0] - nu[0] * e[2];
                 v[2] = nu[0] * e[1] - nu[1] * e[0];
                 
-                const Real factor = (nu[0] * e[0] + nu[1] * e[1] + nu[2] * e[2]) * (one-cos_alpha);
+                const Real factor = Dot(nu,e) * (one-cos_alpha);
                 
                 // Apply Rodrigue's formula
                 e[0] = e[0] * cos_alpha + v[0] * sin_alpha + nu[0] * factor;
@@ -198,14 +206,9 @@ namespace CycleSampler
                 e[2] = e[2] * cos_alpha + v[2] * sin_alpha + nu[2] * factor;
                 
                 // Normalize for stability
-                const Real e_inv_norm = one / std::sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]);
-                
-                e[0] *= e_inv_norm;
-                e[1] *= e_inv_norm;
-                e[2] *= e_inv_norm;
+                e.Normalize();
                 
                 // Compute the new vertex position.
-                
                 p[3 * (i+2) + 0] = d[i+1] * e[0];
                 p[3 * (i+2) + 1] = d[i+1] * e[1];
                 p[3 * (i+2) + 2] = d[i+1] * e[2];
@@ -220,7 +223,7 @@ namespace CycleSampler
                 const Real theta_i   = dist_2( engine );
                 const Real cos_theta = std::cos(theta_i);
                 const Real sin_theta = std::sin(theta_i);
-                const Real factor_2 = (e[0] * nu[0] + e[1] * nu[1] + e[2] * nu[2]) * (one-cos_theta);
+                const Real factor_2 = Dot(e,nu) * (one-cos_theta);
                 
                 // Apply Rodrigue's formula
                 nu[0] = nu[0] * cos_theta + v[0] * sin_theta + e[0] * factor_2;
@@ -228,11 +231,7 @@ namespace CycleSampler
                 nu[2] = nu[2] * cos_theta + v[2] * sin_theta + e[2] * factor_2;
                 
                 // Normalize for stability
-                const Real nu_inv_norm = one / std::sqrt(nu[0] * nu[0] + nu[1] * nu[1] + nu[2] * nu[2]);
-                
-                nu[0] *= nu_inv_norm;
-                nu[1] *= nu_inv_norm;
-                nu[2] *= nu_inv_norm;
+                nu.Normalize();
             }
             
             // Finally, we have to compute the vertex (n-1). We need to apply only an alpha-rotation.
@@ -249,7 +248,7 @@ namespace CycleSampler
             v[1] = nu[2] * e[0] - nu[0] * e[2];
             v[2] = nu[0] * e[1] - nu[1] * e[0];
             
-            const Real factor = (nu[0] * e[0] + nu[1] * e[1] + nu[2] * e[2]) * (one-cos_alpha);
+            const Real factor = Dot(nu,e) * (one-cos_alpha);
             
             // Apply Rodrigue's formula
             e[0] = e[0] * cos_alpha + v[0] * sin_alpha + nu[0] * factor;
@@ -257,14 +256,9 @@ namespace CycleSampler
             e[2] = e[2] * cos_alpha + v[2] * sin_alpha + nu[2] * factor;
             
             // Normalize for stability
-            const Real e_inv_norm = one / std::sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]);
-            
-            e[0] *= e_inv_norm;
-            e[1] *= e_inv_norm;
-            e[2] *= e_inv_norm;
+            e.Normalize();
             
             // Compute the new vertex position.
-            
             p[3 * (n-1) + 0] = d[n-2] * e[0];
             p[3 * (n-1) + 1] = d[n-2] * e[1];
             p[3 * (n-1) + 2] = d[n-2] * e[2];
