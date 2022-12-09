@@ -56,16 +56,16 @@ namespace CycleSampler
         
     public:
         
-        using Vector_T             = Tiny::Vector         <AmbDim,Real,Int>;
-        using SquareMatrix_T       = Tiny::SquareMatrix   <AmbDim,Real,Int>;
-        using SymmetricMatrix_T    = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
+        using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
+        using SquareMatrix_T    = Tiny::SquareMatrix     <AmbDim,Real,Int>;
+        using SymmetricMatrix_T = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
         
-        using RandomVariable_T     = RandomVariable<AmbDim,Real,Int>;
+        using RandomVariable_T  = RandomVariable<AmbDim,Real,Int>;
         
-        using SpherePoints_T = Tensor2<Real,Int>;
-        using SpacePoints_T  = Tensor2<Real,Int>;
-        using Weights_T      = Tensor1<Real,Int>;
-        using Setting_T      = SamplerSettings<Real,Int>;
+        using SpherePoints_T    = Tensor2<Real,Int>;
+        using SpacePoints_T     = Tensor2<Real,Int>;
+        using Weights_T         = Tensor1<Real,Int>;
+        using Setting_T         = SamplerSettings<Real,Int>;
         
         Sampler()
         {
@@ -210,9 +210,9 @@ namespace CycleSampler
         
         Setting_T settings;
         
-        SpherePoints_T x {0,AmbDim};
-        SpherePoints_T y {0,AmbDim};
-        SpacePoints_T  p {0,AmbDim};
+        SpherePoints_T x {0};
+        SpherePoints_T y {0};
+        SpacePoints_T  p {0};
         
         Weights_T      r {0};
         Weights_T    rho {0};
@@ -322,7 +322,7 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Vector_T y_k( y[k] );
+                Vector_T y_k (y[k]);
                 
                 value += r[k] * std::log( std::abs( (a - two * Dot(y_k,z) ) * b ) );
             }
@@ -602,7 +602,7 @@ namespace CycleSampler
             {
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Vector_T x_k ( x[k] );
+                    Vector_T x_k (x[k]);
                     
                     const Real wx2 = two * Dot(w,x_k);
                     
@@ -612,7 +612,7 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        y(k,i) = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
+                        y[k][i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
                     }
                 }
             }
@@ -622,7 +622,7 @@ namespace CycleSampler
                 
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Vector_T x_k ( x[k] );
+                    Vector_T x_k (x[k]);
                     
                     const Real wx2 = two * Dot(w,x_k);
                     
@@ -658,7 +658,7 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Vector_T y_k ( y[k] );
+                Vector_T y_k (y[k]);
                 
                 const Real wy = Dot(w,y_k);
                 
@@ -708,11 +708,11 @@ namespace CycleSampler
                 const Real rho_squared = rho[0] * rho[0];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y(0,i);
+                    const Real factor = rho_squared * y[0][i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) = factor * y(0,j);
+                        Sigma(j,i) = factor * y[0][j];
                     }
                 }
             }
@@ -723,11 +723,11 @@ namespace CycleSampler
                 const Real rho_squared = rho[k] * rho[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = rho_squared * y(k,i);
+                    const Real factor = rho_squared * y[k][i];
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) += factor * y(k,j);
+                        Sigma(j,i) += factor * y[k][j];
                     }
                 }
             }
@@ -805,7 +805,7 @@ namespace CycleSampler
                     
                     x_k.Normalize();
                     
-                    x_k.Write( x[k] );
+                    x_k.Write(x,k);
                 }
             }
             else
@@ -821,7 +821,14 @@ namespace CycleSampler
         
         void WriteInitialEdgeCoordinates( Real * x_out ) const
         {
-            x.Write(x_out);
+//            x.Write(x_out);
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    x_out[AmbDim*k+i] = x[k][i];
+                }
+            }
         }
         
         void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const
@@ -842,7 +849,7 @@ namespace CycleSampler
                 
                 x_k.Normalize();
                 
-                x_k.Write( x[k] );
+                x_k.Write(x[k]);
             }
         }
         
@@ -865,7 +872,14 @@ namespace CycleSampler
         
         void WriteEdgeCoordinates( Real * y_out ) const
         {
-            y.Write(y_out);
+//            y.Write(y_out);
+            for( Int k = 0; k < edge_count; ++k )
+            {
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    y_out[AmbDim*k+i] = y[k][i];
+                }
+            }
         }
         
         void WriteEdgeCoordinates( Real * y_out, const Int k ) const
@@ -895,8 +909,8 @@ namespace CycleSampler
             //Caution: This gives only have the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
             
-            Real barycenter        [AmbDim] = {};
-            Real point_accumulator [AmbDim] = {};
+            Vector_T barycenter        (zero);
+            Vector_T point_accumulator (zero);
             
             for( Int k = 0; k < edge_count; ++k )
             {
@@ -904,7 +918,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real offset = r_k * y(k,i);
+                    const Real offset = r_k * y[k][i];
                     
                     barycenter[i] += (point_accumulator[i] + half * offset);
                     
@@ -914,7 +928,7 @@ namespace CycleSampler
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                p(0,i) = -barycenter[i]/edge_count;
+                p[0][i] = -barycenter[i]/edge_count;
             }
             
             for( Int k = 0; k < edge_count; ++k )
@@ -923,7 +937,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p(k+1,i) = p(k,i) + r_k * y(k,i);
+                    p[k+1][i] = p[k][i] + r_k * y[k][i];
                 }
             }
         }
@@ -962,7 +976,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w[i] = x(0,i) * r_k;
+                    w[i] = x[0][i] * r_k;
                 }
             }
             
@@ -973,7 +987,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w[i] += x(k,i) * r_k;
+                    w[i] += x[k][i] * r_k;
                 }
             }
             
@@ -1199,17 +1213,17 @@ namespace CycleSampler
                 for( Int k = 0; k < repetitions; ++k )
                 {
                     W.RandomizeInitialEdgeCoordinates();
-                    
+
                     W.ComputeShiftVector();
-                    
+
                     W.Optimize();
-                    
+
                     W.ComputeSpaceCoordinates();
-                    
+
                     const Real K = W.EdgeSpaceSamplingWeight();
-                    
+
                     const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();
-                    
+
                     for( Int i = 0; i < fun_count; ++i )
                     {
                         const Real val = (*F_list[i])(W);
@@ -1379,7 +1393,7 @@ namespace CycleSampler
                         
                         for( int i = 0; i < 3; ++i )
                         {
-                            v[i] = p(k,i);
+                            v[i] = p[k][i];
                         }
                     }
                     
