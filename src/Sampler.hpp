@@ -291,17 +291,17 @@ namespace CycleSampler
             return edge_count;
         }
         
-        Real EdgeSpaceSamplingWeight()
+        Real EdgeSpaceSamplingWeight() const
         {
             return edge_space_sampling_weight;
         }
         
-        Real EdgeQuotientSpaceSamplingCorrection()
+        Real EdgeQuotientSpaceSamplingCorrection() const
         {
             return edge_quotient_space_sampling_correction;
         }
         
-        Real EdgeQuotientSpaceSamplingWeight()
+        Real EdgeQuotientSpaceSamplingWeight() const
         {
             return EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
         }

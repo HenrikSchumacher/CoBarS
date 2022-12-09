@@ -33,10 +33,12 @@ int main(int argc, const char * argv[])
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-    F_list.push_back( std::make_unique<ShiftNorm     <d,Real,Int>>()    );
-    F_list.push_back( std::make_unique<Gyradius      <d,Real,Int>>()    );
-    F_list.push_back( std::make_unique<ChordLength   <d,Real,Int>>(0,2) );
-    F_list.push_back( std::make_unique<TotalCurvature<d,Real,Int>>()    );
+    F_list.push_back( std::make_unique<ShiftNorm              <d,Real,Int>>()   );
+    F_list.push_back( std::make_unique<Gyradius               <d,Real,Int>>()   );
+    F_list.push_back( std::make_unique<ChordLength            <d,Real,Int>>(0,2));
+    F_list.push_back( std::make_unique<TotalCurvature         <d,Real,Int>>()   );
+    F_list.push_back( std::make_unique<EdgeSpaceSamplingWeight<d,Real,Int>>()   );
+    
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;
