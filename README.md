@@ -6,7 +6,11 @@ A program for Monte-Carlo sampling of cylic polygons with prescribed edge length
 
 # Installation
 
-After cloning make sure to run the following to connect all submodules to their repos.
+Please clone with
+
+    git clone --recurse-submodules git@github.com:HenrikSchumacher/CycleSampler.git
+
+to load also all submodules. Id you forgot to do that, you can also run the following afterwards:
 
     git submodule update --init --recursive
     
