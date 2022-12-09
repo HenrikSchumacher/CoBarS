@@ -1220,6 +1220,10 @@ namespace CycleSampler
 
                     W.ComputeSpaceCoordinates();
 
+                    W.ComputeEdgeSpaceSamplingWeight();
+                    
+                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    
                     const Real K = W.EdgeSpaceSamplingWeight();
 
                     const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();

@@ -42,7 +42,8 @@ int main(int argc, const char * argv[])
 
     print("");
 
-    valprint("last K_out", K[sample_count-1], 16 );
+    valprint("last K     ", K     [sample_count-1], 16 );
+    valprint("last K_quot", K_quot[sample_count-1], 16 );
 
     print("");
 

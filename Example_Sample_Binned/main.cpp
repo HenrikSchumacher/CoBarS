@@ -58,7 +58,7 @@ int main(int argc, const char * argv[])
     
     Tensor3<Real,Int> moments ( 3, fun_count, moment_count, Real(0) );
     
-    // Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins.
+    // Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be divided into bin_count bins.
     Tensor2<Real,Int> ranges  ( fun_count, 2 );
 
     // The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
@@ -92,11 +92,9 @@ int main(int argc, const char * argv[])
         );
     toc("Sample_Binned");
     
-    // C.Sample adds into the output arrays, but it does _NOT_ normalize bins and moments. This way we can add futher results into them later; we can also simply use them in a further call to C.Sample.
+    // C.Sample adds into the output arrays, but it does _NOT_ normalize bins and moments. This way we can add further results into them later; we can also simply use them in a further call to C.Sample_Binned.
     
-    // In order to get normalized bins.
-    
-    // The interface operates via raw pointers for more flexibility.
+    // Get normalized bins.
     S.NormalizeBinnedSamples(
        bins.data(),
        bin_count,
@@ -104,7 +102,6 @@ int main(int argc, const char * argv[])
        moment_count,
        fun_count
     );
-  
     
     // Plot a very simplistic histogram
     print("");
@@ -114,6 +111,18 @@ int main(int argc, const char * argv[])
     for( Int i = 0; i < bin_count; ++i )
     {
         print( "|"+std::string( static_cast<Int>(bins(0,0,i)*500), '#') );
+    }
+    print( "+ <--- " + ToString( ranges(0,1) ) );
+    print("");
+    
+    // Plot a very simplistic histogram
+    print("");
+    print("Histogram for variable "+F_list[0]->Tag()+" (Pol space weighting):");
+    print("");
+    print( "+ <--- " + ToString( ranges(0,0) ) );
+    for( Int i = 0; i < bin_count; ++i )
+    {
+        print( "|"+std::string( static_cast<Int>(bins(1,0,i)*500), '#') );
     }
     print( "+ <--- " + ToString( ranges(0,1) ) );
     print("");
