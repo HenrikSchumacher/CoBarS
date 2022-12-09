@@ -759,11 +759,11 @@ namespace CycleSampler
                 const Real S_21 = Sigma(2,1)*Sigma(2,1);
                 
                 const Real det = std::abs(
-                                          Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
-                                          + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
-                                          + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
-                                          + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
-                                          );
+                      Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
+                    + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
+                    + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
+                    + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
+                );
                 edge_quotient_space_sampling_correction = one / std::sqrt(det);
                 return;
             }
@@ -955,8 +955,8 @@ namespace CycleSampler
         
         void ComputeShiftVector()
         {
-            //            w.SetZero();
-            
+
+            // Overwrite by first summand.
             {
                 const Real r_k = r[0];
                 
@@ -966,6 +966,7 @@ namespace CycleSampler
                 }
             }
             
+            // Add-in the others.
             for( Int k = 1; k < edge_count; ++k )
             {
                 const Real r_k = r[k];
@@ -1036,13 +1037,13 @@ namespace CycleSampler
     public:
         
         void OptimizeBatch(
-                           const Real * restrict const x_in,
-                           Real * restrict const w_out,
-                           Real * restrict const y_out,
-                           const                       Int sample_count,
-                           const                       Int thread_count = 1,
-                           const bool                  normalize = true
-                           )
+            const Real * restrict const x_in,
+                  Real * restrict const w_out,
+                  Real * restrict const y_out,
+            const                       Int sample_count,
+            const                       Int thread_count = 1,
+            const bool                  normalize = true
+        )
         {
             ptic(ClassName()+"OptimizeBatch");
             
@@ -1076,20 +1077,20 @@ namespace CycleSampler
         }
         
         void RandomClosedPolygons(
-                                  Real * restrict const x_out,
-                                  Real * restrict const w_out,
-                                  Real * restrict const y_out,
-                                  Real * restrict const K_edge_space,
-                                  Real * restrict const K_edge_quotient_space,
-                                  const Int                   sample_count,
-                                  const Int                   thread_count = 1
-                                  ) const
+                  Real * restrict const x_out,
+                  Real * restrict const w_out,
+                  Real * restrict const y_out,
+                  Real * restrict const K_edge_space,
+                  Real * restrict const K_edge_quotient_space,
+            const Int                   sample_count,
+            const Int                   thread_count = 1
+        ) const
         {
             ptic(ClassName()+"RandomClosedPolygons");
             
             JobPointers<Int> job_ptr ( sample_count, thread_count );
             
-#pragma omp parallel for num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
             for( Int thread = 0; thread < thread_count; ++thread )
             {
                 const Int k_begin = job_ptr[thread  ];
@@ -1125,48 +1126,19 @@ namespace CycleSampler
         }
         
         
-        
-        
         // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
         // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
         
-//        void Sample_Binned(
-//                           Real * restrict bins_out,
-//                           const Int             bin_count_,
-//                           Real * restrict moments_out,
-//                           const Int             moment_count_,
-//                           const Real * restrict ranges,
-//                           const std::vector< std::unique_ptr<RandomVariableBase_T> > & F_list_,
-//                           const Int             sample_count,
-//                           const Int             thread_count = 1
-//                           ) const
-//        {
-//            std::vector< std::unique_ptr<RandomVariable_T> > F_list;
-//            
-//            for( size_t i = 0; i < F_list_.size(); ++i )
-//            {
-//                F_list.push_back(
-//                                 std::unique_ptr<RandomVariable_T>(
-//                                                                   dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().release() )
-//                                                                   )
-//                                 );
-//            }
-//            
-//            Sample_Binned(
-//                          bins_out,bin_count_,moments_out,moment_count_,ranges,F_list,sample_count,thread_count
-//                          );
-//        }
-        
         void Sample_Binned(
-                           Real * restrict bins_out,
-                           const Int             bin_count_,
-                           Real * restrict moments_out,
-                           const Int             moment_count_,
-                           const Real * restrict ranges,
-                           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
-                           const Int             sample_count,
-                           const Int             thread_count = 1
-                           ) const
+                 Real * restrict bins_out,
+           const Int             bin_count_,
+                 Real * restrict moments_out,
+           const Int             moment_count_,
+           const Real * restrict ranges,
+           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+           const Int             sample_count,
+           const Int             thread_count = 1
+        ) const
         {
             ptic(ClassName()+"Sample_Binned");
             
@@ -1203,7 +1175,7 @@ namespace CycleSampler
             const Int lower = static_cast<Int>(0);
             const Int upper = static_cast<Int>(bin_count-1);
             
-#pragma omp parallel for num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
             for( Int thread = 0; thread < thread_count; ++thread )
             {
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
@@ -1290,12 +1262,12 @@ namespace CycleSampler
         }
         
         void NormalizeBinnedSamples(
-                                    Real * restrict bins,
-                                    const Int             bin_count,
-                                    Real * restrict moments,
-                                    const Int             moment_count,
-                                    const Int            fun_count
-                                    ) const
+                  Real * restrict bins,
+            const Int             bin_count,
+                  Real * restrict moments,
+            const Int             moment_count,
+            const Int             fun_count
+        ) const
         {
             ptic(ClassName()+"::NormalizeBinnedSamples");
             for( Int i = 0; i < 3; ++i )
@@ -1322,9 +1294,9 @@ namespace CycleSampler
 #if defined(PLCTOPOLOGY_H)
         
         std::map<std::string, std::tuple<Real,Real,Real>> SampleHOMFLY(
-                                                                       const Int sample_count,
-                                                                       const Int thread_count = 1
-                                                                       ) const
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const
         {
             ptic(ClassName()+"SampleHOMFLY");
             
@@ -1354,7 +1326,7 @@ namespace CycleSampler
                 seeds[thread] = (std::numeric_limits<unsigned int>::max()+1) * r() + r();
             }
             
-#pragma omp parallel for num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count )
             for( Int thread = 0; thread < thread_count; ++thread )
             {
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
@@ -1446,8 +1418,6 @@ namespace CycleSampler
                     std::get<0>(tuple) += one;
                     std::get<1>(tuple) += K;
                     std::get<2>(tuple) += K_quot;
-                    
-                    
                 }
                 
                 #pragma omp critical

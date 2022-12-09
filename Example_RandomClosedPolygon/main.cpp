@@ -8,7 +8,7 @@ using namespace Tensors;
 int main(int argc, const char * argv[])
 {
     using Real = float64_t;
-    using Int  = int32_t;
+    using Int  =   int32_t;
 
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
     const     Int edge_count   = 8;
