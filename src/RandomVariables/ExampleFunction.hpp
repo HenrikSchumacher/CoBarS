@@ -65,7 +65,7 @@ namespace CycleSampler
             return static_cast<Real>(0);
         }
         
-        // Optionally, you can provide a lower bound for the range; this migh help with binning.
+        // Optionally, you can provide a lower bound for the range; this might help with binning.
         virtual Real MinValue( const Sampler_T & C ) const override
         {
             return static_cast<Real>(0);
