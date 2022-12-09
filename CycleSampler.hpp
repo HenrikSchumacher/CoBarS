@@ -36,7 +36,26 @@
 
     #include "src/Sampler.hpp"
 
-    #include "src/RandomVariables.hpp"
+    #include "src/RandomVariables/RandomVariable.hpp"
+
+    #include "src/RandomVariables/BarycenterNorm.hpp"   // Should always evaluate to 0.
+    #include "src/RandomVariables/ChordLength.hpp"
+    #include "src/RandomVariables/DiagonalLength.hpp"
+    #include "src/RandomVariables/Gyradius.hpp"
+    #include "src/RandomVariables/GyradiusP.hpp"
+    #include "src/RandomVariables/HydrodynamicRadius.hpp"
+    #include "src/RandomVariables/ShiftNorm.hpp"
+    #include "src/RandomVariables/TotalCurvature.hpp"
+    #include "src/RandomVariables/BendingEnergy.hpp"
+    #include "src/RandomVariables/MaxAngle.hpp"
+    #include "src/RandomVariables/EdgeSpaceSamplingWeight.hpp"
+    #include "src/RandomVariables/EdgeQuotientSpaceSamplingWeight.hpp"
+    #include "src/RandomVariables/IterationCount.hpp"
+        
+        
+    // Add your own random variables here!
+    #include "src/RandomVariables/ExampleFunction.hpp"
+
 
 
     #include "src/MomentPolytopeSampler.hpp"

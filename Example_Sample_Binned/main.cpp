@@ -19,13 +19,9 @@ int main(int argc, const char * argv[])
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
     
-    using Sampler_T = Sampler<d,Real,Int>;
-    
-    using RandomVariableBase_T = typename Sampler_T::RandomVariableBase_T;
-    using RandomVariable_T     = typename Sampler_T::RandomVariable_T;
-    
+    using Sampler_T        = Sampler<d,Real,Int>;
+    using RandomVariable_T = typename Sampler_T::RandomVariable_T;
 
-    
     print("Test program for routine CycleSampler::Sample");
 
     Sampler_T S (edge_count);

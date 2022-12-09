@@ -16,7 +16,7 @@ namespace CycleSampler
         
         static constexpr Int AmbDim = 3;
         
-        using Vector_T = Tensors::Small::Vector<AmbDim,Real,Int>;
+        using Vector_T = Tensors::Tiny::Vector<AmbDim,Real,Int>;
         
         MomentPolytopeSampler() = default;
         

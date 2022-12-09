@@ -56,9 +56,9 @@ namespace CycleSampler
         
     public:
         
-        using Vector_T             = Small::Vector         <AmbDim,Real,Int>;
-        using SquareMatrix_T       = Small::SquareMatrix   <AmbDim,Real,Int>;
-        using SymmetricMatrix_T    = Small::SelfAdjointMatrix<AmbDim,Real,Int>;
+        using Vector_T             = Tiny::Vector         <AmbDim,Real,Int>;
+        using SquareMatrix_T       = Tiny::SquareMatrix   <AmbDim,Real,Int>;
+        using SymmetricMatrix_T    = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
         
         using RandomVariable_T     = RandomVariable<AmbDim,Real,Int>;
         
@@ -120,65 +120,84 @@ namespace CycleSampler
         
         
         
-        //        // Copy constructor
-        //        Sampler( const Sampler & other )
-        //        :   Base_T( other.edge_count, other.settings )
-        //        ,   x(other.x)
-        //        ,   y(other.y)
-        //        ,   p(other.p)
-        //        ,   r(other.r)
-        //        ,   rho(other.rho)
-        //        ,   total_r_inv(other.total_r_inv)
-        //        ,   w(other.w)
-        //        ,   F(other.F)
-        //        ,   DF(other.DF)
-        //        ,   L(other.L)
-        //        ,   u(other.u)
-        //        ,   iter(other.iter)
-        //        ,   residual(other.residual)
-        //        {}
+        // Copy constructor
+        Sampler( const Sampler & other )
+        :   edge_count( other.edge_count )
+        ,   settings( other.settings )
+        ,   x(other.x)
+        ,   y(other.y)
+        ,   p(other.p)
+        ,   r(other.r)
+        ,   rho(other.rho)
+        ,   total_r_inv(other.total_r_inv)
+        ,   w(other.w)
+        ,   F(other.F)
+        ,   DF(other.DF)
+        ,   L(other.L)
+        ,   u(other.u)
+        ,   z(other.z)
+        ,   iter(other.iter)
+        ,   squared_residual(other.squared_residual)
+        ,   residual(other.residual)
+        ,   edge_space_sampling_weight(other.edge_space_sampling_weight)
+        ,   edge_quotient_space_sampling_correction(other.edge_quotient_space_sampling_correction)
+        ,   lambda_min(other.lambda_min)
+        ,   q(other.q)
+        ,   errorestimator(errorestimator)
+        ,   linesearchQ(linesearchQ)
+        ,   succeededQ(succeededQ)
+        ,   continueQ(continueQ)
+        ,   ArmijoQ(ArmijoQ)
+        {}
         
-        //
-        //        friend void swap(Sampler &A, Sampler &B) noexcept
-        //        {
-        //            // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
-        //            using std::swap;
-        //
-        //            swap(A.edge_count,B.edge_count);
-        //            swap(A.x,B.x);
-        //            swap(A.y,B.y);
-        //            swap(A.p,B.p);
-        //            swap(A.r,B.r);
-        //            swap(A.rho,B.rho);
-        //            swap(A.total_r_inv,B.total_r_inv);
-        //
-        //            std::swap_ranges(&A.w[0],    &A.w[AmbDim],            &B.w[0]   );
-        //            std::swap_ranges(&A.z[0],    &A.z[AmbDim],            &B.z[0]   );
-        //            std::swap_ranges(&A.F[0],    &A.F[AmbDim],            &B.F[0]   );
-        //            std::swap_ranges(&A.A(0,0),  &A.A(AmbDim-1,AmbDim),   &B.A(0,0) );
-        //            std::swap_ranges(&A.u[0],    &A.u[AmbDim],            &B.u[0]   );
-        //
-        //            swap(A.settings,       B.settings     );
-        //            swap(A.iter,           B.iter          );
-        //            swap(A.residual,       B.residual      );
-        //        }
-        //
-        //        // Copy assignment operator
-        //        Sampler & operator=(Sampler other)
-        //        {
-        //            // copy-and-swap idiom
-        //            // see https://stackoverflow.com/a/3279550/8248900 for details
-        //            swap(*this, other);
-        //
-        //            return *this;
-        //        }
-        //
-        //        /* Move constructor */
-        //        Sampler( Sampler && other ) noexcept
-        //        :   Sampler()
-        //        {
-        //            swap(*this, other);
-        //        }
+        friend void swap(Sampler &A, Sampler &B) noexcept
+        {
+            // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
+            using std::swap;
+            swap(A.edge_count,B.edge_count);
+            swap(A.settings,B.settings);
+            swap(A.x,B.x);
+            swap(A.y,B.y);
+            swap(A.p,B.p);
+            swap(A.r,B.r);
+            swap(A.rho,B.rho);
+            swap(A.total_r_inv,B.total_r_inv);
+            swap(A.w,B.w);
+            swap(A.F,B.F);
+            swap(A.A,B.A);
+            swap(A.u,B.u);
+            swap(A.z,B.z);
+
+            swap(A.iter,             B.iter             );
+            swap(A.squared_residual, B.squared_residual );
+            swap(A.residual,         B.residual         );
+            swap(A.edge_space_sampling_weight,A.edge_space_sampling_weight);
+            swap(A.edge_quotient_space_sampling_correction,A.edge_quotient_space_sampling_correction);
+            swap(A.lambda_min,B.lambda_min);
+            swap(A.q,B.q);
+            swap(A.errorestimator,B.errorestimator);
+            swap(A.linesearchQ,B.linesearchQ);
+            swap(A.succeededQ,B.succeededQ);
+            swap(A.continueQ,B.continueQ);
+            swap(A.ArmijoQ,B.ArmijoQ);
+        }
+        
+        // Copy assignment operator
+        Sampler & operator=(Sampler other)
+        {
+            // copy-and-swap idiom
+            // see https://stackoverflow.com/a/3279550/8248900 for details
+            swap(*this, other);
+
+            return *this;
+        }
+
+        /* Move constructor */
+        Sampler( Sampler && other ) noexcept
+        :   Sampler()
+        {
+            swap(*this, other);
+        }
         
         
     protected:
@@ -265,6 +284,11 @@ namespace CycleSampler
                 
                 SearchDirection_Hyperbolic();
             }
+        }
+        
+        Int EdgeCount() const
+        {
+            return edge_count;
         }
         
         Real EdgeSpaceSamplingWeight()
@@ -1184,17 +1208,17 @@ namespace CycleSampler
             {
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
                 
-                Sampler W( edge_count, EdgeLengths().data(), Rho().data(), settings );
+                Sampler W( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
                 std::vector< std::unique_ptr<RandomVariable_T> > F_list;
                 
                 for( Int i = 0; i < fun_count; ++ i )
                 {
                     F_list.push_back(
-                                     std::unique_ptr<RandomVariable_T>(
-                                                                       dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().release() )
-                                                                       )
-                                     );
+                        std::unique_ptr<RandomVariable_T>(
+                           dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().release() )
+                        )
+                    );
                 }
                 
                 Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
@@ -1221,8 +1245,8 @@ namespace CycleSampler
                         Real values [3] = { one, K, K_quot };
                         
                         const Int bin_idx = static_cast<Int>(
-                                                             std::floor( factor[i] * (val - ranges[2*i]) )
-                                                             );
+                            std::floor( factor[i] * (val - ranges[2*i]) )
+                        );
                         
                         if( (bin_idx <= upper) && (bin_idx >= lower) )
                         {
@@ -1247,15 +1271,15 @@ namespace CycleSampler
                     }
                 }
                 
-#pragma omp critical
+                #pragma omp critical
                 {
                     add_to_buffer(
-                                  bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
-                                  );
+                        bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
+                    );
                     
                     add_to_buffer(
-                                  moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
-                                  );
+                        moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
+                    );
                 }
             }
             
@@ -1426,7 +1450,7 @@ namespace CycleSampler
                     
                 }
                 
-#pragma omp critical
+                #pragma omp critical
                 {
                     for ( auto const & [key, val] : map_loc )
                     {

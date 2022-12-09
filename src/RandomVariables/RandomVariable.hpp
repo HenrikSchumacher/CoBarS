@@ -31,7 +31,7 @@ namespace CycleSampler
 
     public:
         
-        Int AmbientDimension() const override
+        Int AmbientDimension() const
         {
             return AmbDim;
         }
