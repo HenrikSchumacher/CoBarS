@@ -80,7 +80,7 @@ namespace CycleSampler
     public:
         
         
-        Int RandomClosedPolygon( Real * restrict p )
+        Int RandomClosedPolygon( Real * restrict const p )
         {
             // Port of the routine "plc_random_equilateral_closed_polygon" from the C library "plCurve" by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
             // https://jasoncantarella.com/wordpress/software/plcurve/
@@ -265,7 +265,7 @@ namespace CycleSampler
         }
         
         
-        Int RandomClosedPolygons( Real * restrict p, const Int sample_count, const Int thread_count = 1 )
+        Int RandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             Int trials = 0;
