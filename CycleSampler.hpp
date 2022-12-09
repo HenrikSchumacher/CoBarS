@@ -10,8 +10,8 @@
 
 
     #define EIGEN_NO_DEBUG
-    #define EIGEN_USE_BLAS
-    #define EIGEN_USE_LAPACKE
+//     #define EIGEN_USE_BLAS
+//     #define EIGEN_USE_LAPACKE
     #include <eigen3/Eigen/Dense>
 
     #include "Tensors/Tensors.hpp"
