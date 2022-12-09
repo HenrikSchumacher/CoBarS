@@ -3,10 +3,8 @@
 namespace CycleSampler
 {
 
-#define CLASS MomentPolytopeSampler
-    
     template<typename Real = double, typename Int = long long>
-    class CLASS
+    class MomentPolytopeSampler
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
@@ -20,11 +18,11 @@ namespace CycleSampler
         
         using Vector_T = Tensors::Small::Vector<AmbDim,Real,Int>;
         
-        CLASS() = default;
+        MomentPolytopeSampler() = default;
         
-        ~CLASS(){}
+        ~MomentPolytopeSampler(){}
         
-        explicit CLASS( const Int edge_count_ )
+        explicit MomentPolytopeSampler( const Int edge_count_ )
         :   edge_count  ( edge_count_)
         {
         }
@@ -279,7 +277,7 @@ namespace CycleSampler
             {
                 
                 // Create a new instance of the class with its own random number generator.
-                CLASS C ( edge_count );
+                MomentPolytopeSampler C ( edge_count );
             
                 Int trials_loc = 0;
                 
@@ -312,11 +310,8 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return TO_STD_STRING(CLASS)+"<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
+            return "MomentPolytopeSampler<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
         }
     };
-        
-#undef BASE
-#undef CLASS
     
 } // namespace CycleSampler

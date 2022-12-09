@@ -1,45 +1,51 @@
 #pragma once
 
-#define CLASS IterationCount
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
-template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+namespace CycleSampler
 {
-public:
     
-    using Sampler_T   = typename BASE::Sampler_T;
+#define CLASS IterationCount
     
-    CLASS() = default;
-    
-    virtual ~CLASS() override = default;
-    
-    __ADD_CLONE_CODE__(CLASS)
-
-protected:
-    
-    virtual Real operator()( const Sampler_T & C ) const override
+    template<int AmbDim, typename Real = double, typename Int = long long>
+    class CLASS : public RandomVariable<AmbDim,Real,Int>
     {
-        return C.IterationCount();
-    }
+    private:
+        
+        using Base_T    = RandomVariable<AmbDim,Real,Int>;
+        
+    public:
+        
+        using Sampler_T = typename Base_T::Sampler_T;
+        
+        CLASS() = default;
+        
+        virtual ~CLASS() override = default;
+        
+        __ADD_CLONE_CODE__(CLASS)
+        
+    protected:
+        
+        virtual Real operator()( const Sampler_T & C ) const override
+        {
+            return C.IterationCount();
+        }
+        
+        virtual Real MinValue( const Sampler_T & C ) const override
+        {
+            return static_cast<Real>(0);
+        }
+        
+        virtual Real MaxValue( const Sampler_T & C ) const override
+        {
+            return C.MaxIterationCount();
+        }
+        
+    public:
+        
+        virtual std::string Tag() const  override
+        {
+            return TO_STD_STRING(CLASS);
+        }
+    };
     
-    virtual Real MinValue( const Sampler_T & C ) const override
-    {
-        return static_cast<Real>(0);
-    }
-    
-    virtual Real MaxValue( const Sampler_T & C ) const override
-    {
-        return C.MaxIterationCount();
-    }
-    
-public:
-
-    virtual std::string Tag() const  override
-    {
-        return TO_STD_STRING(CLASS);
-    }
-};
-    
-#undef BASE
 #undef CLASS
+}

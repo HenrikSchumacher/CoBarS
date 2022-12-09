@@ -12,18 +12,19 @@ int main(int argc, const char * argv[])
     using Real = float64_t;
     using Int  = int32_t;
     
-    constexpr Int AmbDim = 3;
+    constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
+    const     Int edge_count   = 8;
+    const     Int sample_count = 10000000;
+    const     Int thread_count = 8;
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
-    // In particular, the ambient dimension has to be known at compile time.
-    using Sampler_T = Sampler<AmbDim,Real,Int>;
+    
+    using Sampler_T = Sampler<d,Real,Int>;
     
     using RandomVariableBase_T = typename Sampler_T::RandomVariableBase_T;
     using RandomVariable_T     = typename Sampler_T::RandomVariable_T;
     
-    const     Int edge_count   = 8;
-    const     Int sample_count = 10000000;
-    const     Int thread_count = 8;
+
     
     print("Test program for routine CycleSampler::Sample");
 
@@ -36,10 +37,10 @@ int main(int argc, const char * argv[])
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-    F_list.push_back( std::make_unique<ShiftNorm     <AmbDim,Real,Int>>()    );
-    F_list.push_back( std::make_unique<Gyradius      <AmbDim,Real,Int>>()    );
-    F_list.push_back( std::make_unique<ChordLength   <AmbDim,Real,Int>>(0,2) );
-    F_list.push_back( std::make_unique<TotalCurvature<AmbDim,Real,Int>>()    );
+    F_list.push_back( std::make_unique<ShiftNorm     <d,Real,Int>>()    );
+    F_list.push_back( std::make_unique<Gyradius      <d,Real,Int>>()    );
+    F_list.push_back( std::make_unique<ChordLength   <d,Real,Int>>(0,2) );
+    F_list.push_back( std::make_unique<TotalCurvature<d,Real,Int>>()    );
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;

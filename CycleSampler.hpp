@@ -33,7 +33,7 @@
     //
     //int PD_VERBOSE = 0;
 
-    #include "src/SamplerBase.hpp"
+
     #include "src/Sampler.hpp"
 
     #include "src/RandomVariables.hpp"

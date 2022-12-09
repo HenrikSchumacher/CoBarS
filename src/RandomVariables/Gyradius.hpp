@@ -1,62 +1,69 @@
 #pragma once
 
-#define CLASS Gyradius
-#define BASE  RandomVariable<AmbDim,Real,Int>
-
-template<int AmbDim, typename Real = double, typename Int = long long>
-class CLASS : public BASE
+namespace CycleSampler
 {
-public:
-    
-    using Sampler_T         = typename BASE::Sampler_T;
-    using SpherePoints_T    = typename BASE::SpherePoints_T;
-    using SpacePoints_T     = typename BASE::SpacePoints_T;
-    using Weights_T         = typename BASE::Weights_T;
-    
-    CLASS() = default;
-    
-    virtual ~CLASS() override = default;
-    
-    __ADD_CLONE_CODE__(CLASS)
 
-protected:
+#define CLASS Gyradius
     
-    
-    virtual Real operator()( const Sampler_T & C ) const override
+    template<int AmbDim, typename Real = double, typename Int = long long>
+    class CLASS : public RandomVariable<AmbDim,Real,Int>
     {
-        Real r2 = static_cast<Real>(0);
+    private:
         
-        const Int n             = C.EdgeCount();
-        const SpacePoints_T & p = C.SpaceCoordinates();
+        using Base_T            = RandomVariable<AmbDim,Real,Int>;
         
-        for( Int k = 0; k < n; ++k )
+    public:
+        
+        using Sampler_T         = typename Base_T::Sampler_T;
+        using SpherePoints_T    = typename Base_T::SpherePoints_T;
+        using SpacePoints_T     = typename Base_T::SpacePoints_T;
+        using Weights_T         = typename Base_T::Weights_T;
+        
+        CLASS() = default;
+        
+        virtual ~CLASS() override = default;
+        
+        __ADD_CLONE_CODE__(CLASS)
+        
+    protected:
+        
+        
+        virtual Real operator()( const Sampler_T & C ) const override
         {
-            for( Int i = 0; i < AmbDim; ++i )
+            Real r2 = static_cast<Real>(0);
+            
+            const Int n             = C.EdgeCount();
+            const SpacePoints_T & p = C.SpaceCoordinates();
+            
+            for( Int k = 0; k < n; ++k )
             {
-                r2 += p[k][i] * p[k][i];
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    r2 += p[k][i] * p[k][i];
+                }
             }
+            
+            return std::sqrt( r2/n );
         }
         
-        return std::sqrt( r2/n );
-    }
-    
-    virtual Real MinValue( const Sampler_T & C ) const override
-    {
-        return static_cast<Real>(0);
-    }
-    
-    virtual Real MaxValue( const Sampler_T & C ) const override
-    {
-        return Total(C.EdgeLengths())/std::sqrt(C.EdgeCount());
-    }
-    
-public:
-    
-    virtual std::string Tag() const  override
-    {
-        return TO_STD_STRING(CLASS);
-    }
-};
+        virtual Real MinValue( const Sampler_T & C ) const override
+        {
+            return static_cast<Real>(0);
+        }
         
-#undef BASE
+        virtual Real MaxValue( const Sampler_T & C ) const override
+        {
+            return Total(C.EdgeLengths())/std::sqrt(C.EdgeCount());
+        }
+        
+    public:
+        
+        virtual std::string Tag() const  override
+        {
+            return TO_STD_STRING(CLASS);
+        }
+    };
+    
 #undef CLASS
+    
+}
