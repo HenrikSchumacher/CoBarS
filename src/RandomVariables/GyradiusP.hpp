@@ -47,7 +47,7 @@ namespace CycleSampler
             Real sum = static_cast<Real>(0);
             Real r2  = static_cast<Real>(0);
             
-            const Real power = exponent/2;
+            const Real power = exponent/static_cast<Real>(2);
             
             const Int n             = C.EdgeCount();
             const SpacePoints_T & p = C.SpaceCoordinates();

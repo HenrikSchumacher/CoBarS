@@ -647,8 +647,8 @@ namespace CycleSampler
             // Shifts all entries of x along y and writes the results to y.
             // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
             
-            SquareMatrix_T cbar  (0);
-            SquareMatrix_T gamma (0);
+            SquareMatrix_T cbar  (zero);
+            SquareMatrix_T gamma (zero);
             
             Real prod = one;
             

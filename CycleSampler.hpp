@@ -36,7 +36,7 @@
 
     #include "src/Sampler.hpp"
 
-    #include "src/RandomVariables/RandomVariable.hpp"
+    #include "src/RandomVariable.hpp"
 
     #include "src/RandomVariables/BarycenterNorm.hpp"   // Should always evaluate to 0.
     #include "src/RandomVariables/ChordLength.hpp"
