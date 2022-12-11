@@ -698,10 +698,9 @@ namespace CycleSampler
                 return;
             }
             
-            Eigen::Matrix<Real,AmbDim,AmbDim> Sigma;
+            Tiny::SelfAdjointMatrix<AmbDim, Real, Int> Sigma;
             
-            // We fill only the lower triangle of Sigma, because that's the only thing that Eigen's selfadjoint eigensolver needs.
-            // Recall that Eigen matrices are column-major by default.
+            // We fill only the upper triangle of Sigma, because that's the only thing that the function Eigenvalues needs.
             
             // Overwrite for k = 0.
             {
@@ -712,7 +711,7 @@ namespace CycleSampler
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) = factor * y[0][j];
+                        Sigma[i][j] = factor * y[0][j];
                     }
                 }
             }
@@ -727,20 +726,10 @@ namespace CycleSampler
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        Sigma(j,i) += factor * y[k][j];
+                        Sigma[i][j] += factor * y[k][j];
                     }
                 }
             }
-            
-            // Eigen needs only the lower triangular part. So need not symmetrize.
-            
-            //            for( Int i = 0; i < AmbDim; ++i )
-            //            {
-            //                for( Int j = 0; j < i; ++j )
-            //                {
-            //                    Sigma(j,i) = Sigma(i,j);
-            //                }
-            //            }
             
             if constexpr ( AmbDim == 3)
             {
@@ -750,29 +739,27 @@ namespace CycleSampler
                 //      ( tr(Sigma*Sigma) - tr(Sigma)*tr(Sigma) ) *  tr(Sigma)/2 - det(Sigma)
                 //  Thus, it can be expressed by as third-order polynomial in the entries of the matrix.
                 
-                const Real S_00 = Sigma(0,0)*Sigma(0,0);
-                const Real S_11 = Sigma(1,1)*Sigma(1,1);
-                const Real S_22 = Sigma(2,2)*Sigma(2,2);
+                const Real S_00 = Sigma[0][0]*Sigma[0][0];
+                const Real S_11 = Sigma[1][1]*Sigma[1][1];
+                const Real S_22 = Sigma[2][2]*Sigma[2][2];
                 
-                const Real S_10 = Sigma(1,0)*Sigma(1,0);
-                const Real S_20 = Sigma(2,0)*Sigma(2,0);
-                const Real S_21 = Sigma(2,1)*Sigma(2,1);
+                const Real S_10 = Sigma[0][1]*Sigma[0][1];
+                const Real S_20 = Sigma[0][2]*Sigma[0][2];
+                const Real S_21 = Sigma[1][2]*Sigma[1][2];
                 
                 const Real det = std::abs(
-                      Sigma(0,0) * ( S_11 + S_22 - S_10 - S_20 )
-                    + Sigma(1,1) * ( S_00 + S_22 - S_10 - S_21 )
-                    + Sigma(2,2) * ( S_00 + S_11 - S_20 - S_21 )
-                    + two * (Sigma(0,0)*Sigma(1,1)*Sigma(2,2) - Sigma(1,0)*Sigma(2,0)*Sigma(2,1))
+                      Sigma[0][0] * ( S_11 + S_22 - S_10 - S_20 )
+                    + Sigma[1][1] * ( S_00 + S_22 - S_10 - S_21 )
+                    + Sigma[2][2] * ( S_00 + S_11 - S_20 - S_21 )
+                    + two * (Sigma[0][0]*Sigma[1][1]*Sigma[2][2] - Sigma[0][1]*Sigma[0][2]*Sigma[1][2])
                 );
                 edge_quotient_space_sampling_correction = one / std::sqrt(det);
                 return;
             }
             
-            Eigen::SelfAdjointEigenSolver< Eigen::Matrix<Real,AmbDim,AmbDim> > eigs;
+            Tiny::Vector<AmbDim,Real,Int> lambda;
             
-            eigs.compute(Sigma);
-            
-            auto & lambda = eigs.eigenvalues();
+            Sigma.Eigenvalues(lambda);
             
             Real det = one;
             
