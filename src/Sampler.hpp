@@ -1198,7 +1198,7 @@ namespace CycleSampler
         
 
         
-        void Sample_Binned(
+        void Sample_Compressed(
                  Real * restrict bins_out,
            const Int             bin_count_,
                  Real * restrict moments_out,
@@ -1214,7 +1214,7 @@ namespace CycleSampler
             // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
             // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
             
-            ptic(ClassName()+"Sample_Binned");
+            ptic(ClassName()+"Sample_Compressed");
             
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1237,7 +1237,7 @@ namespace CycleSampler
             Tensor3<Real,Int> moments_global( moments_out, 3, fun_count, moment_count );
             Tensor1<Real,Int> factor        (                 fun_count               );
             
-            print("Sampling the following random variables:");
+            print("Sampling (compressed) the following random variables:");
             for( Int i = 0; i < fun_count; ++ i )
             {
                 const size_t i_ = static_cast<size_t>(i);
@@ -1334,10 +1334,10 @@ namespace CycleSampler
             bins_global.Write( bins_out );
             moments_global.Write( moments_out );
             
-            ptoc(ClassName()+"::Sample_Binned");
+            ptoc(ClassName()+"::Sample_Compressed");
         }
         
-        void NormalizeBinnedSamples(
+        void NormalizeCompressedSamples(
                   Real * restrict bins,
             const Int             bin_count,
                   Real * restrict moments,
@@ -1345,7 +1345,7 @@ namespace CycleSampler
             const Int             fun_count
         ) const
         {
-            ptic(ClassName()+"::NormalizeBinnedSamples");
+            ptic(ClassName()+"::NormalizeCompressedSamples");
             for( Int i = 0; i < 3; ++i )
             {
                 for( Int j = 0; j < fun_count; ++j )
@@ -1364,7 +1364,7 @@ namespace CycleSampler
                     scale_buffer( factor, moments_i_j, moment_count );
                 }
             }
-            ptoc(ClassName()+"::NormalizeBinnedSamples");
+            ptoc(ClassName()+"::NormalizeCompressedSamples");
         }
         
     protected:
