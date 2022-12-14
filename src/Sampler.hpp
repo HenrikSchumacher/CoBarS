@@ -808,14 +808,7 @@ namespace CycleSampler
         
         void WriteInitialEdgeCoordinates( Real * x_out ) const
         {
-//            x.Write(x_out);
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    x_out[AmbDim*k+i] = x[k][i];
-                }
-            }
+            x.Write(x_out);
         }
         
         void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const
@@ -859,14 +852,7 @@ namespace CycleSampler
         
         void WriteEdgeCoordinates( Real * y_out ) const
         {
-//            y.Write(y_out);
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    y_out[AmbDim*k+i] = y[k][i];
-                }
-            }
+            y.Write(y_out);
         }
         
         void WriteEdgeCoordinates( Real * y_out, const Int k ) const
@@ -1056,21 +1042,21 @@ namespace CycleSampler
                 const Int k_begin = job_ptr[thread];
                 const Int k_end   = job_ptr[thread+1];
                 
-                Sampler W( edge_count, settings );
+                Sampler S( edge_count, settings );
                 
-                W.ReadEdgeLengths( EdgeLengths().data() );
+                S.ReadEdgeLengths( EdgeLengths().data() );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
-                    W.ReadInitialEdgeCoordinates( x_in, k, normalize );
+                    S.ReadInitialEdgeCoordinates( x_in, k, normalize );
                     
-                    W.ComputeShiftVector();
+                    S.ComputeShiftVector();
                     
-                    W.Optimize();
+                    S.Optimize();
                     
-                    W.WriteShiftVector( w_out, k );
+                    S.WriteShiftVector( w_out, k );
                     
-                    W.WriteEdgeCoordinates( y_out, k );
+                    S.WriteEdgeCoordinates( y_out, k );
                 }
             }
             
@@ -1097,38 +1083,120 @@ namespace CycleSampler
                 const Int k_begin = job_ptr[thread  ];
                 const Int k_end   = job_ptr[thread+1];
                 
-                Sampler W( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                Sampler S( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
-                    W.RandomizeInitialEdgeCoordinates();
+                    S.RandomizeInitialEdgeCoordinates();
                     
-                    W.WriteInitialEdgeCoordinates(x_out, k);
+                    S.WriteInitialEdgeCoordinates(x_out, k);
                     
-                    W.ComputeShiftVector();
+                    S.ComputeShiftVector();
                     
-                    W.Optimize();
+                    S.Optimize();
                     
-                    W.WriteShiftVector(w_out,k);
+                    S.WriteShiftVector(w_out,k);
                     
-                    W.WriteEdgeCoordinates(y_out,k);
+                    S.WriteEdgeCoordinates(y_out,k);
                     
-                    W.ComputeEdgeSpaceSamplingWeight();
+                    S.ComputeEdgeSpaceSamplingWeight();
                     
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
                     
-                    K_edge_space[k] = W.EdgeSpaceSamplingWeight();
+                    K_edge_space[k] = S.EdgeSpaceSamplingWeight();
                     
-                    K_edge_quotient_space[k] = W.EdgeQuotientSpaceSamplingWeight();
+                    K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
                 }
             }
             
             ptoc(ClassName()+"::RandomClosedPolygons");
         }
         
+        void Sample(
+                 Real * restrict sampled_values,
+                 Real * restrict edge_space_sampling_weights,
+                 Real * restrict edge_quotient_space_sampling_weights,
+           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+           const Int             sample_count,
+           const Int             thread_count = 1
+        ) const
+        {
+            const Int fun_count = static_cast<Int>(F_list_.size());
+            
+            // This function creates sample for the random variables in the list F_list_ and records the sampling weights, so that this weighted data can be processed elsewhere.
+            
+            // The generated polygons are discarded immediately after evaluating the random variables on them.
+            
+            // sampled_values is expected to be an array of size at least sample_count * fun_count;
+            // edge_space_sampling_weights is expected to be an array of size at least sample_count.
+            // edge_quotient_space_sampling_weights is expected to be an array of size at least sample_count.
+            
+            ptic(ClassName()+"Sample");
+            
+            // Create an object that computes the workload for each thread.
+            JobPointers<Int> job_ptr ( sample_count, thread_count );
+            
+            valprint( "dimension   ", AmbDim       );
+            valprint( "edge_count  ", edge_count   );
+            valprint( "sample_count", sample_count );
+            valprint( "fun_count   ", fun_count    );
+            valprint( "thread_count", thread_count );
+            
+            print("Sampling the following random variables:");
+            for( Int i = 0; i < fun_count; ++ i )
+            {
+                const size_t i_ = static_cast<size_t>(i);
+                print("    " + F_list_[i_]->Tag());
+            }
+
+            #pragma omp parallel for num_threads( thread_count )
+            for( Int thread = 0; thread < thread_count; ++thread )
+            {
+                // For every thread create a copy of the current Sampler object.
+                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                
+                // Make also copys of all the random variables (they might have some state!).
+                std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                for( Int i = 0; i < fun_count; ++ i )
+                {
+                    F_list.push_back(
+                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                    );
+                }
+                
+                const Int k_begin = job_ptr[thread  ];
+                const Int k_end   = job_ptr[thread+1];
+                
+                // Start sampling and write the results into the slice assigned to this thread.
+                for( Int k = k_begin; k < k_end; ++k )
+                {
+                    S.RandomizeInitialEdgeCoordinates();
+
+                    S.ComputeShiftVector();
+
+                    S.Optimize();
+
+                    S.ComputeSpaceCoordinates();
+
+                    S.ComputeEdgeSpaceSamplingWeight();
+                    
+                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    
+                    edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+
+                    edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
+
+                    for( Int i = 0; i < fun_count; ++i )
+                    {
+                        sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                    }
+                }
+            }
+            
+            ptoc(ClassName()+"::Sample");
+        }
         
-        // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
-        // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
+
         
         void Sample_Binned(
                  Real * restrict bins_out,
@@ -1141,6 +1209,11 @@ namespace CycleSampler
            const Int             thread_count = 1
         ) const
         {
+            // This function does the sampling, but computes moments and binning on the fly, so that the sampled data can be discarded immediately.
+            
+            // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
+            // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
+            
             ptic(ClassName()+"Sample_Binned");
             
             const Int fun_count = static_cast<Int>(F_list_.size());
@@ -1152,10 +1225,10 @@ namespace CycleSampler
             JobPointers<Int> job_ptr ( sample_count, thread_count );
             
             valprint( "dimension   ", AmbDim       );
-            valprint( "edge_count  ", edge_count );
+            valprint( "edge_count  ", edge_count   );
             valprint( "sample_count", sample_count );
-            valprint( "fun_count   ", fun_count );
-            valprint( "bin_count   ", bin_count );
+            valprint( "fun_count   ", fun_count    );
+            valprint( "bin_count   ", bin_count    );
             valprint( "moment_count", moment_count );
             valprint( "thread_count", thread_count );
             
@@ -1181,16 +1254,14 @@ namespace CycleSampler
             {
                 const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
                 
-                Sampler W( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
                 std::vector< std::unique_ptr<RandomVariable_T> > F_list;
                 
                 for( Int i = 0; i < fun_count; ++ i )
                 {
                     F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>(
-                           dynamic_cast<RandomVariable_T*>( F_list_[i]->Clone().release() )
-                        )
+                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
                     );
                 }
                 
@@ -1199,25 +1270,25 @@ namespace CycleSampler
                 
                 for( Int k = 0; k < repetitions; ++k )
                 {
-                    W.RandomizeInitialEdgeCoordinates();
+                    S.RandomizeInitialEdgeCoordinates();
 
-                    W.ComputeShiftVector();
+                    S.ComputeShiftVector();
 
-                    W.Optimize();
+                    S.Optimize();
 
-                    W.ComputeSpaceCoordinates();
+                    S.ComputeSpaceCoordinates();
 
-                    W.ComputeEdgeSpaceSamplingWeight();
+                    S.ComputeEdgeSpaceSamplingWeight();
                     
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
                     
-                    const Real K = W.EdgeSpaceSamplingWeight();
+                    const Real K = S.EdgeSpaceSamplingWeight();
 
-                    const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();
+                    const Real K_quot = S.EdgeQuotientSpaceSamplingWeight();
 
                     for( Int i = 0; i < fun_count; ++i )
                     {
-                        const Real val = (*F_list[i])(W);
+                        const Real val = (*F_list[i])(S);
                         
                         Real values [3] = { one, K, K_quot };
                         
@@ -1295,163 +1366,6 @@ namespace CycleSampler
             }
             ptoc(ClassName()+"::NormalizeBinnedSamples");
         }
-        
-#if defined(PLCTOPOLOGY_H)
-        
-        std::map<std::string, std::tuple<Real,Real,Real>> SampleHOMFLY(
-            const Int sample_count,
-            const Int thread_count = 1
-        ) const
-        {
-            ptic(ClassName()+"SampleHOMFLY");
-            
-            std::map<std::string, std::tuple<Real,Real,Real>> map_global;
-            
-            if( AmbDim != 3 )
-            {
-                eprint("SampleHOMFLY is only available in 3D.");
-                return map_global;
-            }
-            
-            JobPointers<Int> job_ptr (sample_count, thread_count);
-            
-            valprint( "dimension   ", AmbDim       );
-            valprint( "edge_count  ", edge_count   );
-            valprint( "sample_count", sample_count );
-            valprint( "thread_count", thread_count );
-            
-            gsl_rng_env_setup();
-            
-            Tensor1<unsigned long,Int> seeds ( thread_count );
-            
-            std::random_device r;
-            
-            for( Int thread = 0 ; thread < thread_count; ++ thread )
-            {
-                seeds[thread] = (std::numeric_limits<unsigned int>::max()+1) * r() + r();
-            }
-            
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
-                
-                Sampler W( edge_count, EdgeLengths().data(), Rho().data(), settings );
-                
-                std::map<std::string, std::tuple<Real,Real,Real>> map_loc;
-                
-                bool openQ = false;
-                
-                int color_count = 0;
-                
-                int n = static_cast<int>(edge_count);
-                
-                gsl_rng *rng = gsl_rng_alloc( gsl_rng_mt19937 );
-                
-                gsl_rng_set( rng, seeds[thread] );
-                
-                plCurve * Gamma = plc_new( 1, &n, &openQ, &color_count );
-                //
-                //                auto * p = &Gamma->cp[0].vt[0];
-                
-                auto & p = W.SpaceCoordinates();
-                
-                for( Int l = 0; l < repetitions; ++l )
-                {
-                    //                    valprint("l",l);
-                    
-                    W.RandomizeInitialEdgeCoordinates();
-                    
-                    W.ComputeShiftVector();
-                    
-                    W.Optimize();
-                    
-                    W.ComputeSpaceCoordinates();
-                    
-                    W.ComputeEdgeSpaceSamplingWeight();
-                    
-                    W.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
-                    const Real K = W.EdgeSpaceSamplingWeight();
-                    
-                    const Real K_quot = W.EdgeQuotientSpaceSamplingWeight();
-                    
-                    auto * comp = &Gamma->cp[0];
-                    
-                    for( int k = 0; k < edge_count; ++k )
-                    {
-                        auto * v = &comp->vt[k].c[0];
-                        
-                        for( int i = 0; i < 3; ++i )
-                        {
-                            v[i] = p[k][i];
-                        }
-                    }
-                    
-                    plc_fix_wrap( Gamma );
-                    
-                    
-                    //                    char * polynomial = (char *) malloc( sizeof(char) * 3);
-                    //
-                    //                    polynomial[0] = 'a';
-                    //                    polynomial[1] = 'b';
-                    //                    polynomial[2] = 'c';
-                    
-                    char * polynomial = plc_homfly( rng, Gamma );
-                    
-                    std::string s("");
-                    
-                    if( polynomial != nullptr )
-                    {
-                        s.append(polynomial);
-                        free( polynomial );
-                    }
-                    else
-                    {
-                        s.append("FAILED");
-                    }
-                    
-                    //                    s << polynomial;
-                    //
-                    //                    std::string str = s.str();
-                    //                    print(s);
-                    
-                    map_loc.try_emplace(s, std::tie(zero,zero,zero) );
-                    
-                    auto & tuple = map_loc[s];
-                    
-                    std::get<0>(tuple) += one;
-                    std::get<1>(tuple) += K;
-                    std::get<2>(tuple) += K_quot;
-                }
-                
-                #pragma omp critical
-                {
-                    for ( auto const & [key, val] : map_loc )
-                    {
-                        map_global.try_emplace( key, std::tie(zero,zero,zero) );
-                        
-                        auto & from = val;
-                        auto & to   = map_global[key];
-                        
-                        std::get<0>(to) += std::get<0>(from);
-                        std::get<1>(to) += std::get<1>(from);
-                        std::get<2>(to) += std::get<2>(from);
-                    }
-                }
-                
-                gsl_rng_free( rng );
-                
-                plc_free( Gamma );
-            }
-            
-            
-            ptoc(ClassName()+"::SampleHOMFLY");
-            
-            return map_global;
-        }
-        
-#endif
         
     protected:
         

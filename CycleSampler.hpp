@@ -6,33 +6,20 @@
     #include <iostream>
     #include <random>
     #include <cstring>
-    #include <array>
 
     #include "Tensors/Tensors.hpp"
 
-    namespace CycleSampler {
-        
+    namespace CycleSampler
+    {
         using namespace Tools;
         using namespace Tensors;
-        
     } // namespace CycleSampler
-
-    //extern "C"
-    //{
-    //    #include <gsl/gsl_rng.h>
-    //    #include <gsl/gsl_randist.h>
-    //}
-    //
-    //#include <plcTopology.h>
-    //
-    //int PD_VERBOSE = 0;
-
 
     #include "src/Sampler.hpp"
 
     #include "src/RandomVariable.hpp"
 
-    #include "src/RandomVariables/BarycenterNorm.hpp"   // Should always evaluate to 0.
+    #include "src/RandomVariables/BarycenterNorm.hpp"
     #include "src/RandomVariables/ChordLength.hpp"
     #include "src/RandomVariables/DiagonalLength.hpp"
     #include "src/RandomVariables/Gyradius.hpp"
