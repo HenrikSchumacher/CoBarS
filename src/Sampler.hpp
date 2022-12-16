@@ -1116,7 +1116,7 @@ namespace CycleSampler
                  Real * restrict sampled_values,
                  Real * restrict edge_space_sampling_weights,
                  Real * restrict edge_quotient_space_sampling_weights,
-           std::unique_ptr<RandomVariable_T> F_ &,
+           std::unique_ptr<RandomVariable_T> & F_,
            const Int             sample_count,
            const Int             thread_count = 1
         ) const
