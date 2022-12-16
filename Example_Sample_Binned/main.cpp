@@ -79,8 +79,8 @@ int main(int argc, const char * argv[])
 
     // Perform the actual sampling.
     // The interface operates via raw pointers for more flexibility.
-    tic("Sample_Binned");
-        S.Sample_Binned(
+    tic("SampleCompressed");
+        S.SampleCompressed(
             bins.data(),
             bin_count,
             moments.data(),
@@ -90,12 +90,12 @@ int main(int argc, const char * argv[])
             sample_count,
             thread_count
         );
-    toc("Sample_Binned");
+    toc("SampleCompressed");
     
     // C.Sample adds into the output arrays, but it does _NOT_ normalize bins and moments. This way we can add further results into them later; we can also simply use them in a further call to C.Sample_Binned.
     
     // Get normalized bins.
-    S.NormalizeBinnedSamples(
+    S.NormalizeCompressedSamples(
        bins.data(),
        bin_count,
        moments.data(),

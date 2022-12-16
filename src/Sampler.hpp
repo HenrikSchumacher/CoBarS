@@ -1198,7 +1198,7 @@ namespace CycleSampler
         
 
         
-        void Sample_Compressed(
+        void SampleCompressed(
                  Real * restrict bins_out,
            const Int             bin_count_,
                  Real * restrict moments_out,
@@ -1214,7 +1214,7 @@ namespace CycleSampler
             // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
             // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
             
-            ptic(ClassName()+"Sample_Compressed");
+            ptic(ClassName()+"SampleCompressed");
             
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1334,7 +1334,7 @@ namespace CycleSampler
             bins_global.Write( bins_out );
             moments_global.Write( moments_out );
             
-            ptoc(ClassName()+"::Sample_Compressed");
+            ptoc(ClassName()+"::SampleCompressed");
         }
         
         void NormalizeCompressedSamples(
