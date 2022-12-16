@@ -1140,7 +1140,7 @@ namespace CycleSampler
                 // For every thread create a copy of the current Sampler object.
                 Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
-                // Make a copy the random variables (it might have some state!).
+                // Make a copy the random variable (it might have some state!).
                 std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
                 
                 RandomVariable_T & F = &F_ptr;
@@ -1270,11 +1270,11 @@ namespace CycleSampler
 //            valprint( "thread_count", thread_count );
 //
 //            print("Sampling the following random variables:");
-            for( Int i = 0; i < fun_count; ++ i )
-            {
-                const size_t i_ = static_cast<size_t>(i);
+//            for( Int i = 0; i < fun_count; ++ i )
+//            {
+//                const size_t i_ = static_cast<size_t>(i);
 //                print("    " + F_list_[i_]->Tag());
-            }
+//            }
 
             #pragma omp parallel for num_threads( thread_count )
             for( Int thread = 0; thread < thread_count; ++thread )
