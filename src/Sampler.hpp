@@ -1143,7 +1143,7 @@ namespace CycleSampler
                 // Make a copy the random variable (it might have some state!).
                 std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
                 
-                RandomVariable_T & F = &F_ptr;
+                RandomVariable_T & F = *F_ptr;
                 
                 const Int k_begin = job_ptr[thread  ];
                 const Int k_end   = job_ptr[thread+1];
@@ -1439,14 +1439,14 @@ namespace CycleSampler
             Tensor1<Real,Int> factor        (                 fun_count               );
             
 //            print("Sampling (compressed) the following random variables:");
-            for( Int i = 0; i < fun_count; ++ i )
-            {
-                const size_t i_ = static_cast<size_t>(i);
-                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
-                
+//            for( Int i = 0; i < fun_count; ++ i )
+//            {
+//                const size_t i_ = static_cast<size_t>(i);
+//                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
+//                
 //                print("    " + F_list_[i_]->Tag());
-            }
-            
+//            }
+
             const Int lower = static_cast<Int>(0);
             const Int upper = static_cast<Int>(bin_count-1);
             
