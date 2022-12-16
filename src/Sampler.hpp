@@ -1116,7 +1116,7 @@ namespace CycleSampler
                  Real * restrict sampled_values,
                  Real * restrict edge_space_sampling_weights,
                  Real * restrict edge_quotient_space_sampling_weights,
-           std::unique_ptr<RandomVariable_T> F_,
+           std::unique_ptr<RandomVariable_T> F_ &,
            const Int             sample_count,
            const Int             thread_count = 1
         ) const
@@ -1443,7 +1443,7 @@ namespace CycleSampler
 //            {
 //                const size_t i_ = static_cast<size_t>(i);
 //                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
-//                
+//
 //                print("    " + F_list_[i_]->Tag());
 //            }
 
