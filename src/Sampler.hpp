@@ -1520,7 +1520,7 @@ namespace CycleSampler
                     }
                 }
                 
-                #pragma omp critical
+                #pragma omp critical(add_to_bins)
                 {
                     add_to_buffer(
                         bins_local.data(), bins_global.data(), 3 * fun_count * bin_count

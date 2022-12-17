@@ -272,7 +272,7 @@ namespace CycleSampler
             
             JobPointers<Int> job_ptr (sample_count, thread_count);
             
-            #pragma omp parallel for num_threads( thread_count )
+            #pragma omp parallel for num_threads( thread_count ) reduction( + : trials )
             for( Int thread = 0; thread < thread_count; ++thread )
             {
                 
@@ -291,10 +291,7 @@ namespace CycleSampler
                     trials_loc += C.RandomClosedPolygon( &p[ step * k ] );
                 }
                 
-                #pragma omp critical
-                {
-                    trials += trials_loc;
-                }
+                trials += trials_loc;
             }
             
             ptoc(ClassName()+"::RandomClosedPolygons");
