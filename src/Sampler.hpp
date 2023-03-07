@@ -57,7 +57,7 @@ namespace CycleSampler
     public:
         
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
-        using SquareMatrix_T    = Tiny::SquareMatrix     <AmbDim,Real,Int>;
+        using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
         using SymmetricMatrix_T = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
         
         using RandomVariable_T  = RandomVariable<AmbDim,Real,Int>;
