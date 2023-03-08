@@ -307,7 +307,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return "MomentPolytopeSampler<"+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
+            return "MomentPolytopeSampler<"+TypeName<Real>()+","+TypeName<Int>()+","+">";
         }
     };
     

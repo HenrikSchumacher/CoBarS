@@ -1615,7 +1615,7 @@ namespace CycleSampler
         
         std::string ClassName() const
         {
-            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>::Get()+","+TypeName<Int>::Get()+","+">";
+            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>()+","+TypeName<Int>()+","+">";
         }
         
     }; // class Sampler
