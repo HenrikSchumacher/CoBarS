@@ -16,7 +16,7 @@ int main(int argc, const char * argv[])
     const     Int thread_count = 8; // 0 means "automatic"
     
     // Create an instance of the cycle sampler.
-    CycleSampler::Sampler<d,Real,Int> S (edge_count);
+    CycleSampler::Sampler<d,Real,Int>             S (edge_count);
     CycleSampler::MomentPolytopeSampler<Real,Int> M (edge_count);
 
     // Create containers for the data samples.

@@ -69,7 +69,7 @@ namespace CycleSampler
         
         Sampler()
         {
-            random_engine = std::mt19937_64( std::random_device()() );
+            Seed();
         }
         
         
@@ -88,11 +88,7 @@ namespace CycleSampler
         ,   rho ( edge_count, one )
         ,   total_r_inv ( one )
         {
-            std::random_device r;
-            
-            std::seed_seq seed { r(), r(), r(), r()   };
-            
-            random_engine = std::mt19937_64( seed );
+            Seed();
         }
         
         explicit Sampler(
@@ -111,11 +107,7 @@ namespace CycleSampler
         {
             ReadEdgeLengths(r_in);
             
-            std::random_device r;
-            
-            std::seed_seq seed { r(), r(), r(), r()   };
-            
-            random_engine = std::mt19937_64( seed );
+            Seed();
         }
         
         
@@ -258,6 +250,17 @@ namespace CycleSampler
         static constexpr Real g_factor_inv      = one/g_factor;
         static constexpr Real norm_threshold    = 0.99 * 0.99 + 16 * eps;
         static constexpr Real two_pi            = static_cast<Real>(2 * M_PI);
+    
+    protected:
+        
+    void Seed()
+    {
+        std::random_device r;
+        
+        std::seed_seq seed { r(), r(), r(), r()   };
+        
+        random_engine = std::mt19937_64( seed );
+    }
         
     public:
         
@@ -1083,7 +1086,7 @@ namespace CycleSampler
                 const Int k_begin = job_ptr[thread  ];
                 const Int k_end   = job_ptr[thread+1];
                 
-                Sampler S( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
