@@ -1037,31 +1037,31 @@ namespace CycleSampler
         {
             ptic(ClassName()+"OptimizeBatch");
             
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int k_begin = job_ptr[thread];
-                const Int k_end   = job_ptr[thread+1];
-                
-                Sampler S( edge_count, settings );
-                
-                S.ReadEdgeLengths( EdgeLengths().data() );
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            ParallelDo(
+                [=]( const Int thread )
                 {
-                    S.ReadInitialEdgeCoordinates( x_in, k, normalize );
-                    
-                    S.ComputeShiftVector();
-                    
-                    S.Optimize();
-                    
-                    S.WriteShiftVector( w_out, k );
-                    
-                    S.WriteEdgeCoordinates( y_out, k );
-                }
-            }
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
+
+                    Sampler S( edge_count, settings );
+
+                    S.ReadEdgeLengths( EdgeLengths().data() );
+
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        S.ReadInitialEdgeCoordinates( x_in, k, normalize );
+
+                        S.ComputeShiftVector();
+
+                        S.Optimize();
+
+                        S.WriteShiftVector( w_out, k );
+
+                        S.WriteEdgeCoordinates( y_out, k );
+                    }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"OptimizeBatch");
         }
@@ -1078,39 +1078,40 @@ namespace CycleSampler
         {
             ptic(ClassName()+"RandomClosedPolygons");
             
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            ParallelDo(
+                [=]( const Int thread )
                 {
-                    S.RandomizeInitialEdgeCoordinates();
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
+
+                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
-                    S.WriteInitialEdgeCoordinates(x_out, k);
-                    
-                    S.ComputeShiftVector();
-                    
-                    S.Optimize();
-                    
-                    S.WriteShiftVector(w_out,k);
-                    
-                    S.WriteEdgeCoordinates(y_out,k);
-                    
-                    S.ComputeEdgeSpaceSamplingWeight();
-                    
-                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
-                    K_edge_space[k] = S.EdgeSpaceSamplingWeight();
-                    
-                    K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
-                }
-            }
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        S.RandomizeInitialEdgeCoordinates();
+                        
+                        S.WriteInitialEdgeCoordinates(x_out, k);
+                        
+                        S.ComputeShiftVector();
+                        
+                        S.Optimize();
+                        
+                        S.WriteShiftVector(w_out,k);
+                        
+                        S.WriteEdgeCoordinates(y_out,k);
+                        
+                        S.ComputeEdgeSpaceSamplingWeight();
+                        
+                        S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                        
+                        K_edge_space[k] = S.EdgeSpaceSamplingWeight();
+                        
+                        K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
+                    }
+                },
+                thread_count
+            );
+            
             
             ptoc(ClassName()+"::RandomClosedPolygons");
         }
@@ -1134,110 +1135,108 @@ namespace CycleSampler
             
             ptic(ClassName()+"Sample");
             
-            // Create an object that computes the workload for each thread.
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                // For every thread create a copy of the current Sampler object.
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                // Make a copy the random variable (it might have some state!).
-                std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
-                
-                RandomVariable_T & F = *F_ptr;
-                
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                // Start sampling and write the results into the slice assigned to this thread.
-                if( edge_space_sampling_weights != nullptr )
+            ParallelDo(
+                [=]( const Int thread )
                 {
-                    if( edge_quotient_space_sampling_weights != nullptr )
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
+
+                    // For every thread create a copy of the current Sampler object.
+                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    
+                    // Make a copy the random variable (it might have some state!).
+                    std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
+                    
+                    RandomVariable_T & F = *F_ptr;
+                    
+                    // Start sampling and write the results into the slice assigned to this thread.
+                    if( edge_space_sampling_weights != nullptr )
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
 
-                            S.ComputeShiftVector();
+                                S.ComputeShiftVector();
 
-                            S.Optimize();
+                                S.Optimize();
 
-                            S.ComputeSpaceCoordinates();
+                                S.ComputeSpaceCoordinates();
 
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
 
-                            edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
+                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
 
-                            sampled_values[k] = F(S);
+                                sampled_values[k] = F(S);
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+
+                                sampled_values[k] = F(S);
+                            }
                         }
                     }
                     else
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
 
-                            S.ComputeShiftVector();
+                                S.ComputeShiftVector();
 
-                            S.Optimize();
+                                S.Optimize();
 
-                            S.ComputeSpaceCoordinates();
+                                S.ComputeSpaceCoordinates();
 
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
 
-                            sampled_values[k] = F(S);
+                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
+
+                                sampled_values[k] = F(S);
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+                                
+                                sampled_values[k] = F(S);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    if( edge_quotient_space_sampling_weights != nullptr )
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-
-                            edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
-
-                            sampled_values[k] = F(S);
-                        }
-                    }
-                    else
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-                            
-                            sampled_values[k] = F(S);
-                        }
-                    }
-                }
-
-            }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"::Sample");
         }
@@ -1262,140 +1261,126 @@ namespace CycleSampler
             // edge_quotient_space_sampling_weights is expected to be an array of size at least sample_count.
             
             ptic(ClassName()+"Sample");
-            
-            // Create an object that computes the workload for each thread.
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-//            valprint( "dimension   ", AmbDim       );
-//            valprint( "edge_count  ", edge_count   );
-//            valprint( "sample_count", sample_count );
-//            valprint( "fun_count   ", fun_count    );
-//            valprint( "thread_count", thread_count );
-//
-//            print("Sampling the following random variables:");
-//            for( Int i = 0; i < fun_count; ++ i )
-//            {
-//                const size_t i_ = static_cast<size_t>(i);
-//                print("    " + F_list_[i_]->Tag());
-//            }
 
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                // For every thread create a copy of the current Sampler object.
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                // Make also copys of all the random variables (they might have some state!).
-                std::vector< std::unique_ptr<RandomVariable_T> > F_list;
-                for( Int i = 0; i < fun_count; ++ i )
+
+            ParallelDo(
+                [=]( const Int thread )
                 {
-                    F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
-                    );
-                }
-                
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                // Start sampling and write the results into the slice assigned to this thread.
-                if( edge_space_sampling_weights != nullptr )
-                {
-                    if( edge_quotient_space_sampling_weights != nullptr )
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
+
+                    // For every thread create a copy of the current Sampler object.
+                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    
+                    // Make also copys of all the random variables (they might have some state!).
+                    std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                    for( Int i = 0; i < fun_count; ++ i )
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        F_list.push_back(
+                            std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                        );
+                    }
+                    
+                    // Start sampling and write the results into the slice assigned to this thread.
+                    if( edge_space_sampling_weights != nullptr )
+                    {
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                            edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
-
-                            for( Int i = 0; i < fun_count; ++i )
+                            for( Int k = k_begin; k < k_end; ++k )
                             {
-                                sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+
+                                edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
+
+                                for( Int i = 0; i < fun_count; ++i )
+                                {
+                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+
+                                for( Int i = 0; i < fun_count; ++i )
+                                {
+                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                }
                             }
                         }
                     }
                     else
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                            for( Int i = 0; i < fun_count; ++i )
+                            for( Int k = k_begin; k < k_end; ++k )
                             {
-                                sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
+
+                                edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
+
+                                for( Int i = 0; i < fun_count; ++i )
+                                {
+                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                for( Int i = 0; i < fun_count; ++i )
+                                {
+                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    if( edge_quotient_space_sampling_weights != nullptr )
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-
-                            edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
-
-                            for( Int i = 0; i < fun_count; ++i )
-                            {
-                                sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            for( Int i = 0; i < fun_count; ++i )
-                            {
-                                sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                            }
-                        }
-                    }
-                }
-
-            }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"::Sample");
         }
@@ -1453,78 +1438,82 @@ namespace CycleSampler
             const Int lower = static_cast<Int>(0);
             const Int upper = static_cast<Int>(bin_count-1);
             
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
-                
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                std::vector< std::unique_ptr<RandomVariable_T> > F_list;
-                
-                for( Int i = 0; i < fun_count; ++ i )
+            std::mutex mutex;
+            
+            ParallelDo(
+                [=]( const Int thread )
                 {
-                    F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
-                    );
-                }
-                
-                Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
-                Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
-                
-                for( Int k = 0; k < repetitions; ++k )
-                {
-                    S.RandomizeInitialEdgeCoordinates();
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    S.ComputeShiftVector();
-
-                    S.Optimize();
-
-                    S.ComputeSpaceCoordinates();
-
-                    S.ComputeEdgeSpaceSamplingWeight();
+                    const Int repetitions = k_end - k_begin;
                     
-                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
-                    const Real K = S.EdgeSpaceSamplingWeight();
-
-                    const Real K_quot = S.EdgeQuotientSpaceSamplingWeight();
-
-                    for( Int i = 0; i < fun_count; ++i )
+                    std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                    
+                    for( Int i = 0; i < fun_count; ++ i )
                     {
-                        const Real val = (*F_list[i])(S);
-                        
-                        Real values [3] = { one, K, K_quot };
-                        
-                        const Int bin_idx = static_cast<Int>(
-                            std::floor( factor[i] * (val - ranges[2*i]) )
+                        F_list.push_back(
+                            std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
                         );
+                    }
+                    
+                    Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
+                    Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
+                    
+                    for( Int k = 0; k < repetitions; ++k )
+                    {
+                        S.RandomizeInitialEdgeCoordinates();
+
+                        S.ComputeShiftVector();
+
+                        S.Optimize();
+
+                        S.ComputeSpaceCoordinates();
+
+                        S.ComputeEdgeSpaceSamplingWeight();
                         
-                        if( (bin_idx <= upper) && (bin_idx >= lower) )
+                        S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                        
+                        const Real K = S.EdgeSpaceSamplingWeight();
+
+                        const Real K_quot = S.EdgeQuotientSpaceSamplingWeight();
+
+                        for( Int i = 0; i < fun_count; ++i )
                         {
-                            bins_local(0,i,bin_idx) += one;
-                            bins_local(1,i,bin_idx) += K;
-                            bins_local(2,i,bin_idx) += K_quot;
-                        }
-                        
-                        moments_local(0,i,0) += values[0];
-                        moments_local(1,i,0) += values[1];
-                        moments_local(2,i,0) += values[2];
-                        
-                        for( Int j = 1; j < moment_count; ++j )
-                        {
-                            values[0] *= val;
-                            values[1] *= val;
-                            values[2] *= val;
-                            moments_local(0,i,j) += values[0];
-                            moments_local(1,i,j) += values[1];
-                            moments_local(2,i,j) += values[2];
+                            const Real val = (*F_list[i])(S);
+                            
+                            Real values [3] = { one, K, K_quot };
+                            
+                            const Int bin_idx = static_cast<Int>(
+                                std::floor( factor[i] * (val - ranges[2*i]) )
+                            );
+                            
+                            if( (bin_idx <= upper) && (bin_idx >= lower) )
+                            {
+                                bins_local(0,i,bin_idx) += one;
+                                bins_local(1,i,bin_idx) += K;
+                                bins_local(2,i,bin_idx) += K_quot;
+                            }
+                            
+                            moments_local(0,i,0) += values[0];
+                            moments_local(1,i,0) += values[1];
+                            moments_local(2,i,0) += values[2];
+                            
+                            for( Int j = 1; j < moment_count; ++j )
+                            {
+                                values[0] *= val;
+                                values[1] *= val;
+                                values[2] *= val;
+                                moments_local(0,i,j) += values[0];
+                                moments_local(1,i,j) += values[1];
+                                moments_local(2,i,j) += values[2];
+                            }
                         }
                     }
-                }
-                
-                #pragma omp critical(add_to_bins)
-                {
+                    
+                    const std::lock_guard<std::mutex> lock (mutex );
                     add_to_buffer(
                         bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
                     );
@@ -1532,8 +1521,9 @@ namespace CycleSampler
                     add_to_buffer(
                         moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
                     );
-                }
-            }
+                },
+                thread_count
+            );
             
             bins_global.Write( bins_out );
             moments_global.Write( moments_out );
