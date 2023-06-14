@@ -6,7 +6,7 @@ namespace CycleSampler
     template<int AmbDim, typename Real, typename Int>
     class RandomVariable;
     
-    template<typename Real = double, typename Int = long long>
+    template<typename Real, typename Int>
     struct SamplerSettings
     {
         Real tolerance            = std::sqrt(std::numeric_limits<Real>::epsilon());
@@ -89,6 +89,7 @@ namespace CycleSampler
         ,   total_r_inv ( one )
         {
             Seed();
+            print("aa");
         }
         
         explicit Sampler(
@@ -140,7 +141,9 @@ namespace CycleSampler
         ,   succeededQ(succeededQ)
         ,   continueQ(continueQ)
         ,   ArmijoQ(ArmijoQ)
-        {}
+        {
+            print("cc");
+        }
         
         friend void swap(Sampler &A, Sampler &B) noexcept
         {
@@ -1035,10 +1038,10 @@ namespace CycleSampler
             const bool                  normalize = true
         )
         {
-            ptic(ClassName()+"OptimizeBatch");
+            ptic(ClassName()+"::OptimizeBatch");
             
             ParallelDo(
-                [=]( const Int thread )
+                [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
@@ -1063,7 +1066,7 @@ namespace CycleSampler
                 thread_count
             );
             
-            ptoc(ClassName()+"OptimizeBatch");
+            ptoc(ClassName()+"::OptimizeBatch");
         }
         
         void RandomClosedPolygons(
@@ -1076,10 +1079,10 @@ namespace CycleSampler
             const Int                   thread_count = 1
         ) const
         {
-            ptic(ClassName()+"RandomClosedPolygons");
+            ptic(ClassName()+"::RandomClosedPolygons");
             
             ParallelDo(
-                [=]( const Int thread )
+                [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
@@ -1120,7 +1123,7 @@ namespace CycleSampler
                  Real * restrict sampled_values,
                  Real * restrict edge_space_sampling_weights,
                  Real * restrict edge_quotient_space_sampling_weights,
-           std::unique_ptr<RandomVariable_T> & F_,
+           std::shared_ptr<RandomVariable_T> & F_,
            const Int             sample_count,
            const Int             thread_count = 1
         ) const
@@ -1133,10 +1136,10 @@ namespace CycleSampler
             // edge_space_sampling_weights is expected to be an array of size at least sample_count -- or a nullptr.
             // edge_quotient_space_sampling_weights is expected to be an array of size at least sample_count  -- or a nullptr.
             
-            ptic(ClassName()+"Sample");
+            ptic(ClassName()+"::Sample");
             
             ParallelDo(
-                [=]( const Int thread )
+                [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
@@ -1145,7 +1148,7 @@ namespace CycleSampler
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     // Make a copy the random variable (it might have some state!).
-                    std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
+                    std::shared_ptr<RandomVariable_T> F_ptr = F_->Clone();
                     
                     RandomVariable_T & F = *F_ptr;
                     
@@ -1245,7 +1248,7 @@ namespace CycleSampler
                  Real * restrict sampled_values,
                  Real * restrict edge_space_sampling_weights,
                  Real * restrict edge_quotient_space_sampling_weights,
-           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+           const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
            const Int             sample_count,
            const Int             thread_count = 1
         ) const
@@ -1260,11 +1263,11 @@ namespace CycleSampler
             // edge_space_sampling_weights is expected to be an array of size at least sample_count.
             // edge_quotient_space_sampling_weights is expected to be an array of size at least sample_count.
             
-            ptic(ClassName()+"Sample");
+            ptic(ClassName()+"::Sample (batch)");
 
 
             ParallelDo(
-                [=]( const Int thread )
+                [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
@@ -1273,11 +1276,11 @@ namespace CycleSampler
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     // Make also copys of all the random variables (they might have some state!).
-                    std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                    std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                     for( Int i = 0; i < fun_count; ++ i )
                     {
                         F_list.push_back(
-                            std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
                         );
                     }
                     
@@ -1382,7 +1385,7 @@ namespace CycleSampler
                 thread_count
             );
             
-            ptoc(ClassName()+"::Sample");
+            ptoc(ClassName()+"::Sample (batch)");
         }
         
 
@@ -1393,7 +1396,7 @@ namespace CycleSampler
                  Real * restrict moments_out,
            const Int             moment_count_,
            const Real * restrict ranges,
-           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+           const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
            const Int             sample_count,
            const Int             thread_count = 1
         ) const
@@ -1403,7 +1406,7 @@ namespace CycleSampler
             // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
             // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
             
-            ptic(ClassName()+"SampleCompressed");
+            ptic(ClassName()+"::SampleCompressed");
             
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1441,7 +1444,7 @@ namespace CycleSampler
             std::mutex mutex;
             
             ParallelDo(
-                [=]( const Int thread )
+                [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
@@ -1450,12 +1453,12 @@ namespace CycleSampler
                     
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
-                    std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                    std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                     
                     for( Int i = 0; i < fun_count; ++ i )
                     {
                         F_list.push_back(
-                            std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
                         );
                     }
                     
@@ -1608,7 +1611,7 @@ namespace CycleSampler
         
         std::string ClassName() const
         {
-            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>()+","+TypeName<Int>()+","+">";
+            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>+","+TypeName<Int>+","+">";
         }
         
     }; // class Sampler

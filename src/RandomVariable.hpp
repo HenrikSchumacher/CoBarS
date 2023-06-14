@@ -3,7 +3,7 @@
 namespace CycleSampler
 {
 
-    template<int AmbDim, typename Real = double, typename Int = long long>
+    template<int AmbDim, typename Real, typename Int>
     class RandomVariable
     {
         ASSERT_FLOAT(Real);

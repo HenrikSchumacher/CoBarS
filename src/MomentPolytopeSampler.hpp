@@ -3,7 +3,7 @@
 namespace CycleSampler
 {
 
-    template<typename Real = double, typename Int = long long>
+    template<typename Real, typename Int>
     class MomentPolytopeSampler
     {
         ASSERT_FLOAT(Real);
@@ -268,31 +268,32 @@ namespace CycleSampler
         Int RandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
-            Int trials = 0;
             
-            JobPointers<Int> job_ptr (sample_count, thread_count);
-            
-            #pragma omp parallel for num_threads( thread_count ) reduction( + : trials )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                
-                // Create a new instance of the class with its own random number generator.
-                MomentPolytopeSampler C ( edge_count );
-            
-                Int trials_loc = 0;
-                
-                const Int step = 3 * edge_count;
-                
-                const Int k_begin = job_ptr[thread];
-                const Int k_end   = job_ptr[thread+1];
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            const Int trials = ParallelDoReduce(
+                [=]( const Int thread) -> Int
                 {
-                    trials_loc += C.RandomClosedPolygon( &p[ step * k ] );
-                }
+                    
+                    const Int k_begin = JobPointer( sample_count, thread_count, thread     );
+                    const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
+                    
+                    // Create a new instance of the class with its own random number generator.
+                    MomentPolytopeSampler C ( edge_count );
                 
-                trials += trials_loc;
-            }
+                    Int trials = 0;
+                    
+                    const Int step = 3 * edge_count;
+                    
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        trials += C.RandomClosedPolygon( &p[ step * k ] );
+                    }
+                    
+                    return trials;
+                },
+                AddReducer<Int,Int>(),
+                Int(0),
+                thread_count
+            );
             
             ptoc(ClassName()+"::RandomClosedPolygons");
             return trials;
@@ -307,7 +308,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return "MomentPolytopeSampler<"+TypeName<Real>()+","+TypeName<Int>()+","+">";
+            return std::string("MomentPolytopeSampler")+"<"+TypeName<Real>+","+TypeName<Real>+">";
         }
     };
     
