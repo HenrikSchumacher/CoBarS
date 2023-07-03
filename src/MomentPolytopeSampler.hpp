@@ -269,15 +269,6 @@ namespace CycleSampler
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             
-<<<<<<< HEAD
-//            Int trials = 0;
-            
-//            JobPointers<Int> job_ptr (sample_count, thread_count);
-            
-            const Int trials = ParallelDoReduce(
-                [=,this]( const Int thread ) -> Int
-                {
-=======
             const Int trials = ParallelDoReduce(
                 [=]( const Int thread) -> Int
                 {
@@ -285,20 +276,12 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
                     
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                     // Create a new instance of the class with its own random number generator.
                     MomentPolytopeSampler C ( edge_count );
                 
                     Int trials = 0;
                     
-<<<<<<< HEAD
                     const Int step = AmbDim * edge_count;
-                    
-                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
-                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
-=======
-                    const Int step = 3 * edge_count;
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                     
                     for( Int k = k_begin; k < k_end; ++k )
                     {
@@ -308,11 +291,7 @@ namespace CycleSampler
                     return trials;
                 },
                 AddReducer<Int,Int>(),
-<<<<<<< HEAD
                 Scalar::Zero<Int>,
-=======
-                Int(0),
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                 thread_count
             );
             
@@ -329,11 +308,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-<<<<<<< HEAD
-            return std::string("MomentPolytopeSampler")+"<"+TypeName<Real>+","+TypeName<Int>+","+">";
-=======
-            return std::string("MomentPolytopeSampler")+"<"+TypeName<Real>+","+TypeName<Real>+">";
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
+            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int> + ">";
         }
     };
     

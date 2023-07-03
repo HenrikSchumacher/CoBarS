@@ -89,7 +89,6 @@ namespace CycleSampler
         ,   total_r_inv ( one )
         {
             Seed();
-            print("aa");
         }
         
         explicit Sampler(
@@ -141,9 +140,7 @@ namespace CycleSampler
         ,   succeededQ(succeededQ)
         ,   continueQ(continueQ)
         ,   ArmijoQ(ArmijoQ)
-        {
-            print("cc");
-        }
+        {}
         
         friend void swap(Sampler &A, Sampler &B) noexcept
         {
@@ -1041,27 +1038,6 @@ namespace CycleSampler
             ptic(ClassName()+"::OptimizeBatch");
             
             ParallelDo(
-<<<<<<< HEAD
-                [=,this]( const Int thread )
-                {
-                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
-                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
-                    
-                    Sampler S( edge_count, settings );
-                    
-                    S.ReadEdgeLengths( EdgeLengths().data() );
-                    
-                    for( Int k = k_begin; k < k_end; ++k )
-                    {
-                        S.ReadInitialEdgeCoordinates( x_in, k, normalize );
-                        
-                        S.ComputeShiftVector();
-                        
-                        S.Optimize();
-                        
-                        S.WriteShiftVector( w_out, k );
-                        
-=======
                 [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
@@ -1081,7 +1057,6 @@ namespace CycleSampler
 
                         S.WriteShiftVector( w_out, k );
 
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                         S.WriteEdgeCoordinates( y_out, k );
                     }
                 },
@@ -1104,23 +1079,15 @@ namespace CycleSampler
             ptic(ClassName()+"::RandomClosedPolygons");
             
             ParallelDo(
-<<<<<<< HEAD
-                [=,this]( const Int thread )
-                {
-                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
-                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
-                    
-                    Sampler S( edge_count, settings );
-                    
-=======
                 [&,this]( const Int thread )
                 {
+                    Time start = Clock::now();
+                    
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                    
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
+
                     for( Int k = k_begin; k < k_end; ++k )
                     {
                         S.RandomizeInitialEdgeCoordinates();
@@ -1143,33 +1110,25 @@ namespace CycleSampler
                         
                         K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
                     }
+                    
+                    Time stop = Clock::now();
+                    
+                    logprint("Thread " + ToString(thread) + " done. Time elapsed = " + ToString( Duration(start, stop) ) + "." );
+                    
                 },
                 thread_count
             );
-<<<<<<< HEAD
-=======
-            
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
             
             ptoc(ClassName()+"::RandomClosedPolygons");
         }
         
         void Sample(
-<<<<<<< HEAD
             mut<Real> sampled_values,
             mut<Real> edge_space_sampling_weights,
             mut<Real> edge_quotient_space_sampling_weights,
-            std::unique_ptr<RandomVariable_T> & F_,
+            std::shared_ptr<RandomVariable_T> & F_,
             const Int sample_count,
             const Int thread_count = 1
-=======
-                 Real * restrict sampled_values,
-                 Real * restrict edge_space_sampling_weights,
-                 Real * restrict edge_quotient_space_sampling_weights,
-           std::shared_ptr<RandomVariable_T> & F_,
-           const Int             sample_count,
-           const Int             thread_count = 1
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
         ) const
         {
             // This function creates sample for the random variable F and records the sampling weights, so that this weighted data can be processed elsewhere.
@@ -1182,37 +1141,20 @@ namespace CycleSampler
             
             ptic(ClassName()+"::Sample");
             
-<<<<<<< HEAD
-            // Create an object that computes the workload for each thread.
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
 
-            ParallelDo(
-                [=,this]( const Int thread )
-                {
-                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
-                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
-                    
-=======
             ParallelDo(
                 [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                     // For every thread create a copy of the current Sampler object.
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     // Make a copy the random variable (it might have some state!).
-<<<<<<< HEAD
-                    std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
-                    
-                    RandomVariable_T & F_loc = *F_ptr;
-=======
                     std::shared_ptr<RandomVariable_T> F_ptr = F_->Clone();
                     
-                    RandomVariable_T & F = *F_ptr;
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
+                    RandomVariable_T & F_loc = *F_ptr;
                     
                     // Start sampling and write the results into the slice assigned to this thread.
                     if( edge_space_sampling_weights != nullptr )
@@ -1237,11 +1179,7 @@ namespace CycleSampler
 
                                 edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
 
-<<<<<<< HEAD
                                 sampled_values[k] = F_loc(S);
-=======
-                                sampled_values[k] = F(S);
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                             }
                         }
                         else
@@ -1260,11 +1198,7 @@ namespace CycleSampler
                                 
                                 edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
 
-<<<<<<< HEAD
                                 sampled_values[k] = F_loc(S);
-=======
-                                sampled_values[k] = F(S);
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                             }
                         }
                     }
@@ -1288,11 +1222,7 @@ namespace CycleSampler
 
                                 edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
 
-<<<<<<< HEAD
                                 sampled_values[k] = F_loc(S);
-=======
-                                sampled_values[k] = F(S);
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                             }
                         }
                         else
@@ -1307,11 +1237,7 @@ namespace CycleSampler
 
                                 S.ComputeSpaceCoordinates();
                                 
-<<<<<<< HEAD
                                 sampled_values[k] = F_loc(S);
-=======
-                                sampled_values[k] = F(S);
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                             }
                         }
                     }
@@ -1323,21 +1249,12 @@ namespace CycleSampler
         }
         
         void Sample(
-<<<<<<< HEAD
             mut<Real> sampled_values,
             mut<Real> edge_space_sampling_weights,
             mut<Real> edge_quotient_space_sampling_weights,
-            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int  thread_count = 1
-=======
-                 Real * restrict sampled_values,
-                 Real * restrict edge_space_sampling_weights,
-                 Real * restrict edge_quotient_space_sampling_weights,
-           const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-           const Int             sample_count,
-           const Int             thread_count = 1
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
         ) const
         {
             const Int fun_count = static_cast<Int>(F_list_.size());
@@ -1356,20 +1273,6 @@ namespace CycleSampler
             ParallelDo(
                 [&,this]( const Int thread )
                 {
-<<<<<<< HEAD
-                    F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone() )
-                    );
-                }
-                
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                // Start sampling and write the results into the slice assigned to this thread.
-                if( edge_space_sampling_weights != nullptr )
-                {
-                    if( edge_quotient_space_sampling_weights != nullptr )
-=======
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
@@ -1379,7 +1282,6 @@ namespace CycleSampler
                     // Make also copys of all the random variables (they might have some state!).
                     std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                     for( Int i = 0; i < fun_count; ++ i )
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
                     {
                         F_list.push_back(
                             std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
@@ -1491,27 +1393,15 @@ namespace CycleSampler
         }
         
 
-        
         void SampleCompressed(
-<<<<<<< HEAD
             mut<Real> bins_out,
             const Int bin_count_,
             mut<Real> moments_out,
             const Int moment_count_,
             ptr<Real> ranges,
-            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
-=======
-                 Real * restrict bins_out,
-           const Int             bin_count_,
-                 Real * restrict moments_out,
-           const Int             moment_count_,
-           const Real * restrict ranges,
-           const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-           const Int             sample_count,
-           const Int             thread_count = 1
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
         ) const
         {
             // This function does the sampling, but computes moments and binning on the fly, so that the sampled data can be discarded immediately.
@@ -1519,7 +1409,7 @@ namespace CycleSampler
             // moments: A 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
             // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be devided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
             
-            ptic(ClassName()+"::SampleCompressed");
+            ptic(ClassName()+"SampleCompressed");
             
             const Int fun_count = static_cast<Int>(F_list_.size());
             
@@ -1527,66 +1417,42 @@ namespace CycleSampler
             
             const Int bin_count = std::max( bin_count_, static_cast<Int>(1) );
             
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-//            valprint( "dimension   ", AmbDim       );
-//            valprint( "edge_count  ", edge_count   );
-//            valprint( "sample_count", sample_count );
-//            valprint( "fun_count   ", fun_count    );
-//            valprint( "bin_count   ", bin_count    );
-//            valprint( "moment_count", moment_count );
-//            valprint( "thread_count", thread_count );
+            valprint( "dimension   ", AmbDim       );
+            valprint( "edge_count  ", edge_count   );
+            valprint( "sample_count", sample_count );
+            valprint( "fun_count   ", fun_count    );
+            valprint( "bin_count   ", bin_count    );
+            valprint( "moment_count", moment_count );
+            valprint( "thread_count", thread_count );
             
             
             Tensor3<Real,Int> bins_global   ( bins_out,    3, fun_count, bin_count    );
             Tensor3<Real,Int> moments_global( moments_out, 3, fun_count, moment_count );
             Tensor1<Real,Int> factor        (                 fun_count               );
             
-//            print("Sampling (compressed) the following random variables:");
-//            for( Int i = 0; i < fun_count; ++ i )
-//            {
-//                const size_t i_ = static_cast<size_t>(i);
-//                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
-//
-//                print("    " + F_list_[i_]->Tag());
-//            }
+            print("Sampling (compressed) the following random variables:");
+            for( Int i = 0; i < fun_count; ++ i )
+            {
+                const size_t i_ = static_cast<size_t>(i);
+                factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
+
+                print("    " + F_list_[i_]->Tag());
+            }
 
             const Int lower = static_cast<Int>(0);
             const Int upper = static_cast<Int>(bin_count-1);
             
-<<<<<<< HEAD
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int repetitions = (job_ptr[thread+1] - job_ptr[thread]);
-                
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                std::vector< std::shared_ptr<RandomVariable_T> > F_list;
-                
-                for( Int i = 0; i < fun_count; ++ i )
-                {
-                    F_list.push_back(
-                        std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone() )
-                    );
-                }
-                
-                Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
-                Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
-                
-                for( Int k = 0; k < repetitions; ++k )
-                {
-                    S.RandomizeInitialEdgeCoordinates();
-=======
+            
             std::mutex mutex;
             
             ParallelDo(
                 [&,this]( const Int thread )
                 {
+                    Time start = Clock::now();
+                    
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
-
+                    
                     const Int repetitions = k_end - k_begin;
                     
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
@@ -1595,9 +1461,7 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < fun_count; ++ i )
                     {
-                        F_list.push_back(
-                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
-                        );
+                        F_list.push_back( F_list_[i]->Clone() );
                     }
                     
                     Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
@@ -1612,7 +1476,7 @@ namespace CycleSampler
                         S.Optimize();
 
                         S.ComputeSpaceCoordinates();
-
+                        
                         S.ComputeEdgeSpaceSamplingWeight();
                         
                         S.ComputeEdgeQuotientSpaceSamplingCorrection();
@@ -1621,27 +1485,27 @@ namespace CycleSampler
 
                         const Real K_quot = S.EdgeQuotientSpaceSamplingWeight();
 
-                        for( Int i = 0; i < fun_count; ++i )
+                        for( Int i = 0; i < 1; ++i )
                         {
                             const Real val = (*F_list[i])(S);
-                            
+
                             Real values [3] = { one, K, K_quot };
-                            
+
                             const Int bin_idx = static_cast<Int>(
                                 std::floor( factor[i] * (val - ranges[2*i]) )
                             );
-                            
+
                             if( (bin_idx <= upper) && (bin_idx >= lower) )
                             {
                                 bins_local(0,i,bin_idx) += one;
                                 bins_local(1,i,bin_idx) += K;
                                 bins_local(2,i,bin_idx) += K_quot;
                             }
-                            
+
                             moments_local(0,i,0) += values[0];
                             moments_local(1,i,0) += values[1];
                             moments_local(2,i,0) += values[2];
-                            
+
                             for( Int j = 1; j < moment_count; ++j )
                             {
                                 values[0] *= val;
@@ -1654,14 +1518,22 @@ namespace CycleSampler
                         }
                     }
                     
-                    const std::lock_guard<std::mutex> lock (mutex );
-                    add_to_buffer(
-                        bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
-                    );
+                    {
+                        const std::lock_guard<std::mutex> lock ( mutex );
+                        
+                        add_to_buffer<VarSize,Sequential>(
+                            bins_local.data(), bins_global.data(), 3 * fun_count * bin_count
+                        );
+                        
+                        add_to_buffer<VarSize,Sequential>(
+                            moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
+                        );
+                    }
                     
-                    add_to_buffer(
-                        moments_local.data(), moments_global.data(), 3 * fun_count * moment_count
-                    );
+                    Time stop = Clock::now();
+                 
+                    logprint("Thread " + ToString(thread) + " done. Time elapsed = " + ToString( Duration(start, stop) ) + "." );
+                    
                 },
                 thread_count
             );
@@ -1671,7 +1543,7 @@ namespace CycleSampler
             
             ptoc(ClassName()+"::SampleCompressed");
         }
-        
+
         void NormalizeCompressedSamples(
             mut<Real> bins,
             const Int bin_count,
@@ -1707,17 +1579,17 @@ namespace CycleSampler
         Real tanhc( const Real t ) const
         {
             // Computes tanh(t)/t in a stable way by using a Padé approximation around t = 0.
-            constexpr Real a0 = static_cast<Real>(1);
-            constexpr Real a1 = static_cast<Real>(7)/static_cast<Real>(51);
-            constexpr Real a2 = static_cast<Real>(1)/static_cast<Real>(255);
-            constexpr Real a3 = static_cast<Real>(2)/static_cast<Real>(69615);
-            constexpr Real a4 = static_cast<Real>(1)/static_cast<Real>(34459425);
+            constexpr Real a0 = Scalar::One<Real>;
+            constexpr Real a1 = Scalar::Frac<Real>(7,51);
+            constexpr Real a2 = Scalar::Frac<Real>(1,255);
+            constexpr Real a3 = Scalar::Frac<Real>(2,69615);
+            constexpr Real a4 = Scalar::Frac<Real>(1,34459425);
             
-            constexpr Real b0 = static_cast<Real>(1);
-            constexpr Real b1 = static_cast<Real>(8)/static_cast<Real>(17);
-            constexpr Real b2 = static_cast<Real>(7)/static_cast<Real>(255);
-            constexpr Real b3 = static_cast<Real>(4)/static_cast<Real>(9945);
-            constexpr Real b4 = static_cast<Real>(1)/static_cast<Real>(765765);
+            constexpr Real b0 = Scalar::One<Real>;
+            constexpr Real b1 = Scalar::Frac<Real>(8,17);
+            constexpr Real b2 = Scalar::Frac<Real>(7,255);
+            constexpr Real b3 = Scalar::Frac<Real>(4,9945);
+            constexpr Real b4 = Scalar::Frac<Real>(1,765765);
             
             const Real t2 = t * t;
             
@@ -1749,11 +1621,7 @@ namespace CycleSampler
         
         std::string ClassName() const
         {
-<<<<<<< HEAD
             return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int> + "," + ">";
-=======
-            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>+","+TypeName<Int>+","+">";
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
         }
         
     }; // class Sampler

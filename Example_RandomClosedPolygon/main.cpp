@@ -58,5 +58,6 @@ int main(int argc, const char * argv[])
 
     print("");
 
+//    dump(x(0,0,0));
     return 0;
 }

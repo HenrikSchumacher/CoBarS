@@ -3,7 +3,6 @@
 
 using namespace Tools;
 using namespace Tensors;
-using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
@@ -18,7 +17,7 @@ int main(int argc, const char * argv[])
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
     
-    using Sampler_T        = Sampler<d,Real,Int>;
+    using Sampler_T        = CycleSampler::Sampler<d,Real,Int>;
     using RandomVariable_T = typename Sampler_T::RandomVariable_T;
 
     print("Test program for routine CycleSampler::Sample");
@@ -27,16 +26,16 @@ int main(int argc, const char * argv[])
     
     // A list of random variables to sample. We start with an empty list.
 
-//    std::vector< std::unique_ptr<RandomVariableBase_T> > F_list;
-    std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+//    std::vector< std::shared_ptr<RandomVariableBase_T> > F_list;
+    std::vector< std::shared_ptr<RandomVariable_T> > F_list;
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-    F_list.push_back( std::make_unique<ShiftNorm              <d,Real,Int>>()   );
-    F_list.push_back( std::make_unique<Gyradius               <d,Real,Int>>()   );
-    F_list.push_back( std::make_unique<ChordLength            <d,Real,Int>>(0,2));
-    F_list.push_back( std::make_unique<TotalCurvature         <d,Real,Int>>()   );
-    F_list.push_back( std::make_unique<EdgeSpaceSamplingWeight<d,Real,Int>>()   );
+    F_list.push_back( std::make_shared<CycleSampler::ShiftNorm              <d,Real,Int>>()   );
+//    F_list.push_back( std::make_shared<CycleSampler::Gyradius               <d,Real,Int>>()   );
+//    F_list.push_back( std::make_shared<CycleSampler::ChordLength            <d,Real,Int>>(0,2));
+//    F_list.push_back( std::make_shared<CycleSampler::TotalCurvature         <d,Real,Int>>()   );
+//    F_list.push_back( std::make_shared<CycleSampler::EdgeSpaceSamplingWeight<d,Real,Int>>()   );
     
 
     const Int fun_count    = static_cast<Int>(F_list.size());

@@ -39,7 +39,6 @@
 		AF19FEA728EC51A900593F55 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		AF19FEA828EC51A900593F55 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		AF2AEB6128EC5C44004650E3 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		AF597E2B29C52F2C00ABD4A0 /* Xoshiro-cpp */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Xoshiro-cpp"; sourceTree = "<group>"; };
 		AF597E3429C64C4E00ABD4A0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AF597E3629C64C5800ABD4A0 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		AFE5555629C26F9900FC5BD7 /* Example_Sample_Binned */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_Sample_Binned; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,7 +78,6 @@
 		AFC72D6728EC51460087C64D = {
 			isa = PBXGroup;
 			children = (
-				AF597E2B29C52F2C00ABD4A0 /* Xoshiro-cpp */,
 				AF19FEA328EC51A900593F55 /* Tensors */,
 				AF19FEA828EC51A900593F55 /* src */,
 				AF19FEA628EC51A900593F55 /* CycleSampler.hpp */,
