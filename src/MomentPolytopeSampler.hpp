@@ -80,7 +80,7 @@ namespace CycleSampler
     public:
         
         
-        Int RandomClosedPolygon( Real * restrict const p )
+        Int RandomClosedPolygon( mut<Real> p )
         {
             // Port of the routine "plc_random_equilateral_closed_polygon" from the C library "plCurve" by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
             // https://jasoncantarella.com/wordpress/software/plcurve/
@@ -93,7 +93,7 @@ namespace CycleSampler
             const Int n = edge_count;
             
             // We use the user-supplied buffer as scratch space for the diagonal lengths.
-            Real * restrict const d = &p[2*edge_count+1];
+            mut<Real> d = &p[2*edge_count+1];
             
             bool rejected = true;
 
@@ -265,34 +265,38 @@ namespace CycleSampler
         }
         
         
-        Int RandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
+        Int RandomClosedPolygons( mut<Real> p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
-            Int trials = 0;
             
-            JobPointers<Int> job_ptr (sample_count, thread_count);
+//            Int trials = 0;
             
-            #pragma omp parallel for num_threads( thread_count ) reduction( + : trials )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                
-                // Create a new instance of the class with its own random number generator.
-                MomentPolytopeSampler C ( edge_count );
+//            JobPointers<Int> job_ptr (sample_count, thread_count);
             
-                Int trials_loc = 0;
-                
-                const Int step = 3 * edge_count;
-                
-                const Int k_begin = job_ptr[thread];
-                const Int k_end   = job_ptr[thread+1];
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            const Int trials = ParallelDoReduce(
+                [=,this]( const Int thread ) -> Int
                 {
-                    trials_loc += C.RandomClosedPolygon( &p[ step * k ] );
-                }
+                    // Create a new instance of the class with its own random number generator.
+                    MomentPolytopeSampler C ( edge_count );
                 
-                trials += trials_loc;
-            }
+                    Int trials = 0;
+                    
+                    const Int step = AmbDim * edge_count;
+                    
+                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
+                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
+                    
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        trials += C.RandomClosedPolygon( &p[ step * k ] );
+                    }
+                    
+                    return trials;
+                },
+                AddReducer<Int,Int>(),
+                Scalar::Zero<Int>,
+                thread_count
+            );
             
             ptoc(ClassName()+"::RandomClosedPolygons");
             return trials;
@@ -307,7 +311,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return "MomentPolytopeSampler<"+TypeName<Real>()+","+TypeName<Int>()+","+">";
+            return std::string("MomentPolytopeSampler")+"<"+TypeName<Real>+","+TypeName<Int>+","+">";
         }
     };
     

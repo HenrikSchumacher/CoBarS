@@ -37,14 +37,14 @@ namespace CycleSampler
             
             // Handle wrap-around.
             {
-                const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
+                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
                 
                 sum = phi;
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
+                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
                 
                 sum += phi;
             }

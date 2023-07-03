@@ -92,8 +92,8 @@ namespace CycleSampler
         }
         
         explicit Sampler(
-            const Real * restrict const r_in,
-            const Real * restrict const rho_in,
+            ptr<Real> r_in,
+            ptr<Real> rho_in,
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
@@ -249,15 +249,15 @@ namespace CycleSampler
         static constexpr Real g_factor          = 4;
         static constexpr Real g_factor_inv      = one/g_factor;
         static constexpr Real norm_threshold    = 0.99 * 0.99 + 16 * eps;
-        static constexpr Real two_pi            = static_cast<Real>(2 * M_PI);
+        static constexpr Real two_pi            = Scalar::TwoPi<Real>;
     
     protected:
         
     void Seed()
     {
-        std::random_device r;
+        std::random_device rand_dev;
         
-        std::seed_seq seed { r(), r(), r(), r()   };
+        std::seed_seq seed { rand_dev(), rand_dev(), rand_dev(), rand_dev()   };
         
         random_engine = std::mt19937_64( seed );
     }
@@ -312,7 +312,7 @@ namespace CycleSampler
         
     protected:
         
-        Real Potential( const Vector_T & z )
+        Real Potential()
         {
             const Real zz = Dot(z,z);
             
@@ -348,7 +348,7 @@ namespace CycleSampler
             
             // TODO: Isn't it vice versa?
             // Shift the point z along -w to get new updated point w
-            InverseShift(z,w);
+            InverseShift();
             
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -380,7 +380,7 @@ namespace CycleSampler
                     
                     // TODO: Isn't it vice versa?
                     // Shift the point z along -w to get new updated point w .
-                    InverseShift(z,w);
+                    InverseShift();
                     
                     // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
                     Shift();
@@ -418,7 +418,7 @@ namespace CycleSampler
                 
                 //                const Real phi_0 = Potential(o);
                 
-                Real phi_tau = Potential(z);
+                Real phi_tau = Potential();
                 
                 ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
                 
@@ -436,7 +436,7 @@ namespace CycleSampler
                     
                     Times( tau * tanhc(tau * u_norm), u, z );
                     
-                    phi_tau = Potential(z);
+                    phi_tau = Potential();
                     
                     ArmijoQ = phi_tau  /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
                 }
@@ -444,7 +444,7 @@ namespace CycleSampler
             
             // TODO: Isn't it vice versa?
             // Shift the point z along -w to get new updated point w .
-            InverseShift(z,w);
+            InverseShift();
             
             // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
             Shift();
@@ -569,7 +569,7 @@ namespace CycleSampler
             Times(-two, F, u);
         }
         
-        void InverseShift( const Vector_T & z, Vector_T & w )
+        void InverseShift()
         {
             // Shift point w along -z.
             
@@ -690,7 +690,7 @@ namespace CycleSampler
             //            We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
             //            cbar *= static_cast<Real>(2)/(one_minus_ww);
             
-            edge_space_sampling_weight = MyMath::pow(prod, static_cast<Int>(AmbDim-1)) * sqrt(gamma.Det()) / cbar.Det();
+            edge_space_sampling_weight = Power(prod, static_cast<Int>(AmbDim-1)) * sqrt(gamma.Det()) / cbar.Det();
         }
         
         void ComputeEdgeQuotientSpaceSamplingCorrection()
@@ -1027,101 +1027,101 @@ namespace CycleSampler
     public:
         
         void OptimizeBatch(
-            const Real * restrict const x_in,
-                  Real * restrict const w_out,
-                  Real * restrict const y_out,
-            const                       Int sample_count,
-            const                       Int thread_count = 1,
-            const bool                  normalize = true
+            ptr<Real>  x_in,
+            mut<Real>  w_out,
+            mut<Real>  y_out,
+            const Int  sample_count,
+            const Int  thread_count = 1,
+            const bool normalize = true
         )
         {
             ptic(ClassName()+"OptimizeBatch");
             
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int k_begin = job_ptr[thread];
-                const Int k_end   = job_ptr[thread+1];
-                
-                Sampler S( edge_count, settings );
-                
-                S.ReadEdgeLengths( EdgeLengths().data() );
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            ParallelDo(
+                [=,this]( const Int thread )
                 {
-                    S.ReadInitialEdgeCoordinates( x_in, k, normalize );
+                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
+                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
                     
-                    S.ComputeShiftVector();
+                    Sampler S( edge_count, settings );
                     
-                    S.Optimize();
+                    S.ReadEdgeLengths( EdgeLengths().data() );
                     
-                    S.WriteShiftVector( w_out, k );
-                    
-                    S.WriteEdgeCoordinates( y_out, k );
-                }
-            }
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        S.ReadInitialEdgeCoordinates( x_in, k, normalize );
+                        
+                        S.ComputeShiftVector();
+                        
+                        S.Optimize();
+                        
+                        S.WriteShiftVector( w_out, k );
+                        
+                        S.WriteEdgeCoordinates( y_out, k );
+                    }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"OptimizeBatch");
         }
         
         void RandomClosedPolygons(
-                  Real * restrict const x_out,
-                  Real * restrict const w_out,
-                  Real * restrict const y_out,
-                  Real * restrict const K_edge_space,
-                  Real * restrict const K_edge_quotient_space,
-            const Int                   sample_count,
-            const Int                   thread_count = 1
+            mut<Real> x_out,
+            mut<Real> w_out,
+            mut<Real> y_out,
+            mut<Real> K_edge_space,
+            mut<Real> K_edge_quotient_space,
+            const Int sample_count,
+            const Int thread_count = 1
         ) const
         {
             ptic(ClassName()+"RandomClosedPolygons");
             
-            JobPointers<Int> job_ptr ( sample_count, thread_count );
-            
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                for( Int k = k_begin; k < k_end; ++k )
+            ParallelDo(
+                [=,this]( const Int thread )
                 {
-                    S.RandomizeInitialEdgeCoordinates();
+                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
+                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
                     
-                    S.WriteInitialEdgeCoordinates(x_out, k);
+                    Sampler S( edge_count, settings );
                     
-                    S.ComputeShiftVector();
-                    
-                    S.Optimize();
-                    
-                    S.WriteShiftVector(w_out,k);
-                    
-                    S.WriteEdgeCoordinates(y_out,k);
-                    
-                    S.ComputeEdgeSpaceSamplingWeight();
-                    
-                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
-                    K_edge_space[k] = S.EdgeSpaceSamplingWeight();
-                    
-                    K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
-                }
-            }
+                    for( Int k = k_begin; k < k_end; ++k )
+                    {
+                        S.RandomizeInitialEdgeCoordinates();
+                        
+                        S.WriteInitialEdgeCoordinates(x_out, k);
+                        
+                        S.ComputeShiftVector();
+                        
+                        S.Optimize();
+                        
+                        S.WriteShiftVector(w_out,k);
+                        
+                        S.WriteEdgeCoordinates(y_out,k);
+                        
+                        S.ComputeEdgeSpaceSamplingWeight();
+                        
+                        S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                        
+                        K_edge_space[k] = S.EdgeSpaceSamplingWeight();
+                        
+                        K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
+                    }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"::RandomClosedPolygons");
         }
         
         void Sample(
-                 Real * restrict sampled_values,
-                 Real * restrict edge_space_sampling_weights,
-                 Real * restrict edge_quotient_space_sampling_weights,
-           std::unique_ptr<RandomVariable_T> & F_,
-           const Int             sample_count,
-           const Int             thread_count = 1
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            std::unique_ptr<RandomVariable_T> & F_,
+            const Int sample_count,
+            const Int thread_count = 1
         ) const
         {
             // This function creates sample for the random variable F and records the sampling weights, so that this weighted data can be processed elsewhere.
@@ -1137,118 +1137,119 @@ namespace CycleSampler
             // Create an object that computes the workload for each thread.
             JobPointers<Int> job_ptr ( sample_count, thread_count );
 
-            #pragma omp parallel for num_threads( thread_count )
-            for( Int thread = 0; thread < thread_count; ++thread )
-            {
-                // For every thread create a copy of the current Sampler object.
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
-                
-                // Make a copy the random variable (it might have some state!).
-                std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
-                
-                RandomVariable_T & F = *F_ptr;
-                
-                const Int k_begin = job_ptr[thread  ];
-                const Int k_end   = job_ptr[thread+1];
-                
-                // Start sampling and write the results into the slice assigned to this thread.
-                if( edge_space_sampling_weights != nullptr )
+            ParallelDo(
+                [=,this]( const Int thread )
                 {
-                    if( edge_quotient_space_sampling_weights != nullptr )
+                    const Int k_begin = JobPointers(sample_count,thread_count,thread     );
+                    const Int k_end   = JobPointers(sample_count,thread_count,thread + 1 );
+                    
+                    // For every thread create a copy of the current Sampler object.
+                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    
+                    // Make a copy the random variable (it might have some state!).
+                    std::unique_ptr<RandomVariable_T> F_ptr = F_->Clone();
+                    
+                    RandomVariable_T & F_loc = *F_ptr;
+                    
+                    // Start sampling and write the results into the slice assigned to this thread.
+                    if( edge_space_sampling_weights != nullptr )
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
 
-                            S.ComputeShiftVector();
+                                S.ComputeShiftVector();
 
-                            S.Optimize();
+                                S.Optimize();
 
-                            S.ComputeSpaceCoordinates();
+                                S.ComputeSpaceCoordinates();
 
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
 
-                            edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
+                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
 
-                            sampled_values[k] = F(S);
+                                sampled_values[k] = F_loc(S);
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+
+                                sampled_values[k] = F_loc(S);
+                            }
                         }
                     }
                     else
                     {
-                        for( Int k = k_begin; k < k_end; ++k )
+                        if( edge_quotient_space_sampling_weights != nullptr )
                         {
-                            S.RandomizeInitialEdgeCoordinates();
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
 
-                            S.ComputeShiftVector();
+                                S.ComputeShiftVector();
 
-                            S.Optimize();
+                                S.Optimize();
 
-                            S.ComputeSpaceCoordinates();
+                                S.ComputeSpaceCoordinates();
 
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
+                                S.ComputeEdgeSpaceSamplingWeight();
+                                
+                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
 
-                            sampled_values[k] = F(S);
+                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
+
+                                sampled_values[k] = F_loc(S);
+                            }
+                        }
+                        else
+                        {
+                            for( Int k = k_begin; k < k_end; ++k )
+                            {
+                                S.RandomizeInitialEdgeCoordinates();
+
+                                S.ComputeShiftVector();
+
+                                S.Optimize();
+
+                                S.ComputeSpaceCoordinates();
+                                
+                                sampled_values[k] = F_loc(S);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    if( edge_quotient_space_sampling_weights != nullptr )
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-
-                            S.ComputeEdgeSpaceSamplingWeight();
-                            
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-
-                            edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
-
-                            sampled_values[k] = F(S);
-                        }
-                    }
-                    else
-                    {
-                        for( Int k = k_begin; k < k_end; ++k )
-                        {
-                            S.RandomizeInitialEdgeCoordinates();
-
-                            S.ComputeShiftVector();
-
-                            S.Optimize();
-
-                            S.ComputeSpaceCoordinates();
-                            
-                            sampled_values[k] = F(S);
-                        }
-                    }
-                }
-
-            }
+                },
+                thread_count
+            );
             
             ptoc(ClassName()+"::Sample");
         }
         
         void Sample(
-                 Real * restrict sampled_values,
-                 Real * restrict edge_space_sampling_weights,
-                 Real * restrict edge_quotient_space_sampling_weights,
-           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
-           const Int             sample_count,
-           const Int             thread_count = 1
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int  thread_count = 1
         ) const
         {
             const Int fun_count = static_cast<Int>(F_list_.size());
@@ -1290,7 +1291,7 @@ namespace CycleSampler
                 for( Int i = 0; i < fun_count; ++ i )
                 {
                     F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone() )
                     );
                 }
                 
@@ -1403,14 +1404,14 @@ namespace CycleSampler
 
         
         void SampleCompressed(
-                 Real * restrict bins_out,
-           const Int             bin_count_,
-                 Real * restrict moments_out,
-           const Int             moment_count_,
-           const Real * restrict ranges,
-           const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
-           const Int             sample_count,
-           const Int             thread_count = 1
+            mut<Real> bins_out,
+            const Int bin_count_,
+            mut<Real> moments_out,
+            const Int moment_count_,
+            ptr<Real> ranges,
+            const std::vector< std::unique_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int thread_count = 1
         ) const
         {
             // This function does the sampling, but computes moments and binning on the fly, so that the sampled data can be discarded immediately.
@@ -1460,12 +1461,12 @@ namespace CycleSampler
                 
                 Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                 
-                std::vector< std::unique_ptr<RandomVariable_T> > F_list;
+                std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                 
                 for( Int i = 0; i < fun_count; ++ i )
                 {
                     F_list.push_back(
-                        std::unique_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                        std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone() )
                     );
                 }
                 
@@ -1542,11 +1543,11 @@ namespace CycleSampler
         }
         
         void NormalizeCompressedSamples(
-                  Real * restrict bins,
-            const Int             bin_count,
-                  Real * restrict moments,
-            const Int             moment_count,
-            const Int             fun_count
+            mut<Real> bins,
+            const Int bin_count,
+            mut<Real> moments,
+            const Int moment_count,
+            const Int fun_count
         ) const
         {
             ptic(ClassName()+"::NormalizeCompressedSamples");
@@ -1556,9 +1557,9 @@ namespace CycleSampler
                 {
                     // Normalize bins and moments.
                     
-                    Real * restrict const bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
+                    mut<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
                     
-                    Real * restrict const moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
+                    mut<Real> moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
                     
                     // The field for zeroth moment is assumed to contain the total mass.
                     Real factor = Real(1)/moments_i_j[0];
@@ -1618,7 +1619,7 @@ namespace CycleSampler
         
         std::string ClassName() const
         {
-            return "Sampler<"+ToString(AmbDim)+","+TypeName<Real>()+","+TypeName<Int>()+","+">";
+            return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int> + "," + ">";
         }
         
     }; // class Sampler

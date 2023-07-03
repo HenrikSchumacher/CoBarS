@@ -36,14 +36,14 @@ namespace CycleSampler
             Real max_angle = static_cast<Real>(0);
             
             {
-                const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
+                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
                 
                 max_angle = std::max(max_angle,phi);
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                const Real phi = MyMath::AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
+                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
                 
                 max_angle = std::max(max_angle,phi);
             }
