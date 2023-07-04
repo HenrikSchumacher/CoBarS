@@ -11,7 +11,9 @@ namespace CycleSampler
         
     public:
         
-        using PRNG_T = MersenneTwister;
+//        using PRNG_T = MersenneTwister;
+        
+        using PRNG_T = Xoshiro256Plus;
         
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;

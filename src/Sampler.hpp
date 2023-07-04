@@ -55,7 +55,10 @@ namespace CycleSampler
         ASSERT_INT(Int);
         
     public:
-        using PRNG_T = MersenneTwister;
+        
+//        using PRNG_T = MersenneTwister;
+        
+        using PRNG_T = Xoshiro256Plus;
         
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
         using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
