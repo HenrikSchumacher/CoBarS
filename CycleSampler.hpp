@@ -11,9 +11,16 @@
 
     namespace CycleSampler
     {
+        
         using namespace Tools;
         using namespace Tensors;
-    } // namespace CycleSampler
+
+#include "src/SplitMix64.hpp"
+#include "src/MersenneTwister.hpp"
+#include "src/Xoshiro256Plus.hpp"
+    }
+
+
 
     #include "src/Sampler.hpp"
 

@@ -55,6 +55,7 @@ namespace CycleSampler
         ASSERT_INT(Int);
         
     public:
+        using PRNG_T = MersenneTwister;
         
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
         using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
@@ -67,13 +68,9 @@ namespace CycleSampler
         using Weights_T         = Tensor1<Real,Int>;
         using Setting_T         = SamplerSettings<Real,Int>;
         
-        Sampler()
-        {
-            Seed();
-        }
+        Sampler() = default;
         
-        
-        ~Sampler(){}
+        ~Sampler() = default;
         
         explicit Sampler(
             const Int edge_count_,
@@ -87,9 +84,7 @@ namespace CycleSampler
         ,   r   ( edge_count, one / edge_count )
         ,   rho ( edge_count, one )
         ,   total_r_inv ( one )
-        {
-            Seed();
-        }
+        {}
         
         explicit Sampler(
             ptr<Real> r_in,
@@ -106,8 +101,6 @@ namespace CycleSampler
         ,   rho ( rho_in, edge_count )
         {
             ReadEdgeLengths(r_in);
-            
-            Seed();
         }
         
         
@@ -196,9 +189,9 @@ namespace CycleSampler
         
         const Int edge_count = 0;
         
-        mutable std::mt19937_64 random_engine;
+        mutable PRNG_T random_engine;
         
-        mutable std::normal_distribution<Real> normal_dist {static_cast<Real>(0),static_cast<Real>(1)};
+        mutable std::normal_distribution<Real> normal_dist {zero,one};
         
         Setting_T settings;
         
@@ -252,15 +245,6 @@ namespace CycleSampler
         static constexpr Real two_pi            = Scalar::TwoPi<Real>;
     
     protected:
-        
-    void Seed()
-    {
-        std::random_device rand_dev;
-        
-        std::seed_seq seed { rand_dev(), rand_dev(), rand_dev(), rand_dev()   };
-        
-        random_engine = std::mt19937_64( seed );
-    }
         
     public:
         
@@ -345,8 +329,7 @@ namespace CycleSampler
             
             // exponential map shooting from 0 to tau * u.
             Times( tau * tanhc(tau * u_norm), u, z );
-            
-            // TODO: Isn't it vice versa?
+
             // Shift the point z along -w to get new updated point w
             InverseShift();
             
@@ -378,7 +361,6 @@ namespace CycleSampler
                     
                     Times( tau * tanhc(tau * u_norm), u, z );
                     
-                    // TODO: Isn't it vice versa?
                     // Shift the point z along -w to get new updated point w .
                     InverseShift();
                     
@@ -442,7 +424,6 @@ namespace CycleSampler
                 }
             }
             
-            // TODO: Isn't it vice versa?
             // Shift the point z along -w to get new updated point w .
             InverseShift();
             
@@ -571,8 +552,6 @@ namespace CycleSampler
         
         void InverseShift()
         {
-            // Shift point w along -z.
-            
             const Real ww  = Dot(w,w);
             const Real wz2 = Dot(w,z) * two;
             const Real zz  = Dot(z,z);
@@ -588,12 +567,7 @@ namespace CycleSampler
             }
         }
         
-        void Shift(
-        //            const SpherePoints_T & x_in,
-        //            const Vector_T       & w,
-        //                  SpherePoints_T & y_out,
-        //            const Real             t = one
-        )
+        void Shift()
         {
             // Shifts all entries of x along w and writes the results to y.
             
@@ -1621,7 +1595,7 @@ namespace CycleSampler
         
         std::string ClassName() const
         {
-            return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int> + "," + ">";
+            return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int> + "," + random_engine.ClassName() + ">";
         }
         
     }; // class Sampler

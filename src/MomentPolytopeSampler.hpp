@@ -11,6 +11,8 @@ namespace CycleSampler
         
     public:
         
+        using PRNG_T = MersenneTwister;
+        
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;
         
@@ -24,10 +26,10 @@ namespace CycleSampler
         
         explicit MomentPolytopeSampler( const Int edge_count_ )
         :   edge_count  ( edge_count_)
-        {
-        }
+        {}
 
     protected:
+        
         static constexpr Real zero              = 0;
         static constexpr Real half              = 0.5;
         static constexpr Real one               = 1;
@@ -36,49 +38,21 @@ namespace CycleSampler
         static constexpr Real four              = 4;
         static constexpr Real eps               = std::numeric_limits<Real>::min();
         static constexpr Real infty             = std::numeric_limits<Real>::max();
-        static constexpr Real small_one         = 1 - 16 * eps;
-        static constexpr Real big_one           = 1 + 16 * eps;
-        static constexpr Real two_pi            = static_cast<Real>(2 * M_PI);
+        static constexpr Real small_one         = one - 16 * eps;
+        static constexpr Real big_one           = one + 16 * eps;
+        static constexpr Real two_pi            = Scalar::TwoPi<Real>;
         
         const Int edge_count;
         
-        std::mt19937_64 engine { std::random_device()() };
+        mutable PRNG_T random_engine;
                     
-        std::uniform_real_distribution<Real> dist_1 { static_cast<Real>(-1), static_cast<Real>(1) };
+        std::uniform_real_distribution<Real> dist_1 { -one, one    };
         
-        std::uniform_real_distribution<Real> dist_2 { static_cast<Real>(0), static_cast<Real>(2 * M_PI) };
+        std::uniform_real_distribution<Real> dist_2 { zero, two_pi };
         
         static constexpr Int max_trials = 10000000;
         
     public:
-        
-//        const SpherePoints_T & EdgeCoordinates() const
-//        {
-//            return y;
-//        }
-//
-//        void ReadEdgeCoordinates( const Real * const y_in )
-//        {
-//            y.Read(y_in);
-//        }
-//
-//        void ReadEdgeCoordinates( const Real * const y_in, const Int k )
-//        {
-//            ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
-//        }
-//
-//        void WriteEdgeCoordinates( Real * y_out ) const
-//        {
-//            y.Write(y_out);
-//        }
-//
-//        void WriteEdgeCoordinates( Real * y_out, const Int k ) const
-//        {
-//            WriteEdgeCoordinates( &y_out[ AmbDim * edge_count * k ]);
-//        }
-        
-    public:
-        
         
         Int RandomClosedPolygon( mut<Real> p )
         {
@@ -132,7 +106,7 @@ namespace CycleSampler
                 for( Int i = 1; i < n-2; ++i )
                 {
                     // This guarantees (4):
-                    d[i] = d[i-1] + dist_1( engine );
+                    d[i] = d[i-1] + dist_1( random_engine );
                     
                     //Check condition (5) and (6).
                     rejected = (d[i-1] + d[i] < one) || (d[i] < eps);
@@ -149,15 +123,9 @@ namespace CycleSampler
             
             if( trials > max_trials )
             {
-                eprint("No success after "+ToString(max_trials)+" trials.");
+                eprint("No success after " + ToString(max_trials) + " trials.");
                 return trials;
             }
-            
-//            // Draw uniformly distributed angles:
-//            for( Int i = 0; i < n-3; ++i )
-//            {
-//                theta[i] = dist_2( engine );
-//            }
             
             p[0] = zero;
             p[1] = zero;
@@ -218,10 +186,10 @@ namespace CycleSampler
                 v[1] = e[2] * nu[0] - e[0] * nu[2];
                 v[2] = e[0] * nu[1] - e[1] * nu[0];
                 
-                const Real theta_i   = dist_2( engine );
+                const Real theta_i   = dist_2( random_engine );
                 const Real cos_theta = std::cos(theta_i);
                 const Real sin_theta = std::sin(theta_i);
-                const Real factor_2 = Dot(e,nu) * (one-cos_theta);
+                const Real factor_2  = Dot(e,nu) * (one-cos_theta);
                 
                 // Apply Rodrigue's formula
                 nu[0] = nu[0] * cos_theta + v[0] * sin_theta + e[0] * factor_2;
@@ -308,7 +276,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int> + ">";
+            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int> + "," + random_engine.ClassName() + ">";
         }
     };
     

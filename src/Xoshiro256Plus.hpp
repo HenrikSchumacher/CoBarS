@@ -138,6 +138,11 @@ public:
         return (lhs.state != rhs.state);
     }
     
+    std::string ClassName()
+    {
+        return std::string("Xoshiro256Plus");
+    }
+    
 private:
     
     state_type state;

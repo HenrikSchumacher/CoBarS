@@ -61,5 +61,10 @@ public:
     {
         return (lhs.random_engine != rhs.random_engine);
     }
+    
+    std::string ClassName()
+    {
+        return std::string("MersenneTwister");
+    }
 };
 
