@@ -7,10 +7,10 @@ using namespace Tensors;
 int main(int argc, const char * argv[])
 {
     using Real = double;
-    using Int  = int64_t;
+    using Int  = int_fast32_t;
 
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 8;
+    const     Int edge_count   = 64;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8; // 0 means "automatic"
     
@@ -31,6 +31,7 @@ int main(int argc, const char * argv[])
     S.Settings().PrintStats();
 
     print("");
+    valprint("edge_count  ",edge_count  );
     valprint("sample_count",sample_count);
     valprint("thread_count",thread_count);
     print("");

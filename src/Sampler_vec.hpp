@@ -66,10 +66,12 @@ namespace CycleSampler
         
         using RandomVariable_T  = RandomVariable<AmbDim,Real,Int>;
         
-        using SpherePoints_T    = Tensor2<Real,Int>;
-        using SpacePoints_T     = Tensor2<Real,Int>;
+        using SpherePoints_T    = Tiny::VectorList<AmbDim,Real,Int>;
+        using SpacePoints_T     = Tiny::VectorList<AmbDim,Real,Int>;
         using Weights_T         = Tensor1<Real,Int>;
         using Setting_T         = SamplerSettings<Real,Int>;
+        
+        static constexpr bool zerofy_first = true;
         
         Sampler() = default;
         
@@ -81,9 +83,9 @@ namespace CycleSampler
         )
         :   edge_count(edge_count_)
         ,   settings(settings_)
-        ,   x   ( edge_count,     AmbDim )
-        ,   y   ( edge_count,     AmbDim )
-        ,   p   ( edge_count + 1, AmbDim )
+        ,   x   ( edge_count )
+        ,   y   ( edge_count )
+        ,   p   ( edge_count + 1 )
         ,   r   ( edge_count, one / edge_count )
         ,   rho ( edge_count, one )
         ,   total_r_inv ( one )
@@ -97,9 +99,9 @@ namespace CycleSampler
         )
         :   edge_count(edge_count_)
         ,   settings(settings_)
-        ,   x   ( edge_count,     AmbDim )
-        ,   y   ( edge_count,     AmbDim )
-        ,   p   ( edge_count + 1, AmbDim )
+        ,   x   ( edge_count )
+        ,   y   ( edge_count )
+        ,   p   ( edge_count + 1 )
         ,   r   ( edge_count )
         ,   rho ( rho_in, edge_count )
         {
@@ -312,7 +314,7 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Vector_T y_k (y[k]);
+                Vector_T y_k ( y, k );
                 
                 value += r[k] * std::log( std::abs( (a - two * Dot(y_k,z) ) * b ) );
             }
@@ -441,33 +443,56 @@ namespace CycleSampler
             // Assemble DF = nabla F + regulatization:
             // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
             
-            // Filling F and DF with first summand...
+            if constexpr ( zerofy_first )
             {
-                for( Int i = 0; i < AmbDim; ++i )
+                F.SetZero();
+                DF.SetZero();
+                
+                for( Int k = 0; k < edge_count; ++k )
                 {
-                    const Real factor = r[0] * y[0][i];
-                    
-                    F[i] = - factor;
-                    
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int i = 0; i < AmbDim; ++i )
                     {
-                        DF[i][j] = - factor * y[0][j];
+                        const Real factor = r[k] * y[i][k];
+                        
+                        F[i] -= factor;
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            DF[i][j] -= factor * y[j][k];
+                        }
                     }
                 }
             }
-            
-            // ... and adding-in the other summands.
-            for( Int k = 1; k < edge_count; ++k )
+            else
             {
-                for( Int i = 0; i < AmbDim; ++i )
+                // Filling F and DF with first summand...
                 {
-                    const Real factor = r[k] * y[k][i];
-                    
-                    F[i] -= factor;
-                    
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int i = 0; i < AmbDim; ++i )
                     {
-                        DF[i][j] -= factor * y[k][j];
+                        const Real factor = r[0] * y[i][0];
+                        
+                        F[i] = - factor;
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            DF[i][j] = - factor * y[j][0];
+                        }
+                    }
+                }
+                
+                // ... and adding-in the other summands.
+                for( Int k = 1; k < edge_count; ++k )
+                {
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real factor = r[k] * y[i][k];
+                        
+                        F[i] -= factor;
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            DF[i][j] -= factor * y[j][k];
+                        }
                     }
                 }
             }
@@ -582,8 +607,8 @@ namespace CycleSampler
             {
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Vector_T x_k (x[k]);
-                    
+                    Vector_T x_k ( x, k );
+                                         
                     const Real wx2 = two * Dot(w,x_k);
                     
                     const Real denom = one / ( one_plus_ww - wx2 );
@@ -592,7 +617,7 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        y[k][i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
+                        y[i][k] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
                     }
                 }
             }
@@ -602,7 +627,7 @@ namespace CycleSampler
                 
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Vector_T x_k (x[k]);
+                    Vector_T x_k ( x, k );
                     
                     const Real wx2 = two * Dot(w,x_k);
                     
@@ -617,7 +642,7 @@ namespace CycleSampler
                     
                     x_k.Normalize();
                     
-                    x_k.Write(y[k]);
+                    x_k.Write( y, k );
                 }
             }
         }
@@ -638,7 +663,7 @@ namespace CycleSampler
             
             for( Int k = 0; k < edge_count; ++k )
             {
-                Vector_T y_k (y[k]);
+                Vector_T y_k ( y, k );
                 
                 const Real wy = Dot(w,y_k);
                 
@@ -681,35 +706,59 @@ namespace CycleSampler
             Tiny::SelfAdjointMatrix<AmbDim, Real, Int> Sigma;
             
             // We fill only the upper triangle of Sigma, because that's the only thing that the function Eigenvalues needs.
+          
             
-            // Overwrite for k = 0.
+            if constexpr ( zerofy_first )
             {
-                const Real rho_squared = rho[0] * rho[0];
-                for( Int i = 0; i < AmbDim; ++i )
+                Sigma.SetZero();
+                
+                for( Int k = 0; k < edge_count; ++k )
                 {
-                    const Real factor = rho_squared * y[0][i];
-                    
-                    for( Int j = i; j < AmbDim; ++j )
+                    const Real rho_squared = rho[k] * rho[k];
+                    for( Int i = 0; i < AmbDim; ++i )
                     {
-                        Sigma[i][j] = factor * y[0][j];
+                        const Real factor = rho_squared * y[i][k];
+                        
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            Sigma[i][j] += factor * y[j][k];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Overwrite for k = 0.
+                {
+                    const Real rho_squared = rho[0] * rho[0];
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real factor = rho_squared * y[i][0];
+
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            Sigma[i][j] = factor * y[j][0];
+                        }
+                    }
+                }
+
+                // Now we add-in the other entries.
+                for( Int k = 1; k < edge_count; ++k )
+                {
+                    const Real rho_squared = rho[k] * rho[k];
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real factor = rho_squared * y[i][k];
+
+                        for( Int j = i; j < AmbDim; ++j )
+                        {
+                            Sigma[i][j] += factor * y[j][k];
+                        }
                     }
                 }
             }
             
-            // Now we add-in the other entries.
-            for( Int k = 1; k < edge_count; ++k )
-            {
-                const Real rho_squared = rho[k] * rho[k];
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    const Real factor = rho_squared * y[k][i];
-                    
-                    for( Int j = i; j < AmbDim; ++j )
-                    {
-                        Sigma[i][j] += factor * y[k][j];
-                    }
-                }
-            }
+            
             
             if constexpr ( AmbDim == 3)
             {
@@ -719,9 +768,9 @@ namespace CycleSampler
                 //      ( tr(Sigma*Sigma) - tr(Sigma)*tr(Sigma) ) *  tr(Sigma)/2 - det(Sigma)
                 //  Thus, it can be expressed by as third-order polynomial in the entries of the matrix.
                 
-                const Real S_00 = Sigma[0][0]*Sigma[0][0];
-                const Real S_11 = Sigma[1][1]*Sigma[1][1];
-                const Real S_22 = Sigma[2][2]*Sigma[2][2];
+                const Real S_00 = Sigma[0][0] * Sigma[0][0];
+                const Real S_11 = Sigma[1][1] * Sigma[1][1];
+                const Real S_22 = Sigma[2][2] * Sigma[2][2];
                 
                 const Real S_10 = Sigma[0][1]*Sigma[0][1];
                 const Real S_20 = Sigma[0][2]*Sigma[0][2];
@@ -771,11 +820,11 @@ namespace CycleSampler
             {
                 for( Int k = 0; k < edge_count; ++k )
                 {
-                    Vector_T x_k ( x_in[AmbDim * k ] );
+                    Vector_T x_k ( x_in, k );
                     
                     x_k.Normalize();
                     
-                    x_k.Write(x,k);
+                    x_k.Write( x, k );
                 }
             }
             else
@@ -786,56 +835,54 @@ namespace CycleSampler
         
         void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true )
         {
-            ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize);
+            ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize );
         }
         
         void WriteInitialEdgeCoordinates( Real * x_out ) const
         {
-            x.Write(x_out);
+            x.Write( x_out );
         }
         
         void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const
         {
             WriteInitialEdgeCoordinates( &x_out[ AmbDim * edge_count * k ]);
         }
-        
+
         void RandomizeInitialEdgeCoordinates()
         {
             for( Int k = 0; k < edge_count; ++k )
             {
                 Vector_T x_k;
-                
+
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     x_k[i] = normal_dist( random_engine[i] );
                 }
-                
+
                 x_k.Normalize();
-                
-                x_k.Write(x[k]);
+
+                x_k.Write( x, k );
             }
         }
-        
-        
         
         const SpherePoints_T & EdgeCoordinates() const
         {
             return y;
         }
         
-        void ReadEdgeCoordinates( const Real * const y_in )
+        void ReadEdgeCoordinates( ptr<Real> y_in )
         {
-            y.Read(y_in);
+            y.Read( y_in );
         }
         
-        void ReadEdgeCoordinates( const Real * const y_in, const Int k )
+        void ReadEdgeCoordinates( ptr<Real> y_in, const Int k )
         {
             ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
         }
         
-        void WriteEdgeCoordinates( Real * y_out ) const
+        void WriteEdgeCoordinates( mut<Real> y_out ) const
         {
-            y.Write(y_out);
+            y.Write( y_out );
         }
         
         void WriteEdgeCoordinates( Real * y_out, const Int k ) const
@@ -852,7 +899,7 @@ namespace CycleSampler
         
         void WriteSpaceCoordinates( Real * p_out ) const
         {
-            p.Write(p_out);
+            p.Write( p_out );
         }
         
         void WriteSpaceCoordinates( Real * p_out, const Int k ) const
@@ -874,7 +921,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real offset = r_k * y[k][i];
+                    const Real offset = r_k * y[i][k];
                     
                     barycenter[i] += (point_accumulator[i] + half * offset);
                     
@@ -884,7 +931,7 @@ namespace CycleSampler
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                p[0][i] = -barycenter[i]/edge_count;
+                p[i][0] = -barycenter[i] / edge_count;
             }
             
             for( Int k = 0; k < edge_count; ++k )
@@ -893,7 +940,7 @@ namespace CycleSampler
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p[k+1][i] = p[k][i] + r_k * y[k][i];
+                    p[i][k+1] = p[i][k] + r_k * y[i][k];
                 }
             }
         }
@@ -925,27 +972,44 @@ namespace CycleSampler
         
         void ComputeShiftVector()
         {
-
-            // Overwrite by first summand.
-            {
-                const Real r_k = r[0];
-                
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    w[i] = x[0][i] * r_k;
-                }
-            }
+            w.SetZero();
             
-            // Add-in the others.
-            for( Int k = 1; k < edge_count; ++k )
+            if constexpr ( zerofy_first )
             {
-                const Real r_k = r[k];
-                
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int k = 0; k < edge_count; ++k )
                 {
-                    w[i] += x[k][i] * r_k;
+                    const Real r_k = r[k];
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        w[i] += x[i][k] * r_k;
+                    }
                 }
             }
+            else
+            {
+                // Overwrite by first summand.
+                {
+                    const Real r_k = r[0];
+
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        w[i] = x[i][0] * r_k;
+                    }
+                }
+
+                // Add-in the others.
+                for( Int k = 1; k < edge_count; ++k )
+                {
+                    const Real r_k = r[k];
+
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        w[i] += x[i][k] * r_k;
+                    }
+                }
+            }
+
             
             // Normalize in that case that r does not sum up to 1.
             w *= total_r_inv;
@@ -969,12 +1033,12 @@ namespace CycleSampler
         
         void WriteShiftVector( Real * w_out ) const
         {
-            w.Write(w_out);
+            w.Write( w_out );
         }
         
         void WriteShiftVector( Real * w_out, const Int k ) const
         {
-            w.Write(&w_out[ AmbDim * k]);
+            w.Write( &w_out[ AmbDim * k] );
         }
         
         const Vector_T & ShiftVector() const
@@ -1066,7 +1130,6 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    // TODO: Use Xoshiro256Plus::LongJump for initialization?
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
 
                     for( Int k = k_begin; k < k_end; ++k )
@@ -1129,8 +1192,7 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    // TODO: Use Xoshiro256Plus::LongJump for initialization?
-                    // For every thread create a new instance of Sampler.
+                    // For every thread create a copy of the current Sampler object.
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     // Make a copy the random variable (it might have some state!).
@@ -1258,8 +1320,7 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    // TODO: Use Xoshiro256Plus::LongJump for initialization?
-                    // For every thread create new instance of Sampler.
+                    // For every thread create a copy of the current Sampler object.
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     // Make also copys of all the random variables (they might have some state!).
@@ -1438,7 +1499,6 @@ namespace CycleSampler
                     
                     const Int repetitions = k_end - k_begin;
                     
-                    // TODO: Use Xoshiro256Plus::LongJump for initialization?
                     Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
                     
                     std::vector< std::shared_ptr<RandomVariable_T> > F_list;

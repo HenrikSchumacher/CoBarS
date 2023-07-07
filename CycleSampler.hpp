@@ -22,7 +22,8 @@
 
 
 
-    #include "src/Sampler.hpp"
+//    #include "src/Sampler.hpp"
+    #include "src/Sampler_vec.hpp"
 
     #include "src/RandomVariable.hpp"
 

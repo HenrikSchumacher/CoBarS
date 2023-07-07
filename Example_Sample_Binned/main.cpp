@@ -8,10 +8,10 @@ int main(int argc, const char * argv[])
 {
     // Some type aliases to make out lives a bit easier.
     using Real = double;
-    using Int  = int64_t;
+    using Int  = int_fast32_t;
     
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 8;
+    const     Int edge_count   = 16;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8;
 
