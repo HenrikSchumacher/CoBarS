@@ -46,17 +46,17 @@ int main(int argc, const char * argv[])
         );
     toc(S_Xoshiro.ClassName());
     
-    tic(S_PCG64.ClassName());
-        S_PCG64.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64.ClassName());
-    
     tic(S_Xoshiro_vec.ClassName());
         S_Xoshiro_vec.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_Xoshiro_vec.ClassName());
+    
+    tic(S_PCG64.ClassName());
+        S_PCG64.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64.ClassName());
     
     tic(S_PCG64.ClassName());
         S_PCG64.RandomClosedPolygons(
