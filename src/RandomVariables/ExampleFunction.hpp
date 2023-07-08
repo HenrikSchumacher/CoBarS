@@ -7,21 +7,23 @@ namespace CycleSampler
     // Just fill in the name of your new class in the next line; it will be automatically filled in below by the preprocessor.
 #define CLASS ExampleFunction
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public RandomVariable<AmbDim,Real,Int>
+    template<typename SamplerBase_T> class CLASS;
+    
+    template<int AmbDim, typename Real, typename Int>
+    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
+            
+    public:
+        
+        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        
     private:
         
-        // It's not a bad thing to have a symbol for the base class...
-        using Base_T            = RandomVariable<AmbDim,Real,Int>;
+        using Base_T            = RandomVariable<SamplerBase_T>;
         
     public:
         
-        // Imports several type aliases from the parent object.
-        
-        using Sampler_T         = typename Base_T::Sampler_T;
-        using SpherePoints_T    = typename Base_T::SpherePoints_T;
-        using SpacePoints_T     = typename Base_T::SpacePoints_T;
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
@@ -39,23 +41,14 @@ namespace CycleSampler
     protected:
         
         // This is almost the only routine that you have to modify.
-        // Calling the class on an object of class Sampler_T, it can access all its public data.
+        // Calling the class on an object of class SamplerBase_T, it can access all its public data.
         // We provide hooks for the most interesting of them.
-        virtual Real operator()( const Sampler_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & C ) const override
         {
             const Int edge_count = C.EdgeCount();
             
-            // The space coordinates as a edge_count x AmbDim matrix.
-            const SpacePoints_T & p = C.SpaceCoordinates();
-            
             // The edge lengths as a vector of length edge_count.
             const Weights_T & edge_lengths = C.EdgeLengths();
-            
-            // The unit edge vectors of the conformally barycentered curve.
-            const SpherePoints_T & y = C.EdgeCoordinates();
-            
-            // The unit edge vectors of the open polygonal curve.
-            const SpherePoints_T & x = C.InitialEdgeCoordinates();
             
             // The shift vector (conformal barycenter of x w.r.t. edge_lengths).
             const Vector_T & w = C.ShiftVector();
@@ -66,13 +59,13 @@ namespace CycleSampler
         }
         
         // Optionally, you can provide a lower bound for the range; this might help with binning.
-        virtual Real MinValue( const Sampler_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & C ) const override
         {
             return static_cast<Real>(0);
         }
         
         // Optionally, you can provide an upper bound for the range; this migh help with binning.
-        virtual Real MaxValue( const Sampler_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
             return static_cast<Real>(1);
         }

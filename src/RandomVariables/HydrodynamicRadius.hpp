@@ -5,18 +5,23 @@ namespace CycleSampler
     
 #define CLASS HydrodynamicRadius
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public RandomVariable<AmbDim,Real,Int>
+    template<typename SamplerBase_T> class CLASS;
+    
+    template<int AmbDim, typename Real, typename Int>
+    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
+            
+    public:
+        
+        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        
     private:
         
-        using Base_T            = RandomVariable<AmbDim,Real,Int>;
+        using Base_T            = RandomVariable<SamplerBase_T>;
         
     public:
         
-        using Sampler_T         = typename Base_T::Sampler_T;
-        using SpherePoints_T    = typename Base_T::SpherePoints_T;
-        using SpacePoints_T     = typename Base_T::SpacePoints_T;
         using Weights_T         = typename Base_T::Weights_T;
         
         CLASS() = default;
@@ -30,13 +35,12 @@ namespace CycleSampler
     protected:
         
         
-        virtual Real operator()( const Sampler_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & C ) const override
         {
             Real sum = static_cast<Real>(0);
             Real r2  = static_cast<Real>(0);
             
             const Int n             = C.EdgeCount();
-            const SpacePoints_T & p = C.SpaceCoordinates();
             
             for( Int k = 0; k < n; ++k )
             {
@@ -46,7 +50,7 @@ namespace CycleSampler
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
-                        const Real delta = p[l][i] - p[k][i];
+                        const Real delta = C.SpaceCoordinates(l,i) - C.SpaceCoordinates(k,i);
                         
                         r2 += delta * delta;
                     }
@@ -58,12 +62,12 @@ namespace CycleSampler
             return (n * n)/sum;
         }
         
-        virtual Real MinValue( const Sampler_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & C ) const override
         {
             return static_cast<Real>(0);
         }
         
-        virtual Real MaxValue( const Sampler_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
             return C.EdgeLengths().Total();
         }

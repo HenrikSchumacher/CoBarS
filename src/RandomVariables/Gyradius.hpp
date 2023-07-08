@@ -5,18 +5,23 @@ namespace CycleSampler
 
 #define CLASS Gyradius
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public RandomVariable<AmbDim,Real,Int>
+    template<typename SamplerBase_T> class CLASS;
+    
+    template<int AmbDim, typename Real, typename Int>
+    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
+            
+    public:
+        
+        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        
     private:
         
-        using Base_T            = RandomVariable<AmbDim,Real,Int>;
+        using Base_T            = RandomVariable<SamplerBase_T>;
         
     public:
         
-        using Sampler_T         = typename Base_T::Sampler_T;
-        using SpherePoints_T    = typename Base_T::SpherePoints_T;
-        using SpacePoints_T     = typename Base_T::SpacePoints_T;
         using Weights_T         = typename Base_T::Weights_T;
         
         CLASS() = default;
@@ -28,32 +33,31 @@ namespace CycleSampler
     protected:
         
         
-        virtual Real operator()( const Sampler_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & C ) const override
         {
             Real r2 = static_cast<Real>(0);
             
             const Int n             = C.EdgeCount();
-            const SpacePoints_T & p = C.SpaceCoordinates();
-            
+
             for( Int k = 0; k < n; ++k )
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    r2 += p[k][i] * p[k][i];
+                    r2 += C.SpaceCoordinates(k,i) * C.SpaceCoordinates(k,i);
                 }
             }
             
             return std::sqrt( r2/n );
         }
         
-        virtual Real MinValue( const Sampler_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
-        virtual Real MaxValue( const Sampler_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Total(C.EdgeLengths())/std::sqrt(C.EdgeCount());
+            return Total( C.EdgeLengths() ) / std::sqrt( static_cast<Real>(C.EdgeCount()) );
         }
         
     public:

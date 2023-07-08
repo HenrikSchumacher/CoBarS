@@ -3,6 +3,7 @@
 
 using namespace Tools;
 using namespace Tensors;
+using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
@@ -11,18 +12,24 @@ int main(int argc, const char * argv[])
     using Int  = int_fast32_t;
     
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 16;
+    const     Int edge_count   = 4;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8;
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
     
-    using Sampler_T        = CycleSampler::Sampler<d,Real,Int>;
-    using RandomVariable_T = typename Sampler_T::RandomVariable_T;
+    using SamplerBase_T    = SamplerBase<d,Real,Int>;
+    using RandomVariable_T = typename SamplerBase_T::RandomVariable_T;
 
-    print("Test program for routine CycleSampler::Sample");
+    print("Test program for routine Sample");
+    
+    SamplerSettings<Real,Int> opts;
+    
+    opts.max_iter = 1000;
 
-    Sampler_T S (edge_count);
+    Sampler_vec<d,Real,Int,Xoshiro256Plus> S ( edge_count, opts );
+    
+    dump(S.EdgeLengths());
     
     // A list of random variables to sample. We start with an empty list.
 
@@ -31,12 +38,16 @@ int main(int argc, const char * argv[])
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
     // The nature of runtime polymorphism has it that we have to use smart pointers here...
-    F_list.push_back( std::make_shared<CycleSampler::ShiftNorm              <d,Real,Int>>()   );
-//    F_list.push_back( std::make_shared<CycleSampler::Gyradius               <d,Real,Int>>()   );
-//    F_list.push_back( std::make_shared<CycleSampler::ChordLength            <d,Real,Int>>(0,2));
-//    F_list.push_back( std::make_shared<CycleSampler::TotalCurvature         <d,Real,Int>>()   );
-//    F_list.push_back( std::make_shared<CycleSampler::EdgeSpaceSamplingWeight<d,Real,Int>>()   );
-    
+    F_list.push_back( std::make_shared<ChordLength            <SamplerBase_T>>(0,2));
+    F_list.push_back( std::make_shared<ShiftNorm              <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<EdgeQuotientSpaceSamplingWeight<SamplerBase_T>>() );
+    F_list.push_back( std::make_shared<IterationCount         <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<Gyradius               <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<HydrodynamicRadius     <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<TotalCurvature         <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<EdgeSpaceSamplingWeight<SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<BendingEnergy          <SamplerBase_T>>(2)  );
+    F_list.push_back( std::make_shared<MaxAngle               <SamplerBase_T>>()   );
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;

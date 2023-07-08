@@ -9,6 +9,11 @@
 
     #include "Tensors/Tensors.hpp"
 
+    #include <istream>
+    #include <ostream>
+
+    #include "pcg-cpp/include/pcg_random.hpp"
+
     namespace CycleSampler
     {
         
@@ -18,11 +23,14 @@
 #include "src/SplitMix64.hpp"
 #include "src/MersenneTwister.hpp"
 #include "src/Xoshiro256Plus.hpp"
+#include "src/PCG64.hpp"
+        
     }
+    
 
-
-
-//    #include "src/Sampler.hpp"
+    #include "src/SamplerSettings.hpp"
+    #include "src/SamplerBase.hpp"
+    #include "src/Sampler.hpp"
     #include "src/Sampler_vec.hpp"
 
     #include "src/RandomVariable.hpp"

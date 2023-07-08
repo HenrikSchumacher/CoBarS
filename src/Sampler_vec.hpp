@@ -2,87 +2,45 @@
 
 namespace CycleSampler
 {
-
-    template<int AmbDim, typename Real, typename Int>
-    class RandomVariable;
     
-    template<typename Real, typename Int>
-    struct SamplerSettings
-    {
-        Real tolerance            = std::sqrt(std::numeric_limits<Real>::epsilon());
-        Real give_up_tolerance    = 128 * std::numeric_limits<Real>::epsilon();
-        Real regularization       = static_cast<Real>(0.01);
-        Int  max_iter             = 1000;
-        
-        Real Armijo_slope_factor  = static_cast<Real>(0.01);
-        Real Armijo_shrink_factor = static_cast<Real>(0.5);
-        Int  max_backtrackings    = 20;
-        
-        bool use_linesearch       = true;
-        
-        SamplerSettings() {}
-        
-        ~SamplerSettings() = default;
-        
-        SamplerSettings( const SamplerSettings & other )
-        :   tolerance(other.tolerance)
-        ,   give_up_tolerance(other.give_up_tolerance)
-        ,   regularization(other.regularization)
-        ,   max_iter(other.max_iter)
-        ,   Armijo_slope_factor(other.Armijo_slope_factor)
-        ,   Armijo_shrink_factor(other.Armijo_shrink_factor)
-        ,   max_backtrackings(other.max_backtrackings)
-        ,   use_linesearch(other.use_linesearch)
-        {}
-        
-        void PrintStats() const
-        {
-            valprint( "tolerance           ", tolerance           , 16 );
-            valprint( "give_up_tolerance   ", give_up_tolerance   , 16 );
-            valprint( "regularization      ", regularization      , 16 );
-            valprint( "max_iter            ", max_iter            , 16 );
-            valprint( "Armijo_slope_factor ", Armijo_slope_factor , 16 );
-            valprint( "Armijo_shrink_factor", Armijo_shrink_factor, 16 );
-            valprint( "max_backtrackings   ", max_backtrackings   , 16 );
-            valprint( "use_linesearch      ", use_linesearch      , 16 );
-        }
-    };
-    
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class Sampler
+    template<int AmbDim, typename Real = double, typename Int = int_fast32_t, typename PRNG_T = Xoshiro256Plus,
+        bool zerofy_first = true
+    >
+    class Sampler_vec : public SamplerBase<AmbDim,Real,Int>
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
+    private:
+        
+        using Base_T = SamplerBase<AmbDim,Real,Int>;
+        
     public:
         
-//        using PRNG_T = MersenneTwister;
+        using Vector_T          = typename Base_T::Vector_T;
+        using SquareMatrix_T    = typename Base_T::SquareMatrix_T;
+        using SymmetricMatrix_T = typename Base_T::SymmetricMatrix_T;
         
-        using PRNG_T = Xoshiro256Plus;
+        using RandomVariable_T  = typename Base_T::RandomVariable_T;
         
-        using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
-        using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
-        using SymmetricMatrix_T = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
         
-        using RandomVariable_T  = RandomVariable<AmbDim,Real,Int>;
+        using Weights_T         = typename Base_T::Weights_T;
+        using Setting_T         = typename Base_T::Setting_T;
         
         using SpherePoints_T    = Tiny::VectorList<AmbDim,Real,Int>;
         using SpacePoints_T     = Tiny::VectorList<AmbDim,Real,Int>;
-        using Weights_T         = Tensor1<Real,Int>;
-        using Setting_T         = SamplerSettings<Real,Int>;
+
         
-        static constexpr bool zerofy_first = true;
+        Sampler_vec() = default;
         
-        Sampler() = default;
+        ~Sampler_vec() = default;
         
-        ~Sampler() = default;
-        
-        explicit Sampler(
+        explicit Sampler_vec(
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
-        :   edge_count(edge_count_)
-        ,   settings(settings_)
+        :   Base_T( settings_ )
+        ,   edge_count(edge_count_)
         ,   x   ( edge_count )
         ,   y   ( edge_count )
         ,   p   ( edge_count + 1 )
@@ -91,14 +49,14 @@ namespace CycleSampler
         ,   total_r_inv ( one )
         {}
         
-        explicit Sampler(
+        explicit Sampler_vec(
             ptr<Real> r_in,
             ptr<Real> rho_in,
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
-        :   edge_count(edge_count_)
-        ,   settings(settings_)
+        :   Base_T( settings_ )
+        ,   edge_count(edge_count_)
         ,   x   ( edge_count )
         ,   y   ( edge_count )
         ,   p   ( edge_count + 1 )
@@ -109,11 +67,10 @@ namespace CycleSampler
         }
         
         
-        
         // Copy constructor
-        Sampler( const Sampler & other )
-        :   edge_count( other.edge_count )
-        ,   settings( other.settings )
+        Sampler_vec( const Sampler_vec & other )
+        :   Base_T( other )
+        ,   edge_count( other.edge_count )
         ,   x(other.x)
         ,   y(other.y)
         ,   p(other.p)
@@ -138,9 +95,14 @@ namespace CycleSampler
         ,   succeededQ(succeededQ)
         ,   continueQ(continueQ)
         ,   ArmijoQ(ArmijoQ)
-        {}
+        {
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                random_engine[i].seed(pcg_extras::seed_seq_from<std::random_device>());
+            }
+        }
         
-        friend void swap(Sampler &A, Sampler &B) noexcept
+        friend void swap(Sampler_vec &A, Sampler_vec &B) noexcept
         {
             // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
             using std::swap;
@@ -173,7 +135,7 @@ namespace CycleSampler
         }
         
         // Copy assignment operator
-        Sampler & operator=(Sampler other)
+        Sampler_vec & operator=(Sampler_vec other)
         {
             // copy-and-swap idiom
             // see https://stackoverflow.com/a/3279550/8248900 for details
@@ -183,8 +145,8 @@ namespace CycleSampler
         }
 
         /* Move constructor */
-        Sampler( Sampler && other ) noexcept
-        :   Sampler()
+        Sampler_vec( Sampler_vec && other ) noexcept
+        :   Sampler_vec()
         {
             swap(*this, other);
         }
@@ -197,8 +159,6 @@ namespace CycleSampler
         mutable PRNG_T random_engine [AmbDim];
         
         mutable std::normal_distribution<Real> normal_dist {zero,one};
-        
-        Setting_T settings;
         
         SpherePoints_T x {0};
         SpherePoints_T y {0};
@@ -253,9 +213,11 @@ namespace CycleSampler
         
     public:
         
-        void Optimize()
+        using Base_T::Settings;
+        
+        virtual void Optimize() override
         {
-            const Int max_iter = settings.max_iter;
+            const Int max_iter = Settings().max_iter;
             
             iter = 0;
             
@@ -278,22 +240,22 @@ namespace CycleSampler
             }
         }
         
-        Int EdgeCount() const
+        virtual Int EdgeCount() const override
         {
             return edge_count;
         }
         
-        Real EdgeSpaceSamplingWeight() const
+        virtual Real EdgeSpaceSamplingWeight() const override
         {
             return edge_space_sampling_weight;
         }
         
-        Real EdgeQuotientSpaceSamplingCorrection() const
+        virtual Real EdgeQuotientSpaceSamplingCorrection() const override
         {
             return edge_quotient_space_sampling_correction;
         }
         
-        Real EdgeQuotientSpaceSamplingWeight() const
+        virtual Real EdgeQuotientSpaceSamplingWeight() const override
         {
             return EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
         }
@@ -351,16 +313,16 @@ namespace CycleSampler
                 
                 // Armijo condition for squared residual.
                 
-                ArmijoQ = squared_residual - squared_residual_at_0 - settings.Armijo_slope_factor * tau * slope < zero;
+                ArmijoQ = squared_residual - squared_residual_at_0 - Settings().Armijo_slope_factor * tau * slope < zero;
                 
-                while( !ArmijoQ && (backtrackings < settings.max_backtrackings) )
+                while( !ArmijoQ && (backtrackings < Settings().max_backtrackings) )
                 {
                     ++backtrackings;
                     
                     // Estimate step size from quadratic fit if applicable.
                     
-                    const Real tau_1 = settings.Armijo_shrink_factor * tau;
-                    const Real tau_2 = - half * settings.Armijo_slope_factor * tau * tau * slope / ( squared_residual  - squared_residual_at_0 - tau * slope );
+                    const Real tau_1 = Settings().Armijo_shrink_factor * tau;
+                    const Real tau_2 = - half * Settings().Armijo_slope_factor * tau * tau * slope / ( squared_residual  - squared_residual_at_0 - tau * slope );
                     
                     tau = std::max( tau_1, tau_2 );
                     
@@ -374,7 +336,7 @@ namespace CycleSampler
                     
                     DifferentialAndHessian_Hyperbolic();
                     
-                    ArmijoQ = squared_residual - squared_residual_at_0 - settings.Armijo_slope_factor * tau * slope < 0;
+                    ArmijoQ = squared_residual - squared_residual_at_0 - Settings().Armijo_slope_factor * tau * slope < 0;
                 }
             }
         }
@@ -393,9 +355,9 @@ namespace CycleSampler
             {
                 //Linesearch with potential as merit function.
                 
-                const Real gamma = settings.Armijo_shrink_factor;
+                const Real gamma = Settings().Armijo_shrink_factor;
                 
-                const Real sigma = settings.Armijo_slope_factor;
+                const Real sigma = Settings().Armijo_slope_factor;
                 
                 const Real Dphi_0 = g_factor * Dot(F,u);
                 
@@ -410,7 +372,7 @@ namespace CycleSampler
                 ArmijoQ = phi_tau /*- phi_0*/ - sigma * tau * Dphi_0 < 0;
                 
                 
-                while( !ArmijoQ && (backtrackings < settings.max_backtrackings) )
+                while( !ArmijoQ && (backtrackings < Settings().max_backtrackings) )
                 {
                     ++backtrackings;
                     
@@ -518,7 +480,7 @@ namespace CycleSampler
         void SearchDirection_Hyperbolic()
         {
             // Make decisions whether to continue.
-            if( residual < static_cast<Real>(100.) * settings.tolerance )
+            if( residual < static_cast<Real>(100.) * Settings().tolerance )
             {
                 // We have to compute eigenvalue _before_ we add the regularization.
                 lambda_min = DF.SmallestEigenvalue();
@@ -530,15 +492,15 @@ namespace CycleSampler
                     errorestimator = half * lambda_min * q;
                     //And we should deactivate line search. Otherwise, we may run into precision issues.
                     linesearchQ = false;
-                    continueQ = (errorestimator >settings.tolerance);
+                    continueQ = (errorestimator > Settings().tolerance);
                     succeededQ = !continueQ;
                 }
                 else
                 {
                     errorestimator = infty;
-                    linesearchQ = settings.Armijo_slope_factor > zero;
+                    linesearchQ = Settings().Armijo_slope_factor > zero;
                     //There is no way to reduce the residual below machine epsilon. If the algorithm reaches here, the problem is probably too ill-conditioned to be solved in machine precision.
-                    continueQ = residual > settings.give_up_tolerance;
+                    continueQ = residual > Settings().give_up_tolerance;
                 }
             }
             else
@@ -546,11 +508,11 @@ namespace CycleSampler
                 q = big_one;
                 lambda_min = eps;
                 errorestimator = infty;
-                linesearchQ = settings.Armijo_slope_factor > zero;
-                continueQ = residual>std::max( settings.give_up_tolerance, settings.tolerance );
+                linesearchQ = Settings().Armijo_slope_factor > zero;
+                continueQ = residual>std::max( Settings().give_up_tolerance, Settings().tolerance );
             }
             
-            const Real c = settings.regularization * squared_residual;
+            const Real c = Settings().regularization * squared_residual;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -808,13 +770,22 @@ namespace CycleSampler
         
     public:
         
+//        virtual const SpherePoints_T & InitialEdgeCoordinates() const override
+//        {
+//            return x;
+//        }
         
-        const SpherePoints_T & InitialEdgeCoordinates() const
+        virtual Real InitialEdgeCoordinates( const Int k, const Int i ) const override
         {
-            return x;
+            return x[i][k];
         }
         
-        void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true )
+        virtual Vector_T InitialEdgeCoordinates( const Int k ) const override
+        {
+            return Vector_T ( x, k );
+        }
+        
+        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) override
         {
             if( normalize )
             {
@@ -833,22 +804,22 @@ namespace CycleSampler
             }
         }
         
-        void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true )
+        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true ) override
         {
             ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize );
         }
         
-        void WriteInitialEdgeCoordinates( Real * x_out ) const
+        virtual void WriteInitialEdgeCoordinates( Real * x_out ) const override
         {
             x.Write( x_out );
         }
         
-        void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const
+        virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const override
         {
             WriteInitialEdgeCoordinates( &x_out[ AmbDim * edge_count * k ]);
         }
 
-        void RandomizeInitialEdgeCoordinates()
+        virtual void RandomizeInitialEdgeCoordinates() override
         {
             for( Int k = 0; k < edge_count; ++k )
             {
@@ -865,49 +836,69 @@ namespace CycleSampler
             }
         }
         
-        const SpherePoints_T & EdgeCoordinates() const
+//        virtual const SpherePoints_T & EdgeCoordinates() const override
+//        {
+//            return y;
+//        }
+        
+        virtual Real EdgeCoordinates( const Int k, const Int i ) const override
         {
-            return y;
+            return y[i][k];
         }
         
-        void ReadEdgeCoordinates( ptr<Real> y_in )
+        virtual Vector_T EdgeCoordinates( const Int k ) const override
+        {
+            return Vector_T ( y, k );
+        }
+        
+        virtual void ReadEdgeCoordinates( ptr<Real> y_in ) override
         {
             y.Read( y_in );
         }
         
-        void ReadEdgeCoordinates( ptr<Real> y_in, const Int k )
+        virtual void ReadEdgeCoordinates( ptr<Real> y_in, const Int k ) override
         {
             ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
         }
         
-        void WriteEdgeCoordinates( mut<Real> y_out ) const
+        virtual void WriteEdgeCoordinates( mut<Real> y_out ) const override
         {
             y.Write( y_out );
         }
         
-        void WriteEdgeCoordinates( Real * y_out, const Int k ) const
+        virtual void WriteEdgeCoordinates( Real * y_out, const Int k ) const override
         {
             WriteEdgeCoordinates( &y_out[ AmbDim * edge_count * k ]);
         }
         
         
         
-        const SpacePoints_T & SpaceCoordinates() const
+//        virtual const SpacePoints_T & SpaceCoordinates() const override
+//        {
+//            return p;
+//        }
+//        
+        virtual Real SpaceCoordinates( const Int k, const Int i ) const override
         {
-            return p;
+            return p[i][k];
         }
         
-        void WriteSpaceCoordinates( Real * p_out ) const
+        virtual Vector_T SpaceCoordinates( const Int k ) const override
+        {
+            return Vector_T ( p, k );
+        }
+        
+        virtual void WriteSpaceCoordinates( Real * p_out ) const override
         {
             p.Write( p_out );
         }
         
-        void WriteSpaceCoordinates( Real * p_out, const Int k ) const
+        virtual void WriteSpaceCoordinates( Real * p_out, const Int k ) const override
         {
             WriteSpaceCoordinates( &p_out[ (edge_count+1) * AmbDim * k ]);
         }
         
-        void ComputeSpaceCoordinates()
+        virtual void ComputeSpaceCoordinates() override
         {
             //Caution: This gives only have the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
@@ -946,12 +937,12 @@ namespace CycleSampler
         }
         
         
-        const Weights_T & EdgeLengths() const
+        virtual const Weights_T & EdgeLengths() const override
         {
             return r;
         }
         
-        void ReadEdgeLengths( const Real * const r_in )
+        virtual void ReadEdgeLengths( const Real * const r_in ) override
         {
             r.Read(r_in);
             
@@ -959,18 +950,18 @@ namespace CycleSampler
         }
         
         
-        const Weights_T & Rho() const
+        virtual const Weights_T & Rho() const override
         {
             return rho;
         }
         
-        void ReadRho( const Real * const rho_in )
+        virtual void ReadRho( const Real * const rho_in ) override
         {
             rho.Read(rho_in);
         }
         
         
-        void ComputeShiftVector()
+        virtual void ComputeShiftVector() override
         {
             w.SetZero();
             
@@ -1015,7 +1006,7 @@ namespace CycleSampler
             w *= total_r_inv;
         }
         
-        void ReadShiftVector( const Real * const w_in )
+        virtual void ReadShiftVector( const Real * const w_in ) override
         {
             w.Read(w_in);
             
@@ -1026,58 +1017,58 @@ namespace CycleSampler
             }
         }
         
-        void ReadShiftVector( const Real * const w_in, const Int k )
+        virtual void ReadShiftVector( const Real * const w_in, const Int k ) override
         {
             ReadShiftVector( &w_in[ AmbDim * k ] );
         }
         
-        void WriteShiftVector( Real * w_out ) const
+        virtual void WriteShiftVector( Real * w_out ) const override
         {
             w.Write( w_out );
         }
         
-        void WriteShiftVector( Real * w_out, const Int k ) const
+        virtual void WriteShiftVector( Real * w_out, const Int k ) const override
         {
             w.Write( &w_out[ AmbDim * k] );
         }
         
-        const Vector_T & ShiftVector() const
+        virtual const Vector_T & ShiftVector() const override
         {
             return w;
         }
         
         
-        Real Residual() const
+        virtual Real Residual() const override
         {
             return residual;
         }
         
-        Real ErrorEstimator() const
+        virtual Real ErrorEstimator() const override
         {
             return errorestimator;
         }
         
-        Int IterationCount() const
+        virtual Int IterationCount() const override
         {
             return iter;
         }
         
-        Int MaxIterationCount() const
+        virtual Int MaxIterationCount() const override
         {
-            return settings.max_iter;
+            return Settings().max_iter;
         }
         
         
     public:
         
-        void OptimizeBatch(
+        virtual void OptimizeBatch(
             ptr<Real>  x_in,
             mut<Real>  w_out,
             mut<Real>  y_out,
             const Int  sample_count,
             const Int  thread_count = 1,
             const bool normalize = true
-        )
+        ) override
         {
             ptic(ClassName()+"::OptimizeBatch");
             
@@ -1087,7 +1078,7 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    Sampler S( edge_count, settings );
+                    Sampler_vec S( edge_count, Settings() );
 
                     S.ReadEdgeLengths( EdgeLengths().data() );
 
@@ -1110,7 +1101,7 @@ namespace CycleSampler
             ptoc(ClassName()+"::OptimizeBatch");
         }
         
-        void RandomClosedPolygons(
+        virtual void RandomClosedPolygons(
             mut<Real> x_out,
             mut<Real> w_out,
             mut<Real> y_out,
@@ -1118,7 +1109,7 @@ namespace CycleSampler
             mut<Real> K_edge_quotient_space,
             const Int sample_count,
             const Int thread_count = 1
-        ) const
+        ) const override
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             
@@ -1130,7 +1121,7 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    Sampler_vec S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
 
                     for( Int k = k_begin; k < k_end; ++k )
                     {
@@ -1166,14 +1157,14 @@ namespace CycleSampler
             ptoc(ClassName()+"::RandomClosedPolygons");
         }
         
-        void Sample(
+        virtual void Sample(
             mut<Real> sampled_values,
             mut<Real> edge_space_sampling_weights,
             mut<Real> edge_quotient_space_sampling_weights,
             std::shared_ptr<RandomVariable_T> & F_,
             const Int sample_count,
             const Int thread_count = 1
-        ) const
+        ) const override
         {
             // This function creates sample for the random variable F and records the sampling weights, so that this weighted data can be processed elsewhere.
             
@@ -1186,123 +1177,118 @@ namespace CycleSampler
             ptic(ClassName()+"::Sample");
             
 
+            if( edge_space_sampling_weights != nullptr )
+            {
+                if( edge_quotient_space_sampling_weights != nullptr )
+                {
+                    sample_one<true,true>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_, sample_count, thread_count
+                    );
+                }
+                else
+                {
+                    sample_one<true,false>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_, sample_count, thread_count
+                    );
+                }
+            }
+            else
+            {
+                if( edge_quotient_space_sampling_weights != nullptr )
+                {
+                    sample_one<false,true>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_, sample_count, thread_count
+                    );
+                }
+                else
+                {
+                    sample_one<false,false>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_, sample_count, thread_count
+                    );
+                }
+            }
+            
+            ptoc(ClassName()+"::Sample");
+        }
+        
+    private:
+        
+        template<bool edge_space_flag, bool quotient_space_flag>
+        void sample_one(
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            std::shared_ptr<RandomVariable_T> & F_,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const
+        {
             ParallelDo(
                 [&,this]( const Int thread )
                 {
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    // For every thread create a copy of the current Sampler object.
-                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    // For every thread create a copy of the current Sampler_vec object.
+                    Sampler_vec S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
                     
                     // Make a copy the random variable (it might have some state!).
                     std::shared_ptr<RandomVariable_T> F_ptr = F_->Clone();
                     
                     RandomVariable_T & F_loc = *F_ptr;
                     
-                    // Start sampling and write the results into the slice assigned to this thread.
-                    if( edge_space_sampling_weights != nullptr )
+                    for( Int k = k_begin; k < k_end; ++k )
                     {
-                        if( edge_quotient_space_sampling_weights != nullptr )
+                        S.RandomizeInitialEdgeCoordinates();
+
+                        S.ComputeShiftVector();
+
+                        S.Optimize();
+
+                        S.ComputeSpaceCoordinates();
+
+                        if constexpr ( edge_space_flag || quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                                
-                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
-
-                                sampled_values[k] = F_loc(S);
-                            }
+                            S.ComputeEdgeSpaceSamplingWeight();
                         }
-                        else
+                            
+                        if constexpr ( quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                                sampled_values[k] = F_loc(S);
-                            }
+                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
                         }
-                    }
-                    else
-                    {
-                        if( edge_quotient_space_sampling_weights != nullptr )
+                        
+                        if constexpr ( edge_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
-
-                                edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
-
-                                sampled_values[k] = F_loc(S);
-                            }
+                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
                         }
-                        else
+                        
+                        if constexpr ( quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-                                
-                                sampled_values[k] = F_loc(S);
-                            }
+                            edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
                         }
+
+                        sampled_values[k] = F_loc(S);
                     }
                 },
                 thread_count
             );
-            
-            ptoc(ClassName()+"::Sample");
         }
         
-        void Sample(
+    public:
+        
+        virtual void Sample(
             mut<Real> sampled_values,
             mut<Real> edge_space_sampling_weights,
             mut<Real> edge_quotient_space_sampling_weights,
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int  thread_count = 1
-        ) const
+        ) const override
         {
-            const Int fun_count = static_cast<Int>(F_list_.size());
-            
             // This function creates sample for the random variables in the list F_list_ and records the sampling weights, so that this weighted data can be processed elsewhere.
             
             // The generated polygons are discarded immediately after evaluating the random variables on them.
@@ -1313,6 +1299,56 @@ namespace CycleSampler
             
             ptic(ClassName()+"::Sample (batch)");
 
+            if( edge_space_sampling_weights != nullptr )
+            {
+                if( edge_quotient_space_sampling_weights != nullptr )
+                {
+                    sample_many<true,true>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_list_, sample_count, thread_count
+                    );
+                }
+                else
+                {
+                    sample_many<true,false>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_list_, sample_count, thread_count
+                    );
+                }
+            }
+            else
+            {
+                if( edge_quotient_space_sampling_weights != nullptr )
+                {
+                    sample_many<false,true>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_list_, sample_count, thread_count
+                    );
+                }
+                else
+                {
+                    sample_many<false,false>(
+                        sampled_values, edge_space_sampling_weights, edge_quotient_space_sampling_weights,
+                        F_list_, sample_count, thread_count
+                    );
+                }
+            }
+            
+            ptoc(ClassName()+"::Sample (batch)");
+        }
+        
+
+        template<bool edge_space_flag, bool quotient_space_flag>
+        void sample_many(
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int  thread_count = 1
+        ) const
+        {
+            const Int fun_count = static_cast<Int>(F_list_.size());
 
             ParallelDo(
                 [&,this]( const Int thread )
@@ -1320,124 +1356,60 @@ namespace CycleSampler
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                    // For every thread create a copy of the current Sampler object.
-                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    // For every thread create a copy of the current Sampler_vec object.
+                    Sampler_vec S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
                     
                     // Make also copys of all the random variables (they might have some state!).
                     std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                     for( Int i = 0; i < fun_count; ++ i )
                     {
                         F_list.push_back(
-                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone() )
                         );
                     }
                     
-                    // Start sampling and write the results into the slice assigned to this thread.
-                    if( edge_space_sampling_weights != nullptr )
+                    for( Int k = k_begin; k < k_end; ++k )
                     {
-                        if( edge_quotient_space_sampling_weights != nullptr )
+                        S.RandomizeInitialEdgeCoordinates();
+                        
+                        S.ComputeShiftVector();
+                        
+                        S.Optimize();
+                        
+                        S.ComputeSpaceCoordinates();
+                        
+                        if constexpr ( edge_space_flag || quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                                
-                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                                edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
-
-                                for( Int i = 0; i < fun_count; ++i )
-                                {
-                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                                }
-                            }
+                            S.ComputeEdgeSpaceSamplingWeight();
                         }
-                        else
+                        
+                        if constexpr ( quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
-
-                                for( Int i = 0; i < fun_count; ++i )
-                                {
-                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                                }
-                            }
+                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
                         }
-                    }
-                    else
-                    {
-                        if( edge_quotient_space_sampling_weights != nullptr )
+                        
+                        if constexpr ( edge_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                S.ComputeEdgeSpaceSamplingWeight();
-                                
-                                S.ComputeEdgeQuotientSpaceSamplingCorrection();
-
-                                edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
-
-                                for( Int i = 0; i < fun_count; ++i )
-                                {
-                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                                }
-                            }
+                            edge_space_sampling_weights[k] = S.EdgeSpaceSamplingWeight();
                         }
-                        else
+                        
+                        if constexpr ( quotient_space_flag )
                         {
-                            for( Int k = k_begin; k < k_end; ++k )
-                            {
-                                S.RandomizeInitialEdgeCoordinates();
-
-                                S.ComputeShiftVector();
-
-                                S.Optimize();
-
-                                S.ComputeSpaceCoordinates();
-
-                                for( Int i = 0; i < fun_count; ++i )
-                                {
-                                    sampled_values[k * fun_count + i] = (*F_list[i])(S);
-                                }
-                            }
+                            edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
+                        }
+                        
+                        for( Int i = 0; i < fun_count; ++i )
+                        {
+                            sampled_values[k * fun_count + i] = (*F_list[i])(S);
                         }
                     }
                 },
                 thread_count
             );
-            
-            ptoc(ClassName()+"::Sample (batch)");
         }
         
 
-        void SampleCompressed(
+        virtual void SampleCompressed(
             mut<Real> bins_out,
             const Int bin_count_,
             mut<Real> moments_out,
@@ -1446,7 +1418,7 @@ namespace CycleSampler
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
-        ) const
+        ) const override
         {
             // This function does the sampling, but computes moments and binning on the fly, so that the sampled data can be discarded immediately.
             
@@ -1499,7 +1471,7 @@ namespace CycleSampler
                     
                     const Int repetitions = k_end - k_begin;
                     
-                    Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, settings );
+                    Sampler_vec S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
                     
                     std::vector< std::shared_ptr<RandomVariable_T> > F_list;
                     
@@ -1588,37 +1560,9 @@ namespace CycleSampler
             ptoc(ClassName()+"::SampleCompressed");
         }
 
-        void NormalizeCompressedSamples(
-            mut<Real> bins,
-            const Int bin_count,
-            mut<Real> moments,
-            const Int moment_count,
-            const Int fun_count
-        ) const
-        {
-            ptic(ClassName()+"::NormalizeCompressedSamples");
-            for( Int i = 0; i < 3; ++i )
-            {
-                for( Int j = 0; j < fun_count; ++j )
-                {
-                    // Normalize bins and moments.
-                    
-                    mut<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
-                    
-                    mut<Real> moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
-                    
-                    // The field for zeroth moment is assumed to contain the total mass.
-                    Real factor = Real(1)/moments_i_j[0];
-                    
-                    scale_buffer( factor, bins_i_j,    bin_count    );
-                    
-                    scale_buffer( factor, moments_i_j, moment_count );
-                }
-            }
-            ptoc(ClassName()+"::NormalizeCompressedSamples");
-        }
         
-    protected:
+        
+    private:
         
         Real tanhc( const Real t ) const
         {
@@ -1650,24 +1594,12 @@ namespace CycleSampler
         
     public:
         
-        Int AmbientDimension() const
+        
+        std::string ClassName() const override
         {
-            return AmbDim;
+            return std::string("Sampler_vec") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine[0].ClassName() + ">";
         }
         
-    public:
-        
-        const Setting_T & Settings() const
-        {
-            return settings;
-        }
-        
-        
-        std::string ClassName() const
-        {
-            return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int> + "," + random_engine[0].ClassName() + ">";
-        }
-        
-    }; // class Sampler
+    }; // class Sampler_vec
     
 } // namespace CycleSampler

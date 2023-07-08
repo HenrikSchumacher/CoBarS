@@ -3,6 +3,7 @@
 
 using namespace Tools;
 using namespace Tensors;
+using namespace CycleSampler;
 
 int main(int argc, const char * argv[])
 {
@@ -10,13 +11,16 @@ int main(int argc, const char * argv[])
     using Int  = int_fast32_t;
 
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 64;
+    const     Int edge_count   = 32;
     const     Int sample_count = 10000000;
-    const     Int thread_count = 8; // 0 means "automatic"
+    const     Int thread_count = 8;
     
     // Create an instance of the cycle sampler.
-    CycleSampler::Sampler<d,Real,Int>             S (edge_count);
-    CycleSampler::MomentPolytopeSampler<Real,Int> M (edge_count);
+    Sampler<d,Real,Int,Xoshiro256Plus>     S_Xoshiro     (edge_count);
+    Sampler<d,Real,Int,PCG64>              S_PCG64       (edge_count);
+    Sampler_vec<d,Real,Int,Xoshiro256Plus> S_Xoshiro_vec (edge_count);
+    Sampler_vec<d,Real,Int,PCG64>          S_PCG64_vec   (edge_count);
+    MomentPolytopeSampler<Real,Int>        M             (edge_count);
 
     // Create containers for the data samples.
     Tensor3<Real,Int> x      ( sample_count, d, edge_count ); // unit edge vectors of open polygons
@@ -28,7 +32,7 @@ int main(int argc, const char * argv[])
     print("");
     print("Settings:");
     
-    S.Settings().PrintStats();
+    S_Xoshiro.Settings().PrintStats();
 
     print("");
     valprint("edge_count  ",edge_count  );
@@ -36,19 +40,37 @@ int main(int argc, const char * argv[])
     valprint("thread_count",thread_count);
     print("");
 
-    tic("CycleSampler::Sampler::RandomClosedPolygons");
-        S.RandomClosedPolygons(
+    tic(S_Xoshiro.ClassName());
+        S_Xoshiro.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
-    toc("CycleSampler::Sampler::RandomClosedPolygons");
+    toc(S_Xoshiro.ClassName());
+    
+    tic(S_PCG64.ClassName());
+        S_PCG64.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64.ClassName());
+    
+    tic(S_Xoshiro_vec.ClassName());
+        S_Xoshiro_vec.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_vec.ClassName());
+    
+    tic(S_PCG64.ClassName());
+        S_PCG64.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64.ClassName());
     
     Tensor3<Real,Int> p ( sample_count, d, edge_count+1 ); // vertex positions of polygon
     
-    tic("CycleSampler::MomentPolytopeSampler::RandomClosedPolygons");
+    tic(M.ClassName());
         M.RandomClosedPolygons(
             p.data(), sample_count, thread_count
         );
-    toc("CycleSampler::MomentPolytopeSampler::RandomClosedPolygons");
+    toc(M.ClassName());
 
     
     

@@ -2,53 +2,7 @@
 
 namespace CycleSampler
 {
-
-    template<int AmbDim, typename Real, typename Int>
-    class RandomVariable;
-    
-    template<typename Real, typename Int>
-    struct SamplerSettings
-    {
-        Real tolerance            = std::sqrt(std::numeric_limits<Real>::epsilon());
-        Real give_up_tolerance    = 128 * std::numeric_limits<Real>::epsilon();
-        Real regularization       = static_cast<Real>(0.01);
-        Int  max_iter             = 1000;
-        
-        Real Armijo_slope_factor  = static_cast<Real>(0.01);
-        Real Armijo_shrink_factor = static_cast<Real>(0.5);
-        Int  max_backtrackings    = 20;
-        
-        bool use_linesearch       = true;
-        
-        SamplerSettings() {}
-        
-        ~SamplerSettings() = default;
-        
-        SamplerSettings( const SamplerSettings & other )
-        :   tolerance(other.tolerance)
-        ,   give_up_tolerance(other.give_up_tolerance)
-        ,   regularization(other.regularization)
-        ,   max_iter(other.max_iter)
-        ,   Armijo_slope_factor(other.Armijo_slope_factor)
-        ,   Armijo_shrink_factor(other.Armijo_shrink_factor)
-        ,   max_backtrackings(other.max_backtrackings)
-        ,   use_linesearch(other.use_linesearch)
-        {}
-        
-        void PrintStats() const
-        {
-            valprint( "tolerance           ", tolerance           , 16 );
-            valprint( "give_up_tolerance   ", give_up_tolerance   , 16 );
-            valprint( "regularization      ", regularization      , 16 );
-            valprint( "max_iter            ", max_iter            , 16 );
-            valprint( "Armijo_slope_factor ", Armijo_slope_factor , 16 );
-            valprint( "Armijo_shrink_factor", Armijo_shrink_factor, 16 );
-            valprint( "max_backtrackings   ", max_backtrackings   , 16 );
-            valprint( "use_linesearch      ", use_linesearch      , 16 );
-        }
-    };
-    
-    template<int AmbDim, typename Real = double, typename Int = long long>
+    template<int AmbDim, typename Real = double, typename Int = int_fast32_t, typename PRNG_T = Xoshiro256Plus>
     class Sampler
     {
         ASSERT_FLOAT(Real);
@@ -56,15 +10,11 @@ namespace CycleSampler
         
     public:
         
-//        using PRNG_T = MersenneTwister;
-        
-        using PRNG_T = Xoshiro256Plus;
-        
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
         using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
         using SymmetricMatrix_T = Tiny::SelfAdjointMatrix<AmbDim,Real,Int>;
         
-        using RandomVariable_T  = RandomVariable<AmbDim,Real,Int>;
+        using RandomVariable_T  = RandomVariable<Sampler<AmbDim,Real,Int,PRNG_T>>;
         
         using SpherePoints_T    = Tensor2<Real,Int>;
         using SpacePoints_T     = Tensor2<Real,Int>;
@@ -1267,7 +1217,7 @@ namespace CycleSampler
                     for( Int i = 0; i < fun_count; ++ i )
                     {
                         F_list.push_back(
-                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone().release() )
+                            std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone() )
                         );
                     }
                     

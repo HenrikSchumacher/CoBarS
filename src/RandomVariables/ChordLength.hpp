@@ -6,19 +6,25 @@ namespace CycleSampler
     
 #define CLASS ChordLength
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public RandomVariable<AmbDim,Real,Int>
+    template<typename SamplerBase_T> class CLASS;
+    
+    template<int AmbDim, typename Real, typename Int>
+    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
+            
+    public:
+        
+        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        
     private:
         
-        using Base_T            = RandomVariable<AmbDim,Real,Int>;
+        using Base_T            = RandomVariable<SamplerBase_T>;
         
     public:
         
-        using Sampler_T         = typename Base_T::Sampler_T;
-        using SpherePoints_T    = typename Base_T::SpherePoints_T;
-        using SpacePoints_T     = typename Base_T::SpacePoints_T;
         using Weights_T         = typename Base_T::Weights_T;
+        using Vector_T          = typename Base_T::Vector_T;
         
         CLASS( const Int first_vertex_, const Int last_vertex_)
         :   first_vertex( std::max( static_cast<Int>(0), first_vertex_) )
@@ -47,36 +53,31 @@ namespace CycleSampler
         const Int first_vertex = 0;
         const Int last_vertex  = 0;
         
-        virtual Real operator()( const Sampler_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real r2 = static_cast<Real>(0);
-            
-            if( last_vertex > C.EdgeCount() )
+             if( last_vertex > C.EdgeCount() )
             {
-                return static_cast<Real>(0);
+                return Scalar::Zero<Real>;
             }
             
-            const SpacePoints_T & p = C.SpaceCoordinates();
+            Vector_T u = C.SpaceCoordinates( last_vertex );
+            Vector_T v = C.SpaceCoordinates( first_vertex );
             
-            for( Int i = 0; i < AmbDim; ++i )
-            {
-                const Real delta = p(last_vertex,i) - p(first_vertex,i);
-                r2 += delta * delta;
-            }
+            u -= v;
             
-            return std::sqrt(r2);
+            return u.Norm();
         }
         
-        virtual Real MinValue( const Sampler_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
-        virtual Real MaxValue( const Sampler_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
             const Weights_T & r = C.EdgeLengths();
             
-            Real L = static_cast<Real>(0);
+            Real L = Scalar::Zero<Real>;
             
             for( Int k = first_vertex; k < last_vertex; ++k )
             {

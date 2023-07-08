@@ -3,7 +3,7 @@
 namespace CycleSampler
 {
 
-    template<typename Real, typename Int>
+    template<typename Real, typename Int, typename PRNG_T = Xoshiro256Plus>
     class MomentPolytopeSampler
     {
         ASSERT_FLOAT(Real);
@@ -13,7 +13,9 @@ namespace CycleSampler
         
 //        using PRNG_T = MersenneTwister;
         
-        using PRNG_T = Xoshiro256Plus;
+//        using PRNG_T = Xoshiro256Plus;
+        
+//        using PRNG_T = PCG64;
         
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;
@@ -278,7 +280,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int> + "," + random_engine.ClassName() + ">";
+            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ">";
         }
     };
     

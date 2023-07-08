@@ -5,19 +5,25 @@ namespace CycleSampler
     
 #define CLASS TotalCurvature
     
-    template<int AmbDim, typename Real = double, typename Int = long long>
-    class CLASS : public RandomVariable<AmbDim,Real,Int>
+    template<typename SamplerBase_T> class CLASS;
+    
+    template<int AmbDim, typename Real, typename Int>
+    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
+            
+    public:
+        
+        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        
     private:
         
-        using Base_T            = RandomVariable<AmbDim,Real,Int>;
+        using Base_T            = RandomVariable<SamplerBase_T>;
         
     public:
         
-        using Sampler_T         = typename Base_T::Sampler_T;
-        using SpherePoints_T    = typename Base_T::SpherePoints_T;
-        using SpacePoints_T     = typename Base_T::SpacePoints_T;
         using Weights_T         = typename Base_T::Weights_T;
+        using Vector_T          = typename Base_T::Vector_T;
         
         CLASS() = default;
         
@@ -27,24 +33,29 @@ namespace CycleSampler
         
     protected:
         
-        virtual Real operator()( const Sampler_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & C ) const override
         {
             
             const Int n              = C.EdgeCount();
-            const SpherePoints_T & y = C.EdgeCoordinates();
             
             Real sum;
             
             // Handle wrap-around.
             {
-                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[n-1], y[0] );
+                Vector_T u = C.EdgeCoordinates( n-1 );
+                Vector_T v = C.EdgeCoordinates( 0 );
+                
+                const Real phi = AngleBetweenUnitVectors( u, v );
                 
                 sum = phi;
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                const Real phi = AngleBetweenUnitVectors<AmbDim>( y[k], y[k+1] );
+                Vector_T u = C.EdgeCoordinates( k );
+                Vector_T v = C.EdgeCoordinates( k+1 );
+                
+                const Real phi = AngleBetweenUnitVectors( u, v );
                 
                 sum += phi;
             }
@@ -52,15 +63,16 @@ namespace CycleSampler
             return sum;
         }
         
-        virtual Real MinValue( const Sampler_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
-        virtual Real MaxValue( const Sampler_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return C.EdgeCount() * static_cast<Real>(M_PI);
+            return C.EdgeCount() * Scalar::Pi<Real>;
         }
+        
         
     public:
         
