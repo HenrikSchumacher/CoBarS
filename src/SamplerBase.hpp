@@ -41,7 +41,7 @@ namespace CycleSampler
         
         virtual Real EdgeQuotientSpaceSamplingWeight() const = 0;
         
-//        virtual const SpherePoints_T & InitialEdgeCoordinates() const = 0;
+
         
         virtual Real InitialEdgeCoordinates( const Int k, const Int i ) const = 0;
         
@@ -57,7 +57,7 @@ namespace CycleSampler
         
         virtual void RandomizeInitialEdgeCoordinates() = 0;
         
-//        virtual const SpherePoints_T & EdgeCoordinates() const = 0;
+
         
         virtual Real EdgeCoordinates( const Int k, const Int i ) const = 0;
         
@@ -71,7 +71,7 @@ namespace CycleSampler
         
         virtual void WriteEdgeCoordinates( Real * y_out, const Int k ) const = 0;
         
-//        virtual const SpacePoints_T & SpaceCoordinates() const = 0;
+
         
         virtual Real SpaceCoordinates( const Int k, const Int i ) const = 0;
         
@@ -113,52 +113,52 @@ namespace CycleSampler
         virtual Int MaxIterationCount() const = 0;
         
         virtual void OptimizeBatch(
-                                   ptr<Real>  x_in,
-                                   mut<Real>  w_out,
-                                   mut<Real>  y_out,
-                                   const Int  sample_count,
-                                   const Int  thread_count = 1,
-                                   const bool normalize = true
-                                   ) = 0;
+            ptr<Real>  x_in,
+            mut<Real>  w_out,
+            mut<Real>  y_out,
+            const Int  sample_count,
+            const Int  thread_count = 1,
+            const bool normalize = true
+        ) = 0;
         
         virtual void RandomClosedPolygons(
-                                          mut<Real> x_out,
-                                          mut<Real> w_out,
-                                          mut<Real> y_out,
-                                          mut<Real> K_edge_space,
-                                          mut<Real> K_edge_quotient_space,
-                                          const Int sample_count,
-                                          const Int thread_count = 1
-                                          ) const = 0;
+            mut<Real> x_out,
+            mut<Real> w_out,
+            mut<Real> y_out,
+            mut<Real> K_edge_space,
+            mut<Real> K_edge_quotient_space,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
         
         virtual void Sample(
-                            mut<Real> sampled_values,
-                            mut<Real> edge_space_sampling_weights,
-                            mut<Real> edge_quotient_space_sampling_weights,
-                            std::shared_ptr<RandomVariable_T> & F_,
-                            const Int sample_count,
-                            const Int thread_count = 1
-                            ) const = 0;
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            std::shared_ptr<RandomVariable_T> & F_,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
         
         virtual void Sample(
-                            mut<Real> sampled_values,
-                            mut<Real> edge_space_sampling_weights,
-                            mut<Real> edge_quotient_space_sampling_weights,
-                            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-                            const Int sample_count,
-                            const Int  thread_count = 1
-                            ) const = 0;
+            mut<Real> sampled_values,
+            mut<Real> edge_space_sampling_weights,
+            mut<Real> edge_quotient_space_sampling_weights,
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int  thread_count = 1
+        ) const = 0;
         
         virtual void SampleCompressed(
-                                      mut<Real> bins_out,
-                                      const Int bin_count_,
-                                      mut<Real> moments_out,
-                                      const Int moment_count_,
-                                      ptr<Real> ranges,
-                                      const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-                                      const Int sample_count,
-                                      const Int thread_count = 1
-                                      ) const = 0;
+            mut<Real> bins_out,
+            const Int bin_count_,
+            mut<Real> moments_out,
+            const Int moment_count_,
+            ptr<Real> ranges,
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
         
         const Setting_T & Settings() const
         {
@@ -172,12 +172,12 @@ namespace CycleSampler
         
         
         void NormalizeCompressedSamples(
-                                        mut<Real> bins,
-                                        const Int bin_count,
-                                        mut<Real> moments,
-                                        const Int moment_count,
-                                        const Int fun_count
-                                        ) const
+            mut<Real> bins,
+            const Int bin_count,
+            mut<Real> moments,
+            const Int moment_count,
+            const Int fun_count
+        ) const
         {
             ptic(this->ClassName()+"::NormalizeCompressedSamples");
             for( Int i = 0; i < 3; ++i )
