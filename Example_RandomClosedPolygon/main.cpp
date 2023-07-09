@@ -16,11 +16,22 @@ int main(int argc, const char * argv[])
     const     Int thread_count = 8;
     
     // Create an instance of the cycle sampler.
-    Sampler<d,Real,Int,Xoshiro256Plus>     S_Xoshiro     (edge_count);
-    Sampler<d,Real,Int,PCG64>              S_PCG64       (edge_count);
-    Sampler_vec<d,Real,Int,Xoshiro256Plus> S_Xoshiro_vec (edge_count);
-    Sampler_vec<d,Real,Int,PCG64>          S_PCG64_vec   (edge_count);
-    MomentPolytopeSampler<Real,Int>        M             (edge_count);
+    Sampler<d,Real,Int,MT64,false,false>            S_MT_0          (edge_count);
+    Sampler<d,Real,Int,MT64,false,true >            S_MT_1          (edge_count);
+    Sampler<d,Real,Int,MT64,true ,false>            S_MT_vec_0      (edge_count);
+    Sampler<d,Real,Int,MT64,true ,true >            S_MT_vec_1      (edge_count);
+    
+    Sampler<d,Real,Int,PCG64,false,false>           S_PCG64_0       (edge_count);
+    Sampler<d,Real,Int,PCG64,false,true >           S_PCG64_1       (edge_count);
+    Sampler<d,Real,Int,PCG64,true ,false>           S_PCG64_vec_0   (edge_count);
+    Sampler<d,Real,Int,PCG64,true ,true >           S_PCG64_vec_1   (edge_count);
+    
+    Sampler<d,Real,Int,Xoshiro256Plus,false,false>  S_Xoshiro_0     (edge_count);
+    Sampler<d,Real,Int,Xoshiro256Plus,false,true >  S_Xoshiro_1     (edge_count);
+    Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
+    Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
+    
+    MomentPolytopeSampler<Real,Int>                 M               (edge_count);
 
     // Create containers for the data samples.
     Tensor3<Real,Int> x      ( sample_count, d, edge_count ); // unit edge vectors of open polygons
@@ -32,40 +43,92 @@ int main(int argc, const char * argv[])
     print("");
     print("Settings:");
     
-    S_Xoshiro.Settings().PrintStats();
+    S_Xoshiro_0.Settings().PrintStats();
 
     print("");
     valprint("edge_count  ",edge_count  );
     valprint("sample_count",sample_count);
     valprint("thread_count",thread_count);
     print("");
+    
+    
+    
+    tic(S_MT_0.ClassName());
+        S_MT_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_MT_0.ClassName());
 
-    tic(S_Xoshiro.ClassName());
-        S_Xoshiro.RandomClosedPolygons(
+    tic(S_MT_1.ClassName());
+        S_MT_1.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
-    toc(S_Xoshiro.ClassName());
-    
-    tic(S_Xoshiro_vec.ClassName());
-        S_Xoshiro_vec.RandomClosedPolygons(
+    toc(S_MT_1.ClassName());
+
+    tic(S_MT_vec_0.ClassName());
+        S_MT_vec_0.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
-    toc(S_Xoshiro_vec.ClassName());
-    
-    tic(S_PCG64.ClassName());
-        S_PCG64.RandomClosedPolygons(
+    toc(S_MT_vec_0.ClassName());
+
+    tic(S_MT_vec_1.ClassName());
+        S_MT_vec_1.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
-    toc(S_PCG64.ClassName());
-    
-    tic(S_PCG64.ClassName());
-        S_PCG64.RandomClosedPolygons(
+    toc(S_MT_vec_1.ClassName());
+
+
+
+    tic(S_PCG64_0.ClassName());
+        S_PCG64_0.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
-    toc(S_PCG64.ClassName());
-    
+    toc(S_PCG64_0.ClassName());
+
+    tic(S_PCG64_1.ClassName());
+        S_PCG64_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64_1.ClassName());
+
+    tic(S_PCG64_vec_0.ClassName());
+        S_PCG64_vec_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64_vec_0.ClassName());
+
+    tic(S_PCG64_vec_1.ClassName());
+        S_PCG64_vec_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64_vec_1.ClassName());
+
+    tic(S_Xoshiro_0.ClassName());
+        S_Xoshiro_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_0.ClassName());
+
+    tic(S_Xoshiro_1.ClassName());
+        S_Xoshiro_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_1.ClassName());
+
+    tic(S_Xoshiro_vec_0.ClassName());
+        S_Xoshiro_vec_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_vec_0.ClassName());
+
+    tic(S_Xoshiro_vec_1.ClassName());
+        S_Xoshiro_vec_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_vec_1.ClassName());
+
     Tensor3<Real,Int> p ( sample_count, d, edge_count+1 ); // vertex positions of polygon
-    
+
     tic(M.ClassName());
         M.RandomClosedPolygons(
             p.data(), sample_count, thread_count
@@ -81,6 +144,6 @@ int main(int argc, const char * argv[])
 
     print("");
 
-//    dump(x(0,0,0));
+
     return 0;
 }

@@ -4,3 +4,6 @@
 [submodule "pcg-cpp"]
 	path = pcg-cpp
 	url = git@github.com:imneme/pcg-cpp.git
+[submodule "Xoshiro-cpp"]
+	path = Xoshiro-cpp
+	url = git@github.com:Reputeless/Xoshiro-cpp.git

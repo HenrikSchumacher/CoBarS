@@ -1,57 +1,56 @@
 #pragma once
-#include <cstdint>
-#include <array>
-#include <limits>
-#include <type_traits>
+
+#include "../pcg-cpp/include/pcg_random.hpp"
 
 
-// This is just a thin wrapper for std::mt19937_64 with the constructor that properly seeds its state from std::random_device;
+// This is just a thin wrapper for std::mt19937_64 with a constructor that properly seeds its state from std::random_device.
 
-class PCG64
+namespace CycleSampler
 {
-private:
-    
-    pcg64 random_engine;
-    
-public:
-    
-    using result_type = pcg64::result_type;
-    using UInt        = pcg64::result_type;
-    
-    PCG64() noexcept
-    :   random_engine( pcg_extras::seed_seq_from<std::random_device>() )
-    {}
-    
-    result_type operator()() noexcept
+    class PCG64
     {
-        return random_engine();
-    }
+    private:
+        
+        pcg64 random_engine;
+        
+    public:
+        
+        using result_type = pcg64::result_type;
+        using UInt        = pcg64::result_type;
+        
+        PCG64() noexcept
+        :   random_engine( pcg_extras::seed_seq_from<std::random_device>() )
+        {}
+        
+        result_type operator()() noexcept
+        {
+            return random_engine();
+        }
+        
+        static constexpr result_type min() noexcept
+        {
+            return pcg64::min();
+        }
+        
+        static constexpr result_type max() noexcept
+        {
+            return pcg64::max();
+        }
+        
+        friend bool operator ==(const PCG64& lhs, const PCG64& rhs) noexcept
+        {
+            return (lhs.random_engine == rhs.random_engine);
+        }
+        
+        friend bool operator !=(const PCG64& lhs, const PCG64& rhs) noexcept
+        {
+            return (lhs.random_engine != rhs.random_engine);
+        }
+        
+        std::string ClassName()
+        {
+            return std::string("PCG64");
+        }
+    };
     
-    
-    
-    static constexpr result_type min() noexcept
-    {
-        return pcg64::min();
-    }
-    
-    static constexpr result_type max() noexcept
-    {
-        return pcg64::max();
-    }
-    
-    friend bool operator ==(const PCG64& lhs, const PCG64& rhs) noexcept
-    {
-        return (lhs.random_engine == rhs.random_engine);
-    }
-    
-    friend bool operator !=(const PCG64& lhs, const PCG64& rhs) noexcept
-    {
-        return (lhs.random_engine != rhs.random_engine);
-    }
-    
-    std::string ClassName()
-    {
-        return std::string("PCG64");
-    }
-};
-
+}
