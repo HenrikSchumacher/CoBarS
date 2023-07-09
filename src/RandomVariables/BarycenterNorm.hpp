@@ -56,14 +56,14 @@ namespace CycleSampler
                 }
             }
             
-            const Real factor = static_cast<Real>(0.5)/r.Total();
+            const Real factor = Scalar::Half<Real> / r.Total();
             
             return b.Norm() * factor;
         }
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override

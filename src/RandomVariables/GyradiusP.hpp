@@ -52,15 +52,15 @@ namespace CycleSampler
             Real sum = Scalar::Zero<Real>;
             Real r2  = Scalar::Zero<Real>;
             
-            const Real power = exponent/static_cast<Real>(2);
+            const Real power = Scalar::Half<Real> * exponent;
             
-            const Int n             = C.EdgeCount();
+            const Int n      = C.EdgeCount();
             
             for( Int k = 0; k < n; ++k )
             {
                 for( Int l = k+1; l < n; ++l )
                 {
-                    r2 = static_cast<Real>(0);
+                    r2 = Scalar::Zero<Real>;
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
@@ -73,17 +73,17 @@ namespace CycleSampler
                 }
             }
             
-            return std::pow( sum/(n * n), static_cast<Real>(1)/exponent );
+            return std::pow( sum / (n * n), Scalar::Inv<Real>(exponent) );
         }
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Total(C.EdgeLengths())/std::pow(C.EdgeCount(),static_cast<Real>(1)/exponent);
+            return Total(C.EdgeLengths()) * std::pow( C.EdgeCount(), -Scalar::Inv<Real>(exponent) );
         }
         
     public:

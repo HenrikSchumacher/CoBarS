@@ -36,9 +36,9 @@ namespace CycleSampler
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
             
-            const Int n              = C.EdgeCount();
+            const Int n    = C.EdgeCount();
             
-            Real max_angle = static_cast<Real>(0);
+            Real max_angle = Scalar::Zero<Real>;
             
             {
                 Vector_T u = C.EdgeCoordinates( n-1 );
@@ -60,7 +60,7 @@ namespace CycleSampler
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override

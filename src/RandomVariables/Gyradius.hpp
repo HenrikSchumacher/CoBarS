@@ -35,7 +35,7 @@ namespace CycleSampler
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real r2 = static_cast<Real>(0);
+            Real r2 = Scalar::Zero<Real>;
             
             const Int n             = C.EdgeCount();
 

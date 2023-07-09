@@ -93,7 +93,7 @@ namespace CycleSampler
             Real sum;
             
             {
-                const Real len = static_cast<Real>(0.5)*(r[n-1]+r[0]);
+                const Real len = Scalar::Half<Real> * (r[n-1]+r[0]);
                 
                 const Real phi = Scalar::Pi<Real>;
                 
@@ -103,9 +103,9 @@ namespace CycleSampler
             
             for( Int k = 0; k < n-1; ++k )
             {
-                const Real len = static_cast<Real>(0.5)*(r[k]+r[k+1]);
+                const Real len = Scalar::Half<Real> * (r[k]+r[k+1]);
                 
-                const Real phi = static_cast<Real>(M_PI);
+                const Real phi = Scalar::Pi<Real>;
                 
                 sum += std::pow( phi / len, p ) * len;
             }

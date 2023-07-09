@@ -55,19 +55,19 @@ namespace CycleSampler
             
             // DO SOMETHING MEANINGFUL HERE.
             
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         // Optionally, you can provide a lower bound for the range; this might help with binning.
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         // Optionally, you can provide an upper bound for the range; this migh help with binning.
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(1);
+            return Scalar::One<Real>;
         }
         
     public:

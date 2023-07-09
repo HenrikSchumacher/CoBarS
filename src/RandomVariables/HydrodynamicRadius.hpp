@@ -37,8 +37,8 @@ namespace CycleSampler
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real sum = static_cast<Real>(0);
-            Real r2  = static_cast<Real>(0);
+            Real sum = Scalar::Zero<Real>;
+            Real r2  = Scalar::Zero<Real>;
             
             const Int n             = C.EdgeCount();
             
@@ -46,7 +46,7 @@ namespace CycleSampler
             {
                 for( Int l = k+1; l < n; ++l )
                 {
-                    r2 = static_cast<Real>(0);
+                    r2 = Scalar::Zero<Real>;
                     
                     for( Int i = 0; i < AmbDim; ++i )
                     {
@@ -55,7 +55,7 @@ namespace CycleSampler
                         r2 += delta * delta;
                     }
                     
-                    sum+= static_cast<Real>(1)/(std::sqrt(r2) + eps);
+                    sum+= Scalar::Inv<Real>(std::sqrt(r2) + eps);
                 }
             }
             
@@ -64,7 +64,7 @@ namespace CycleSampler
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override

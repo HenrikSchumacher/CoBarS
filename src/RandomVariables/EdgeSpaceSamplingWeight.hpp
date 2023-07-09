@@ -41,13 +41,12 @@ namespace CycleSampler
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return static_cast<Real>(0);
+            return Scalar::Zero<Real>;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            //            return static_cast<Real>(1)/( std::pow( C.EdgeCount(), AmbDim-1) );
-            return static_cast<Real>(1)/( C.EdgeCount() );
+            return Scalar::Inv<Real>( C.EdgeCount() );
         }
         
     public:
