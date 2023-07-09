@@ -19,11 +19,6 @@ Pull changes from the remote repositories of any submodule by executing
 
     git submodule update --remote --recursive
     
-<<<<<<< HEAD
-=======
-So please make sure that it is installed and found by the compiler. So far it has been tested only under macos with Apple Clang as compiler. But it should compile equally fine on other architectures and with other compilers.
-    
->>>>>>> 962c0ee72f998beba50091d710d64e7dcbf2a337
 # Usage
 
 Just include the header CycleSampler.hpp. See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
