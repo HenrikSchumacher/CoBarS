@@ -31,7 +31,7 @@ int main(int argc, const char * argv[])
     Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
     Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
     
-    MomentPolytopeSampler<Real,Int>                 M               (edge_count);
+    ActionAngleSampler<Real,Int>                    M               (edge_count);
 
     // Create containers for the data samples.
     Tensor3<Real,Int> x      ( sample_count, d, edge_count ); // unit edge vectors of open polygons

@@ -4,7 +4,7 @@ namespace CycleSampler
 {
 
     template<typename Real, typename Int, typename PRNG_T = Xoshiro256Plus>
-    class MomentPolytopeSampler
+    class ActionAngleSampler
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
@@ -24,11 +24,11 @@ namespace CycleSampler
         
         using Vector_T = Tensors::Tiny::Vector<AmbDim,Real,Int>;
         
-        MomentPolytopeSampler() = default;
+        ActionAngleSampler() = default;
         
-        ~MomentPolytopeSampler(){}
+        ~ActionAngleSampler(){}
         
-        explicit MomentPolytopeSampler( const Int edge_count_ )
+        explicit ActionAngleSampler( const Int edge_count_ )
         :   edge_count  ( edge_count_)
         {}
 
@@ -249,7 +249,7 @@ namespace CycleSampler
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
                     
                     // Create a new instance of the class with its own random number generator.
-                    MomentPolytopeSampler C ( edge_count );
+                    ActionAngleSampler C ( edge_count );
                 
                     Int trials = 0;
                     
@@ -280,7 +280,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return std::string("MomentPolytopeSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ">";
+            return std::string("ActionAngleSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ">";
         }
     };
     

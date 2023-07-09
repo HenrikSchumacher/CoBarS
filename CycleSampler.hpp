@@ -48,6 +48,6 @@
 
 
 
-    #include "src/MomentPolytopeSampler.hpp"
+    #include "src/ActionAngleSampler.hpp"
 
 #endif
