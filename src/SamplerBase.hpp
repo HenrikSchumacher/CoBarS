@@ -149,7 +149,7 @@ namespace CycleSampler
             const Int  thread_count = 1
         ) const = 0;
         
-        virtual void SampleCompressed(
+        virtual void BinnedSample(
             mut<Real> bins_out,
             const Int bin_count_,
             mut<Real> moments_out,
@@ -171,7 +171,7 @@ namespace CycleSampler
         }
         
         
-        void NormalizeCompressedSamples(
+        void NormalizeBinnedSamples(
             mut<Real> bins,
             const Int bin_count,
             mut<Real> moments,
@@ -179,7 +179,7 @@ namespace CycleSampler
             const Int fun_count
         ) const
         {
-            ptic(this->ClassName()+"::NormalizeCompressedSamples");
+            ptic(this->ClassName()+"::BinnedSamples");
             for( Int i = 0; i < 3; ++i )
             {
                 for( Int j = 0; j < fun_count; ++j )
@@ -198,7 +198,7 @@ namespace CycleSampler
                     scale_buffer( factor, moments_i_j, moment_count );
                 }
             }
-            ptoc(this->ClassName()+"::NormalizeCompressedSamples");
+            ptoc(this->ClassName()+"::BinnedSamples");
         }
         
         virtual std::string ClassName() const

@@ -25,9 +25,9 @@ int main(int argc, const char * argv[])
     
     SamplerSettings<Real,Int> opts;
     
-    opts.max_iter = 1000;
-
-    Sampler_vec<d,Real,Int,Xoshiro256Plus> S ( edge_count, opts );
+    Tensor1<Real,Int> r   ( edge_count, Scalar::One<Real> );
+    Tensor1<Real,Int> rho ( edge_count, Scalar::One<Real> );
+    Sampler<d,Real,Int,Xoshiro256Plus> S ( r.data(), rho.data(), edge_count, opts );
     
     dump(S.EdgeLengths());
     
@@ -44,10 +44,10 @@ int main(int argc, const char * argv[])
     F_list.push_back( std::make_shared<IterationCount         <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<Gyradius               <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<HydrodynamicRadius     <SamplerBase_T>>()   );
-    F_list.push_back( std::make_shared<TotalCurvature         <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<EdgeSpaceSamplingWeight<SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<BendingEnergy          <SamplerBase_T>>(2)  );
     F_list.push_back( std::make_shared<MaxAngle               <SamplerBase_T>>()   );
+    F_list.push_back( std::make_shared<TotalCurvature         <SamplerBase_T>>()   );
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;
@@ -88,8 +88,8 @@ int main(int argc, const char * argv[])
 
     // Perform the actual sampling.
     // The interface operates via raw pointers for more flexibility.
-    tic("SampleCompressed");
-        S.SampleCompressed(
+    tic("BinnedSample");
+        S.BinnedSample(
             bins.data(),
             bin_count,
             moments.data(),
@@ -99,16 +99,14 @@ int main(int argc, const char * argv[])
             sample_count,
             thread_count
         );
-    toc("SampleCompressed");
+    toc("BinnedSample");
     
     // C.Sample adds into the output arrays, but it does _NOT_ normalize bins and moments. This way we can add further results into them later; we can also simply use them in a further call to C.Sample_Binned.
     
     // Get normalized bins.
-    S.NormalizeCompressedSamples(
-       bins.data(),
-       bin_count,
-       moments.data(),
-       moment_count,
+    S.NormalizeBinnedSamples(
+       bins.data(),    bin_count,
+       moments.data(), moment_count,
        fun_count
     );
     
@@ -132,6 +130,18 @@ int main(int argc, const char * argv[])
     for( Int i = 0; i < bin_count; ++i )
     {
         print( "|"+std::string( static_cast<Int>(bins(1,0,i)*500), '#') );
+    }
+    print( "+ <--- " + ToString( ranges(0,1) ) );
+    print("");
+    
+    // Plot a very simplistic histogram
+    print("");
+    print("Histogram for variable "+F_list[0]->Tag()+" (Quotient space weighting):");
+    print("");
+    print( "+ <--- " + ToString( ranges(0,0) ) );
+    for( Int i = 0; i < bin_count; ++i )
+    {
+        print( "|"+std::string( static_cast<Int>(bins(2,0,i)*500), '#') );
     }
     print( "+ <--- " + ToString( ranges(0,1) ) );
     print("");

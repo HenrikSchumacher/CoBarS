@@ -245,6 +245,8 @@ namespace CycleSampler
         
 #include "Sampler/Sampling.hpp"
         
+#include "Sampler/BinnedSampling.hpp"
+        
     public:
         
         virtual Real InitialEdgeCoordinates( const Int k, const Int i ) const override
