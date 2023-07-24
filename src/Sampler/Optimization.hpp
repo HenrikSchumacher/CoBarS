@@ -171,25 +171,27 @@ protected:
         
         if constexpr ( zerofyfirstQ )
         {
+            
             F.SetZero();
             DF.SetZero();
-            
+
             for( Int k = 0; k < edge_count; ++k )
             {
                 Vector_T y_k ( y, k );
-                
+
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = r[k] * y_k[i];
-                    
+
                     F[i] -= factor;
-                    
+
                     for( Int j = i; j < AmbDim; ++j )
                     {
                         DF[i][j] -= factor * y_k[j];
                     }
                 }
             }
+            
         }
         else
         {

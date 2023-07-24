@@ -191,6 +191,7 @@ namespace CycleSampler
         std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> y;
         std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> p;
         
+        
         Weights_T      r {0};
         Weights_T    rho {0};
         
