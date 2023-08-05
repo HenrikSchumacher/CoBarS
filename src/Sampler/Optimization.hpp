@@ -281,7 +281,7 @@ protected:
             lambda_min = eps;
             errorestimator = infty;
             linesearchQ = Settings().Armijo_slope_factor > zero;
-            continueQ = residual>std::max( Settings().give_up_tolerance, Settings().tolerance );
+            continueQ = residual > std::max( Settings().give_up_tolerance, Settings().tolerance );
         }
         
         const Real c = Settings().regularization * squared_residual;
