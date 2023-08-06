@@ -1,9 +1,9 @@
 [submodule "Tensors"]
-	path = Tensors
+	path = submodules/Tensors
 	url = git@github.com:HenrikSchumacher/Tensors.git
 [submodule "pcg-cpp"]
-	path = pcg-cpp
+	path = submodules/pcg-cpp
 	url = git@github.com:imneme/pcg-cpp.git
 [submodule "Xoshiro-cpp"]
-	path = Xoshiro-cpp
+	path = submodules/Xoshiro-cpp
 	url = git@github.com:Reputeless/Xoshiro-cpp.git
