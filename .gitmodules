@@ -1,9 +1,11 @@
-[submodule "Tensors"]
-	path = submodules/Tensors
-	url = git@github.com:HenrikSchumacher/Tensors.git
-[submodule "pcg-cpp"]
+[submodule "submodules/pcg-cpp"]
 	path = submodules/pcg-cpp
 	url = git@github.com:imneme/pcg-cpp.git
-[submodule "Xoshiro-cpp"]
+[submodule "submodules/Xoshiro-cpp"]
 	path = submodules/Xoshiro-cpp
 	url = git@github.com:Reputeless/Xoshiro-cpp.git
+[submodule "submodules/Tensors"]
+	path = submodules/Tensors
+	url = git@github.com:HenrikSchumacher/Tensors.git
+	branch = main
+	update = merge
