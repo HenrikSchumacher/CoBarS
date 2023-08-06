@@ -73,7 +73,7 @@ namespace CycleSampler
             // We use the user-supplied buffer as scratch space for the diagonal lengths.
             mut<Real> d = &p[2*edge_count+1];
             
-            bool rejected = true;
+            bool rejectedQ = true;
 
             Int trials = 0;
             
@@ -85,44 +85,57 @@ namespace CycleSampler
             
             // (4)      |d[i-1] - d[i]| <= 1    for i = 1,...,n-3
             // (5)      d[i-1] + d[i] >= 1      for i = 1,...,n-3
-            // (6)      d[i] >0                 for i = 1,...,n-3
+            // (6)      d[i] > 0                for i = 1,...,n-3
             
             // (7)      |d[n-3] - d[n-2]| <= 1
             // (8)      d[n-3] + d[n-2] >= 1
             
-            //Because d[n-2] = 1, the latter two reduce to
+            // Because d[n-2] == 1, the latter two reduce to
             
             // (7')     |d[n-3] - 1| <= 1
             // (8')     d[n-3] >= 0             obsolete, follows from (6) for i = n-3.
         
-            //Because d[n-3] >0, the condition (4') reduces to
+            // Because d[n-3] >0, the condition (4') reduces to
             
             //  (7'') d[n-3] <= 2.
+            
+            // For condition (7'') it is necessary that d[i] - (n - 3 - i ) <= d[n-3] <= 2.
+            // So we may stop early if
+            //
+            // d[i] - (n - 3 - i ) > 2.
+            //
+            // which is equivalent to
+            //
+            //  (7''')  d[i] + i > n - 1.
+            //
+            // However, this has a chance to be satisfied only in step i roughly (n - 2)/2 or later.
+            // Anyways, checking this comes at and extra cost; so (7''') does not seem to help.
             
             // This guarantees (1), (2).
             d[0  ] = one;
             d[n-2] = one;
             
-            while( rejected && (trials < max_trials) )
+            while( rejectedQ && (trials < max_trials) )
             {
                 ++trials;
                 
-                for( Int i = 1; i < n-2; ++i )
+                for( Int i = 1; i < (n-2); ++i )
                 {
                     // This guarantees (4):
                     d[i] = d[i-1] + dist_1( random_engine );
                     
-                    //Check condition (5) and (6).
-                    rejected = (d[i-1] + d[i] < one) || (d[i] < eps);
+                    // Check condition (5) and (6).
+                    // Apparently, it is faster to check (6) first.
+                    rejectedQ = (d[i] < eps) || (d[i-1] + d[i] < one);
                     
-                    if( rejected )
+                    if( rejectedQ )
                     {
                         break;
                     }
                 }
                 
                 // Check condition (7'') for last diagonal:
-                rejected = rejected || ( d[n-3] > 2 );
+                rejectedQ = rejectedQ || ( d[n-3] > Scalar::Two<Real> );
             }
             
             if( trials > max_trials )
@@ -144,7 +157,7 @@ namespace CycleSampler
             e[1] = zero;
             e[2] = zero;
             
-            // Some buffer for the cross product in Rodrigue's formula.
+            // Some buffer for the cross product in Rodrigues' formula.
             Vector_T v;
             
             // The current triangle's normal.
@@ -153,7 +166,7 @@ namespace CycleSampler
             e[1] = zero;
             e[2] = one;
             
-            for( Int i = 0; i < n-3; ++i )
+            for( Int i = 0; i < n - 3; ++i )
             {
                 // Next we compute the new unit vector that points to e by rotating e by the angle alpha about the unit normal of the triangle.
                 
@@ -161,16 +174,13 @@ namespace CycleSampler
                 const Real cos_alpha = ( d[i] * d[i] + d[i+1] * d[i+1] - one )/( two * d[i] * d[i+1] );
                 
                 // 0 < alpha < Pi, so sin(alpha) is postive. Thus the following is safe.
-                const Real sin_alpha = std::sqrt(one - cos_alpha*cos_alpha);
+                const Real sin_alpha = std::sqrt(one - cos_alpha * cos_alpha);
                 
-                // Cross product of nu and unit vector e.
-                v[0] = nu[1] * e[2] - nu[2] * e[1];
-                v[1] = nu[2] * e[0] - nu[0] * e[2];
-                v[2] = nu[0] * e[1] - nu[1] * e[0];
+                Cross(nu,e,v);
                 
                 const Real factor = Dot(nu,e) * (one-cos_alpha);
                 
-                // Apply Rodrigue's formula
+                // Apply Rodrigues' formula
                 e[0] = e[0] * cos_alpha + v[0] * sin_alpha + nu[0] * factor;
                 e[1] = e[1] * cos_alpha + v[1] * sin_alpha + nu[1] * factor;
                 e[2] = e[2] * cos_alpha + v[2] * sin_alpha + nu[2] * factor;
@@ -185,17 +195,14 @@ namespace CycleSampler
                 
                 // Now we also rotate the triangle's unit normal by theta[i] about the unit vector e.
                 
-                // Cross product of e and nu.
-                v[0] = e[1] * nu[2] - e[2] * nu[1];
-                v[1] = e[2] * nu[0] - e[0] * nu[2];
-                v[2] = e[0] * nu[1] - e[1] * nu[0];
+                Cross(e,nu,v);
                 
                 const Real theta_i   = dist_2( random_engine );
                 const Real cos_theta = std::cos(theta_i);
                 const Real sin_theta = std::sin(theta_i);
                 const Real factor_2  = Dot(e,nu) * (one-cos_theta);
                 
-                // Apply Rodrigue's formula
+                // Apply Rodrigues' formula
                 nu[0] = nu[0] * cos_theta + v[0] * sin_theta + e[0] * factor_2;
                 nu[1] = nu[1] * cos_theta + v[1] * sin_theta + e[1] * factor_2;
                 nu[2] = nu[2] * cos_theta + v[2] * sin_theta + e[2] * factor_2;
@@ -211,16 +218,14 @@ namespace CycleSampler
             const Real cos_alpha = ( d[n-3] * d[n-3] + d[n-2] * d[n-2] - one )/( two * d[n-3] * d[n-2] );
             
             // 0 < alpha < Pi, so sin(alpha) is postive. Thus the following is safe.
-            const Real sin_alpha = std::sqrt(one - cos_alpha*cos_alpha);
+            const Real sin_alpha = std::sqrt(one - cos_alpha * cos_alpha);
             
             // Cross product of nu and unit vector e.
-            v[0] = nu[1] * e[2] - nu[2] * e[1];
-            v[1] = nu[2] * e[0] - nu[0] * e[2];
-            v[2] = nu[0] * e[1] - nu[1] * e[0];
+            Cross(nu,e,v);
             
             const Real factor = Dot(nu,e) * (one-cos_alpha);
             
-            // Apply Rodrigue's formula
+            // Apply Rodrigues' formula
             e[0] = e[0] * cos_alpha + v[0] * sin_alpha + nu[0] * factor;
             e[1] = e[1] * cos_alpha + v[1] * sin_alpha + nu[1] * factor;
             e[2] = e[2] * cos_alpha + v[2] * sin_alpha + nu[2] * factor;

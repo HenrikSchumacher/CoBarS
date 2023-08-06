@@ -11,7 +11,7 @@ int main(int argc, const char * argv[])
     using Int  = int_fast32_t;
 
     constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 24;
+    const     Int edge_count   = 26;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8;
     
@@ -53,55 +53,55 @@ int main(int argc, const char * argv[])
     
     
     
-    tic(S_MT_0.ClassName());
-        S_MT_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_0.ClassName());
-
-    tic(S_MT_1.ClassName());
-        S_MT_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_1.ClassName());
-
-    tic(S_MT_vec_0.ClassName());
-        S_MT_vec_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_vec_0.ClassName());
-
-    tic(S_MT_vec_1.ClassName());
-        S_MT_vec_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_vec_1.ClassName());
-
-
-
-    tic(S_PCG64_0.ClassName());
-        S_PCG64_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_0.ClassName());
-
-    tic(S_PCG64_1.ClassName());
-        S_PCG64_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_1.ClassName());
-
-    tic(S_PCG64_vec_0.ClassName());
-        S_PCG64_vec_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_vec_0.ClassName());
-
-    tic(S_PCG64_vec_1.ClassName());
-        S_PCG64_vec_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_vec_1.ClassName());
+//    tic(S_MT_0.ClassName());
+//        S_MT_0.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_MT_0.ClassName());
+//
+//    tic(S_MT_1.ClassName());
+//        S_MT_1.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_MT_1.ClassName());
+//
+//    tic(S_MT_vec_0.ClassName());
+//        S_MT_vec_0.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_MT_vec_0.ClassName());
+//
+//    tic(S_MT_vec_1.ClassName());
+//        S_MT_vec_1.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_MT_vec_1.ClassName());
+//
+//
+//
+//    tic(S_PCG64_0.ClassName());
+//        S_PCG64_0.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_PCG64_0.ClassName());
+//
+//    tic(S_PCG64_1.ClassName());
+//        S_PCG64_1.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_PCG64_1.ClassName());
+//
+//    tic(S_PCG64_vec_0.ClassName());
+//        S_PCG64_vec_0.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_PCG64_vec_0.ClassName());
+//
+//    tic(S_PCG64_vec_1.ClassName());
+//        S_PCG64_vec_1.RandomClosedPolygons(
+//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+//        );
+//    toc(S_PCG64_vec_1.ClassName());
 
     tic(S_Xoshiro_0.ClassName());
         S_Xoshiro_0.RandomClosedPolygons(

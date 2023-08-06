@@ -7,7 +7,7 @@
     #include <random>
     #include <cstring>
 
-    #include "Tensors/Tensors.hpp"
+    #include "submodules/Tensors/Tensors.hpp"
 
     #include <istream>
     #include <ostream>

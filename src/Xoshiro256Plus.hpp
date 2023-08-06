@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <array>
 
-#include "../Xoshiro-cpp/XoshiroCpp.hpp"
+#include "../submodules/Xoshiro-cpp/XoshiroCpp.hpp"
 
 
 // This is just a thin wrapper for XoshiroCpp::Xoshiro256Plus with a constructor that properly seeds its state from std::random_device;
