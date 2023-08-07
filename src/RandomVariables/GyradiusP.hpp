@@ -73,7 +73,7 @@ namespace CycleSampler
                 }
             }
             
-            return std::pow( sum / (n * n), Scalar::Inv<Real>(exponent) );
+            return std::pow( sum / (n * n), Inv<Real>(exponent) );
         }
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
@@ -83,7 +83,7 @@ namespace CycleSampler
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Total(C.EdgeLengths()) * std::pow( C.EdgeCount(), -Scalar::Inv<Real>(exponent) );
+            return Total(C.EdgeLengths()) * std::pow( C.EdgeCount(), -Inv<Real>(exponent) );
         }
         
     public:

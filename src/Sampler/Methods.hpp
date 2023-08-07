@@ -141,16 +141,16 @@ private:
     {
         // Computes tanh(t)/t in a stable way by using a Padé approximation around t = 0.
         constexpr Real a0 = Scalar::One<Real>;
-        constexpr Real a1 = Scalar::Frac<Real>(7,51);
-        constexpr Real a2 = Scalar::Frac<Real>(1,255);
-        constexpr Real a3 = Scalar::Frac<Real>(2,69615);
-        constexpr Real a4 = Scalar::Frac<Real>(1,34459425);
+        constexpr Real a1 = Frac<Real>(7,51);
+        constexpr Real a2 = Frac<Real>(1,255);
+        constexpr Real a3 = Frac<Real>(2,69615);
+        constexpr Real a4 = Frac<Real>(1,34459425);
         
         constexpr Real b0 = Scalar::One<Real>;
-        constexpr Real b1 = Scalar::Frac<Real>(8,17);
-        constexpr Real b2 = Scalar::Frac<Real>(7,255);
-        constexpr Real b3 = Scalar::Frac<Real>(4,9945);
-        constexpr Real b4 = Scalar::Frac<Real>(1,765765);
+        constexpr Real b1 = Frac<Real>(8,17);
+        constexpr Real b2 = Frac<Real>(7,255);
+        constexpr Real b3 = Frac<Real>(4,9945);
+        constexpr Real b4 = Frac<Real>(1,765765);
         
         const Real t2 = t * t;
         
