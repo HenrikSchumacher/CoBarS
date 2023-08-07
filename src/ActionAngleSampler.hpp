@@ -135,7 +135,7 @@ namespace CycleSampler
                 }
                 
                 // Check condition (7'') for last diagonal:
-                rejectedQ = rejectedQ || ( d[n-3] > Scalar::Two<Real> );
+                rejectedQ = rejectedQ || ( d[n-3] > two );
             }
             
             if( trials > max_trials )
