@@ -15,15 +15,15 @@ namespace CycleSampler
             
     public:
         
-        using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
+        using SamplerBase_T = SamplerBase<AmbDim,Real,Int>;
         
     private:
         
-        using Base_T            = RandomVariable<SamplerBase_T>;
+        using Base_T        = RandomVariable<SamplerBase_T>;
         
     public:
         
-        using Weights_T         = typename Base_T::Weights_T;
+        using Weights_T     = typename Base_T::Weights_T;
         
         CLASS() = default;
         
@@ -46,7 +46,7 @@ namespace CycleSampler
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Inv<Real>( C.EdgeCount() );
+            return Inv<Real>( C.EdgeCount() );
         }
         
     public:

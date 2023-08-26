@@ -120,9 +120,25 @@ namespace CycleSampler
             const Int  thread_count = 1,
             const bool normalize = true
         ) = 0;
+
+        virtual void RandomOpenPolygons(
+            mut<Real> x_out,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
         
         virtual void RandomClosedPolygons(
             mut<Real> x_out,
+            mut<Real> w_out,
+            mut<Real> y_out,
+            mut<Real> K_edge_space,
+            mut<Real> K_edge_quotient_space,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
+        
+        virtual void ConformalClosures(
+            ptr<Real> x_out,
             mut<Real> w_out,
             mut<Real> y_out,
             mut<Real> K_edge_space,

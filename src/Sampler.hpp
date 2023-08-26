@@ -243,8 +243,14 @@ namespace CycleSampler
 #include "Sampler/Reweighting.hpp"
         
 #include "Sampler/Methods.hpp"
+
+#include "Sampler/RandomOpenPolygons.hpp"
         
-#include "Sampler/Sampling.hpp"
+#include "Sampler/RandomClosedPolygons.hpp"
+        
+#include "Sampler/Sample.hpp"
+        
+#include "Sampler/ConformalClosures.hpp"
         
 #include "Sampler/BinnedSampling.hpp"
         

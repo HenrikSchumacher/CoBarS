@@ -55,7 +55,7 @@ namespace CycleSampler
                         r2 += delta * delta;
                     }
                     
-                    sum+= Scalar::Inv<Real>(std::sqrt(r2) + eps);
+                    sum+= Inv<Real>(std::sqrt(r2) + eps);
                 }
             }
             

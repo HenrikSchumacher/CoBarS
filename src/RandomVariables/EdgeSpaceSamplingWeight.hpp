@@ -46,7 +46,7 @@ namespace CycleSampler
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Inv<Real>( C.EdgeCount() );
+            return Inv<Real>( C.EdgeCount() );
         }
         
     public:
