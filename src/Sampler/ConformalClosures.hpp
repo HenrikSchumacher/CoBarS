@@ -33,13 +33,13 @@ public:
                     S.WriteShiftVector(w_out,k);
                     
                     S.WriteEdgeCoordinates(y_out,k);
-                    
+
                     S.ComputeEdgeSpaceSamplingWeight();
-                    
+
                     S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                    
+
                     K_edge_space[k] = S.EdgeSpaceSamplingWeight();
-                    
+
                     K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
                 }
                 

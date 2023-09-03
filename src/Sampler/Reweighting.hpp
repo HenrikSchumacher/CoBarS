@@ -138,7 +138,7 @@ protected:
         
         
         
-        if constexpr ( AmbDim == 3)
+        if constexpr ( AmbDim == 3 )
         {
             // Exploiting that
             //      (lambda[0] + lambda[1]) * (lambda[0] + lambda[2]) * (lambda[1] + lambda[2])
@@ -168,7 +168,7 @@ protected:
             
             // Compute eigenvalues by QR algorithm.
             
-            Sigma.Eigenvalues(lambda);
+            Sigma.Eigenvalues(lambda, Sqrt(Scalar::eps<Real>), 16);
             
             Real det = one;
             

@@ -60,7 +60,7 @@ namespace CycleSampler
                 return Scalar::Zero<Real>;
             }
             
-            Vector_T u = C.SpaceCoordinates( last_vertex );
+            Vector_T u = C.SpaceCoordinates( last_vertex  );
             Vector_T v = C.SpaceCoordinates( first_vertex );
             
             u -= v;

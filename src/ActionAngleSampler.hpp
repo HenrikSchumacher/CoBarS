@@ -3,19 +3,13 @@
 namespace CycleSampler
 {
 
-    template<typename Real, typename Int, typename PRNG_T = Xoshiro256Plus>
+    template<typename Real, typename Int, typename PRNG_T = Xoshiro256Plus, bool RejectEarlyQ = true>
     class ActionAngleSampler
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
         
     public:
-        
-//        using PRNG_T = MersenneTwister;
-        
-//        using PRNG_T = Xoshiro256Plus;
-        
-//        using PRNG_T = PCG64;
         
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;
@@ -29,7 +23,7 @@ namespace CycleSampler
         ~ActionAngleSampler(){}
         
         explicit ActionAngleSampler( const Int edge_count_ )
-        :   edge_count  ( edge_count_)
+        :   edge_count ( edge_count_)
         {}
 
     protected:
@@ -85,7 +79,7 @@ namespace CycleSampler
             
             // (4)      |d[i-1] - d[i]| <= 1    for i = 1,...,n-3
             // (5)      d[i-1] + d[i] >= 1      for i = 1,...,n-3
-            // (6)      d[i] > 0                for i = 1,...,n-3
+            // (6)      d[i] > 0                for i = 1,...,n-3 -- obsolete, follows from (4) and (5)!
             
             // (7)      |d[n-3] - d[n-2]| <= 1
             // (8)      d[n-3] + d[n-2] >= 1
@@ -109,7 +103,7 @@ namespace CycleSampler
             //  (7''')  d[i] + i > n - 1.
             //
             // However, this has a chance to be satisfied only in step i roughly (n - 2)/2 or later.
-            // Anyways, checking this comes at and extra cost; so (7''') does not seem to help.
+            // Anyways, checking this comes at an extra cost; so (7''') does not seem to help.
             
             // This guarantees (1), (2).
             d[0  ] = one;
@@ -119,18 +113,36 @@ namespace CycleSampler
             {
                 ++trials;
                 
-                for( Int i = 1; i < (n-2); ++i )
+                if constexpr ( RejectEarlyQ )
                 {
-                    // This guarantees (4):
-                    d[i] = d[i-1] + dist_1( random_engine );
-                    
-                    // Check condition (5) and (6).
-                    // Apparently, it is faster to check (6) first.
-                    rejectedQ = (d[i] < eps) || (d[i-1] + d[i] < one);
-                    
-                    if( rejectedQ )
+                    for( Int i = 1; i < (n-2); ++i )
                     {
-                        break;
+                        // This guarantees (4):
+                        d[i] = d[i-1] + dist_1( random_engine );
+                        
+                        // Check condition (5).
+                        rejectedQ = d[i-1] + d[i] < one;
+                        
+                        if( rejectedQ )
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for( Int i = 1; i < (n-2); ++i )
+                    {
+                        // This guarantees (4):
+                        d[i] = d[i-1] + dist_1( random_engine );
+                    }
+                    
+                    rejectedQ = false;
+                    
+                    // Check condition (5.
+                    for( Int i = 1; i < (n-2); ++i )
+                    {
+                        rejectedQ = rejectedQ || (d[i-1] + d[i] < one);
                     }
                 }
                 
@@ -285,7 +297,7 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return std::string("ActionAngleSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ">";
+            return std::string("ActionAngleSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ","+ Tools::ToString(RejectEarlyQ)+ ">";
         }
     };
     

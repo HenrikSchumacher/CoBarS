@@ -2,13 +2,19 @@
 
 namespace CycleSampler
 {
-    template<int AmbDim, typename Real = double, typename Int = int_fast32_t>
+    template<int AmbDim_, typename Real_ = double, typename Int_ = int_fast32_t>
     class SamplerBase
     {
-        ASSERT_FLOAT(Real);
-        ASSERT_INT(Int);
+        ASSERT_FLOAT(Real_);
+        ASSERT_REAL(Real_);
+        ASSERT_INT(Int_);
         
     public:
+        
+        using Real = Real_;
+        using Int  = Int_;
+        
+        static constexpr Int AmbDim = int_cast<Int>(AmbDim_);
         
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
         using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;

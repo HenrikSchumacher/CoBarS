@@ -4,24 +4,31 @@ namespace CycleSampler
 {
     
     template<
-        int AmbDim,
-        typename Real = double,
-        typename Int = int_fast32_t,
-        typename PRNG_T = Xoshiro256Plus,
-        bool vectorizeQ = true,
+        int AmbDim_,
+        typename Real_    = double,
+        typename Int_     = int_fast32_t,
+        typename PRNG_T_  = Xoshiro256Plus,
+        bool vectorizeQ   = true,
         bool zerofyfirstQ = false
     >
-    class Sampler : public SamplerBase<AmbDim,Real,Int>
+    class Sampler : public SamplerBase<AmbDim_,Real_,Int_>
     {
-        ASSERT_FLOAT(Real);
-        ASSERT_INT(Int);
+        ASSERT_FLOAT(Real_);
+        ASSERT_REAL(Real_);
+        ASSERT_INT(Int_);
 
     private:
-
-        using Base_T = SamplerBase<AmbDim,Real,Int>;
+        
+        using Base_T = SamplerBase<AmbDim_,Real_,Int_>;
 
     public:
 
+        using Real   = Real_;
+        using Int    = Int_;
+        using PRNG_T = PRNG_T_;
+        
+        static constexpr Int AmbDim = int_cast<Int>(AmbDim_);
+        
         using Vector_T          = typename Base_T::Vector_T;
         using SquareMatrix_T    = typename Base_T::SquareMatrix_T;
         using SymmetricMatrix_T = typename Base_T::SymmetricMatrix_T;

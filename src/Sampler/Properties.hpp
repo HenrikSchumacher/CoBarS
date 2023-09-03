@@ -48,7 +48,7 @@ protected:
     static constexpr Real two               = 2;
     static constexpr Real three             = 3;
     static constexpr Real four              = 4;
-    static constexpr Real eps               = std::numeric_limits<Real>::min();
+    static constexpr Real eps               = std::numeric_limits<Real>::eps();
     static constexpr Real infty             = std::numeric_limits<Real>::max();
     static constexpr Real small_one         = 1 - 16 * eps;
     static constexpr Real big_one           = 1 + 16 * eps;

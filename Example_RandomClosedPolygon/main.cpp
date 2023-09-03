@@ -31,7 +31,8 @@ int main(int argc, const char * argv[])
     Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
     Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
     
-    ActionAngleSampler<Real,Int>                    M               (edge_count);
+    ActionAngleSampler<Real,Int,Xoshiro256Plus,true>  M             (edge_count);
+    ActionAngleSampler<Real,Int,Xoshiro256Plus,false> M1            (edge_count);
 
     // Create containers for the data samples.
     Tensor3<Real,Int> x      ( sample_count, d, edge_count ); // unit edge vectors of open polygons
@@ -136,6 +137,11 @@ int main(int argc, const char * argv[])
     toc(M.ClassName());
 
     
+    tic(M1.ClassName());
+        M1.RandomClosedPolygons(
+            p.data(), sample_count, thread_count
+        );
+    toc(M.ClassName());
     
     print("");
 
