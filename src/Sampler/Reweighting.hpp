@@ -150,9 +150,9 @@ protected:
             const Real S_11 = Sigma[1][1] * Sigma[1][1];
             const Real S_22 = Sigma[2][2] * Sigma[2][2];
             
-            const Real S_10 = Sigma[0][1]*Sigma[0][1];
-            const Real S_20 = Sigma[0][2]*Sigma[0][2];
-            const Real S_21 = Sigma[1][2]*Sigma[1][2];
+            const Real S_10 = Sigma[0][1] * Sigma[0][1];
+            const Real S_20 = Sigma[0][2] * Sigma[0][2];
+            const Real S_21 = Sigma[1][2] * Sigma[1][2];
             
             const Real det = std::abs(
                   Sigma[0][0] * ( S_11 + S_22 - S_10 - S_20 )
