@@ -188,7 +188,7 @@ public:
         mut<Real> edge_quotient_space_sampling_weights,
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         const Int sample_count,
-        const Int  thread_count = 1
+        const Int thread_count = 1
     ) const
     {
         const Int fun_count = static_cast<Int>(F_list_.size());
