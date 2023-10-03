@@ -29,17 +29,18 @@ namespace CycleSampler
         
         static constexpr Int AmbDim = int_cast<Int>(AmbDim_);
         
-        using Vector_T          = typename Base_T::Vector_T;
-        using SquareMatrix_T    = typename Base_T::SquareMatrix_T;
-        using SymmetricMatrix_T = typename Base_T::SymmetricMatrix_T;
+        using Vector_T           = typename Base_T::Vector_T;
+        using SquareMatrix_T     = typename Base_T::SquareMatrix_T;
+        using SymmetricMatrix_T  = typename Base_T::SymmetricMatrix_T;
 
-        using RandomVariable_T  = typename Base_T::RandomVariable_T;
+        using RandomVariable_T   = typename Base_T::RandomVariable_T;
+        using RandomVariable_Ptr = std::shared_ptr<RandomVariable_T>;
 
-        using Weights_T         = typename Base_T::Weights_T;
-        using Setting_T         = typename Base_T::Setting_T;
+        using Weights_T          = typename Base_T::Weights_T;
+        using Setting_T          = typename Base_T::Setting_T;
 
-        using VectorList_T   = Tiny::VectorList<AmbDim,Real,Int>;
-        using Matrix_T       = Tensor2<Real,Int>;
+        using VectorList_T       = Tiny::VectorList<AmbDim,Real,Int>;
+        using Matrix_T           = Tensor2<Real,Int>;
     
     public:
         
@@ -127,20 +128,24 @@ namespace CycleSampler
         ,   succeededQ(succeededQ)
         ,   continueQ(continueQ)
         ,   ArmijoQ(ArmijoQ)
+        ,   moments(moments)
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
                 random_engine[i].seed(pcg_extras::seed_seq_from<std::random_device>());
             }
+            
+            LoadRandomVariables( other.F_list );
         }
         
-        friend void swap(Sampler &A, Sampler &B) noexcept
+        friend void swap( Sampler & A, Sampler & B ) noexcept
         {
             // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
             using std::swap;
 
-            swap( static_cast<Base_T&>(A), static_cast<Base_T&>(B) );
+//            swap( static_cast<Base_T&>(A), static_cast<Base_T&>(B) );
             
+            swap(A.edge_count,B.edge_count);
             swap(A.x,B.x);
             swap(A.y,B.y);
             swap(A.p,B.p);
@@ -149,7 +154,8 @@ namespace CycleSampler
             swap(A.total_r_inv,B.total_r_inv);
             swap(A.w,B.w);
             swap(A.F,B.F);
-            swap(A.A,B.A);
+            swap(A.DF,B.DF);
+            swap(A.L,B.L);
             swap(A.u,B.u);
             swap(A.z,B.z);
 
@@ -165,6 +171,9 @@ namespace CycleSampler
             swap(A.succeededQ,B.succeededQ);
             swap(A.continueQ,B.continueQ);
             swap(A.ArmijoQ,B.ArmijoQ);
+            
+            swap(A.moments,B.moments);
+            swap(A.F_list,B.F_list);
         }
         
         // Copy assignment operator
@@ -179,14 +188,14 @@ namespace CycleSampler
 
         /* Move constructor */
         Sampler( Sampler && other ) noexcept
-        :   Sampler()
+        :   Base_T()
         {
             swap(*this, other);
         }
         
     protected:
         
-        const Int edge_count = 0;
+        Int edge_count = 0;
         
         mutable PRNG_T random_engine [AmbDim];
         
@@ -245,6 +254,15 @@ namespace CycleSampler
         static constexpr Real two_pi            = Scalar::TwoPi<Real>;
 
         
+    private:
+        
+        // TODO: Add copy behavior to theses?
+        
+        mutable Tensor2<Real,Int> moments;
+        mutable std::vector<std::shared_ptr<RandomVariable_T>> F_list;
+        
+    protected:
+        
 #include "Sampler/Optimization.hpp"
 
 #include "Sampler/Reweighting.hpp"
@@ -259,7 +277,13 @@ namespace CycleSampler
         
 #include "Sampler/ConformalClosures.hpp"
         
-#include "Sampler/BinnedSampling.hpp"
+#include "Sampler/BinnedSample.hpp"
+
+#include "Sampler/GearyTransform.hpp"
+        
+#include "Sampler/NormalDistribution.hpp"
+        
+#include "Sampler/ConfidenceSample.hpp"
         
     public:
         
@@ -320,12 +344,9 @@ namespace CycleSampler
 
                 x_k.Normalize();
 
-                x_k.Write( x, k );
+                x_k.Write( this->x, k );
             }
         }
-
-        
-        
         
         virtual Real EdgeCoordinates( const Int k, const Int i ) const override
         {
@@ -441,6 +462,35 @@ namespace CycleSampler
         }
         
 
+        virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const override
+        {
+            return F_list;
+        }
+        
+        virtual Int RandomVariablesCount() const override
+        {
+            return static_cast<Int>(F_list.size());
+        }
+        
+        virtual void LoadRandomVariables( const std::vector<std::shared_ptr<RandomVariable_T>> & F_list_ ) const override
+        {
+            F_list.clear();
+            
+            for( RandomVariable_Ptr f : F_list_ )
+            {
+                F_list.push_back( f->Clone() );
+            }
+        }
+        
+        virtual void ClearRandomVariables() const override
+        {
+            F_list.clear();
+        }
+
+        virtual Real EvaluateRandomVariable( Int i ) const override
+        {
+            return (*F_list[i])( *this );
+        }
         
     public:
         

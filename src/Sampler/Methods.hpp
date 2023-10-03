@@ -167,10 +167,11 @@ private:
 
 
 public:
+
     void NormalizeCompressedSamples(
         mut<Real> bins,
         const Int bin_count,
-        mut<Real> moments,
+        mut<Real> moments_,
         const Int moment_count,
         const Int fun_count
     ) const
@@ -184,7 +185,7 @@ public:
                 
                 mut<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
                 
-                mut<Real> moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
+                mut<Real> moments_i_j = &moments_[ (i*fun_count+j)*moment_count ];
                 
                 // The field for zeroth moment is assumed to contain the total mass.
                 Real factor = Real(1)/moments_i_j[0];

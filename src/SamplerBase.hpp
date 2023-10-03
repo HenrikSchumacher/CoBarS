@@ -35,6 +35,8 @@ namespace CycleSampler
         :   settings(  settings_ )
         {}
         
+        SamplerBase() = default;
+        
         virtual ~SamplerBase() = default;
         
         virtual void Optimize() = 0;
@@ -180,6 +182,29 @@ namespace CycleSampler
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
+        ) const = 0;
+        
+        
+        virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const = 0;
+        
+        virtual Int RandomVariablesCount() const = 0;
+        
+        virtual void LoadRandomVariables( const std::vector<std::shared_ptr<RandomVariable_T>> & F_list_ ) const = 0;
+        
+        virtual void ClearRandomVariables() const = 0;
+        
+        virtual Real EvaluateRandomVariable( Int i ) const = 0;
+        
+        virtual Int ConfidenceSample(
+            const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+            mptr<Real> means,
+            mptr<Real> errors,
+            cptr<Real> tolerances,  // desired radii of the confidence intervals
+            const Int  max_sample_count,
+            const bool quotient_space_Q,
+            const Int  thread_count = 1,
+            const Real confidence_level = 0.95,
+            const Int  chunk_size = 1000000
         ) const = 0;
         
         const Setting_T & Settings() const

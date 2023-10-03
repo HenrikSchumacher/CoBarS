@@ -9,7 +9,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        // This function creates sample for the random variable F and records the sampling weights, so that this weighted data can be processed elsewhere.
+        // This function creates samples for the random variable F and records the sampling weights, so that this weighted data can be processed elsewhere.
         
         // The generated polygons are discarded immediately after evaluating the random variables on them.
         
@@ -202,14 +202,7 @@ public:
                 // For every thread create a copy of the current Sampler object.
                 Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
                 
-                // Make also copys of all the random variables (they might have some state!).
-                std::vector< std::shared_ptr<RandomVariable_T> > F_list;
-                for( Int i = 0; i < fun_count; ++ i )
-                {
-                    F_list.push_back(
-                        std::shared_ptr<RandomVariable_T>( F_list_[i]->Clone() )
-                    );
-                }
+                S.LoadRandomVariables( F_list_ );
                 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
@@ -243,7 +236,7 @@ public:
                     
                     for( Int i = 0; i < fun_count; ++i )
                     {
-                        sampled_values[k * fun_count + i] = (*F_list[i])(S);
+                        sampled_values[k * fun_count + i] = S.EvaluateRandomVariable(i);
                     }
                 }
             },

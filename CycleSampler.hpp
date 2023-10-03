@@ -8,6 +8,7 @@
     #include <cstring>
 
     #include "submodules/Tensors/Tensors.hpp"
+    #include "submodules/erfinv/erfinv.c"
 
     #include <istream>
     #include <ostream>

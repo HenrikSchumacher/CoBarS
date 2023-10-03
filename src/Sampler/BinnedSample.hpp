@@ -65,12 +65,7 @@ public:
                 
                 Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
                 
-                std::vector< std::shared_ptr<RandomVariable_T> > F_list;
-                
-                for( Int i = 0; i < fun_count; ++ i )
-                {
-                    F_list.push_back( F_list_[i]->Clone() );
-                }
+                S.LoadRandomVariables( F_list_ );
                 
                 Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
                 Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
@@ -95,7 +90,7 @@ public:
 
                     for( Int i = 0; i < fun_count; ++i )
                     {
-                        const Real val = (*F_list[i])(S);
+                        const Real val = S.EvaluateRandomVariable(i);
 
                         Real values [3] = { one, K, K_quot };
 
