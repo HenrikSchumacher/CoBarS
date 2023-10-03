@@ -284,9 +284,11 @@ private:
 //                    dump( z_lo );
 //                    dump( z_hi );
                     
-                    valprint( "current confidence of " + F_list_[i]->Tag(), N_CDF(z_hi) - N_CDF(z_lo) );
+                    const Real current_confidence = N_CDF(z_hi) - N_CDF(z_lo);
+                    
+                    valprint( "current confidence of " + F_list_[i]->Tag(), current_confidence );
                                         
-                    completed = completed && ( N_CDF(z_hi) - N_CDF(z_lo) > confidence );
+                    completed = completed && ( current_confidence > confidence );
                 }
             }
             
@@ -386,8 +388,8 @@ private:
             means[i]  = mean_F / mean_K;
             errors[i] = error_F;
             
-            dump( means[i] );
-            dump( errors[i] );
+//            dump( means[i] );
+//            dump( errors[i] );
         }
         
         ptoc("Postprocessing");

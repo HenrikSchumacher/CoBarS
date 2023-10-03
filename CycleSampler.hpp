@@ -32,6 +32,7 @@
     #include "src/RandomVariables/BarycenterNorm.hpp"
     #include "src/RandomVariables/ChordLength.hpp"
     #include "src/RandomVariables/DiagonalLength.hpp"
+    #include "src/RandomVariables/SquaredGyradius.hpp"
     #include "src/RandomVariables/Gyradius.hpp"
     #include "src/RandomVariables/GyradiusP.hpp"
     #include "src/RandomVariables/HydrodynamicRadius.hpp"

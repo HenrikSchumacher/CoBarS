@@ -2,9 +2,9 @@
 
 namespace CycleSampler
 {
-        
-#define CLASS BarycenterNorm
-        
+
+#define CLASS SquaredGyradius
+    
     template<typename SamplerBase_T> class CLASS;
     
     template<int AmbDim, typename Real, typename Int>
@@ -23,7 +23,6 @@ namespace CycleSampler
     public:
         
         using Weights_T         = typename Base_T::Weights_T;
-        using Vector_T          = typename Base_T::Vector_T;
         
         CLASS() = default;
         
@@ -36,28 +35,19 @@ namespace CycleSampler
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            // We treat the edges as massless.
-            // All mass is concentrated in the vertices, and each vertex carries the same mass.
-            
-            const Weights_T & r = C.EdgeLengths();
+            Real r2 = Scalar::Zero<Real>;
             
             const Int n = C.EdgeCount();
-            
-            Vector_T b;
-            
-            b.SetZero();
-            
-            for( Int k = 0; k < n; ++ k )
+
+            for( Int k = 0; k < n; ++k )
             {
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    b[i] += r[i] * ( C.SpaceCoordinates(k,i) + C.SpaceCoordinates(k+1,i) );
+                    r2 += C.SpaceCoordinates(k,i) * C.SpaceCoordinates(k,i);
                 }
             }
             
-            const Real factor = Scalar::Half<Real> / n;
-            
-            return b.Norm() * factor;
+            return r2/n;
         }
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
@@ -67,7 +57,9 @@ namespace CycleSampler
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Total(C.EdgeLengths());
+            const Real L = Total( C.EdgeLengths() );
+            
+            return L * L / static_cast<Real>(C.EdgeCount());
         }
         
     public:
@@ -77,7 +69,8 @@ namespace CycleSampler
             return TO_STD_STRING(CLASS);
         }
     };
-        
+    
 #undef CLASS
-        
-} // namespace CycleSampler
+    
+}
+

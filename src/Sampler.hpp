@@ -287,6 +287,7 @@ namespace CycleSampler
         
     public:
         
+        // This routine seems to be somewhat slow; better not use it if you can avoid it.
         virtual Real InitialEdgeCoordinates( const Int k, const Int i ) const override
         {
             return (vectorizeQ ? x[i][k] : x[k][i]);
@@ -344,13 +345,14 @@ namespace CycleSampler
 
                 x_k.Normalize();
 
-                x_k.Write( this->x, k );
+                x_k.Write( x, k );
             }
         }
         
+        // This routine seems to be somewhat slow; better not use it if you can avoid it.
         virtual Real EdgeCoordinates( const Int k, const Int i ) const override
         {
-            return (vectorizeQ ? y[i][k] : y[k][i]);
+            return COND( vectorizeQ, y[i][k], y[k][i] );
         }
         
         virtual Vector_T EdgeCoordinates( const Int k ) const override
@@ -380,10 +382,10 @@ namespace CycleSampler
         
         
 
-
+        // This routine seems to be somewhat slow; better not use it if you can avoid it.
         virtual Real SpaceCoordinates( const Int k, const Int i ) const override
         {
-            return (vectorizeQ ? p[i][k] : p[k][i]);
+            return COND(vectorizeQ, p[i][k], p[k][i] );
         }
         
         virtual Vector_T SpaceCoordinates( const Int k ) const override
@@ -403,8 +405,11 @@ namespace CycleSampler
         
         virtual void ComputeSpaceCoordinates() override
         {
-            //Caution: This gives only have the weight to the end vertices of the chain.
+            //Caution: This gives only half the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
+            
+            // We treat the edges as massless.
+            // All mass is concentrated in the vertices, and each vertex carries the same mass.
             
             Vector_T barycenter        (zero);
             Vector_T point_accumulator (zero);
@@ -425,39 +430,26 @@ namespace CycleSampler
                 }
             }
             
-            if constexpr ( vectorizeQ )
+            barycenter *= Inv<Real>( edge_count );
+            
+            point_accumulator = barycenter;
+            
+            point_accumulator *= -one;
+            
+            point_accumulator.Write( p, 0 );
+  
+            for( Int k = 0; k < edge_count; ++k )
             {
+                const Vector_T y_k ( y, k );
+                
+                const Real r_k = r[k];
+                
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    p[i][0] = -barycenter[i] / edge_count;
+                    point_accumulator[i] += r_k * y_k[i];
                 }
                 
-                for( Int k = 0; k < edge_count; ++k )
-                {
-                    const Real r_k = r[k];
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        p[i][k+1] = p[i][k] + r_k * y[i][k];
-                    }
-                }
-            }
-            else
-            {
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    p[0][i] = -barycenter[i] / edge_count;
-                }
-                
-                for( Int k = 0; k < edge_count; ++k )
-                {
-                    const Real r_k = r[k];
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        p[k+1][i] = p[k][i] + r_k * y[k][i];
-                    }
-                }
+                point_accumulator.Write( p, k + 1 );
             }
         }
         

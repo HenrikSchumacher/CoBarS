@@ -16,7 +16,7 @@ public:
     {
         r.Read(r_in);
         
-        total_r_inv = one / r.Total();
+        total_r_inv = Inv( r.Total() );
     }
     
     
