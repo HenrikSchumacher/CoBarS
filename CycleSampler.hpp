@@ -23,6 +23,8 @@
     #include "src/Xoshiro256Plus.hpp"
     #include "src/PCG64.hpp"
 
+    #include "src/GearyTransform.hpp"
+
     #include "src/SamplerSettings.hpp"
     #include "src/SamplerBase.hpp"
     #include "src/Sampler.hpp"

@@ -278,8 +278,6 @@ namespace CycleSampler
 #include "Sampler/ConformalClosures.hpp"
         
 #include "Sampler/BinnedSample.hpp"
-
-#include "Sampler/GearyTransform.hpp"
         
 #include "Sampler/NormalDistribution.hpp"
         

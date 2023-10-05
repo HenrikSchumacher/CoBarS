@@ -97,7 +97,8 @@ private:
         
         Int N = 0;
         
-        moments = Tensor2<Real,Int> ( 3, fun_count + 1, zero );
+        moments.Resize( 3, fun_count + 1 );
+        moments.SetZero();
         
         // moments[0] - 1-st moments
         // moments[1] - 2-nd moments
@@ -114,7 +115,7 @@ private:
                                 
                 S.LoadRandomVariables( F_list_ );
                 
-                S.moments = Tensor2<Real,Int>( 3, fun_count + 1, zero );
+                S.moments.Resize( 3, fun_count + 1 );
                 
                 samplers[thread] = std::move(S);
                 
@@ -223,7 +224,7 @@ private:
             
             const Real mean_K = Frac<Real>( moments[0][fun_count], N );
             
-            const Real var_K  = Bessel_corr  * ( Frac<Real>( moments[1][fun_count], N ) - mean_K * mean_K );
+            const Real var_K  = Bessel_corr * ( Frac<Real>( moments[1][fun_count], N ) - mean_K * mean_K );
             
             const Real mean_Y = mean_K;
             
@@ -232,8 +233,12 @@ private:
 //            dump( mean_Y );
 //            dump( std::sqrt(var_Y)  );
             
+            const Real Geary_factor = mean_Y / std::sqrt( var_Y );
+            
+            dump( Geary_factor );
+            
             // Check Geary condition
-            if( mean_Y < Scalar::Three<Real> * std::sqrt( var_Y ) )
+            if( Geary_factor < Scalar::Three<Real> )
             {
                 wprint("Geary condition failed.");
                 
@@ -262,7 +267,7 @@ private:
                     
                     const Real T = mean_X / mean_Y;
                     
-                    const GearyTransform G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
+                    const GearyTransform<Real> G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
                                     
                     // t - G( T ) is a standard Gaussian.
                     // See Geary - The Frequency Distribution of the Quotient of Two Normal Variates (1930)
@@ -277,7 +282,9 @@ private:
                     
                     // TODO: Boundary of checked world.
                     
-                    valprint( "current confidence of " + F_list_[i]->Tag(), current_confidence );
+//                    valprint( "current confidence of  " + F_list_[i]->Tag(), current_confidence );
+                    
+                    print( "current sample mean of " + F_list_[i]->Tag() + " = " +  ToString(T) + " with confidence = " + ToString(current_confidence) );
                                         
                     completed = completed && ( current_confidence > confidence );
                 }
@@ -296,7 +303,7 @@ private:
         
         ptic("Postprocessing");
         
-        const Real Bessel_corr = Frac<Real>( N, N-1);
+        const Real Bessel_corr = Frac<Real>( N, N-1 );
         
         const Real mean_K = Frac( moments[0][fun_count], N );
         
@@ -305,6 +312,7 @@ private:
         const Real mean_Y = mean_K;
         
         const Real var_Y  = Frac( var_K, N );
+        
         
         for( Int i = 0; i < fun_count; ++i )
         {
@@ -322,7 +330,7 @@ private:
             
             const Real cov_XY = Frac<Real>( cov_KF_K, N );
             
-            const GearyTransform G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
+            const GearyTransform<Real> G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
             
             const Real T = mean_X / mean_Y;
             
@@ -377,14 +385,11 @@ private:
             
             means[i]  = mean_KF / mean_K;
             errors[i] = error_F;
-            
-//            dump( means[i] );
-//            dump( errors[i] );
         }
         
         ptoc("Postprocessing");
         
-        moments = Tensor2<Real,Int>();
+        moments.Resize(0,0);
         
         ptoc(ClassName()+"::ConfidenceSample");
         
