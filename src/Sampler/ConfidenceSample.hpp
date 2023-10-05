@@ -1,8 +1,5 @@
 public:
-
-    // TODO: Add user-defined max_sample_count
-
-    // TODO: Use long double for moment containers?
+   // TODO: Use long double for moment containers?
 
 
     virtual Int ConfidenceSample(
@@ -152,9 +149,7 @@ private:
                     {
                         S.RandomizeInitialEdgeCoordinates();
 
-                        S.ComputeShiftVector();
-
-                        S.Optimize();
+                        S.ComputeConformalClosure();
 
                         S.ComputeSpaceCoordinates();
                         
@@ -173,25 +168,18 @@ private:
                             K = S.EdgeSpaceSamplingWeight();
                         }
                         
-                        Real K_squared = K * K;
-                        
                         for( Int i = 0; i < fun_count; ++i )
                         {
-                            const Real f = S.EvaluateRandomVariable(i);
-
-                            const Real f_squared = f * f;
+                            const Real KF = K * S.EvaluateRandomVariable(i);
                             
-                            S.moments[0][i] += K * f;
-//                            S.moments[1][i] += weight * value_squared;
-                            // TODO: or this one
-                            S.moments[1][i] += K_squared * f_squared;
-
-                            S.moments[2][i] += K_squared * f ;
+                            S.moments[0][i] += KF;
+                            S.moments[1][i] += KF * KF;
+                            S.moments[2][i] += KF * K ;
 
                         }
                         
                         S.moments[0][fun_count] += K;
-                        S.moments[1][fun_count] += K_squared;
+                        S.moments[1][fun_count] += K * K;
                     }
                     
                     {
@@ -267,6 +255,8 @@ private:
                     
                     const Real T = mean_X / mean_Y;
                     
+                    // TODO: Boundary of checked world.
+                    
                     const GearyTransform<Real> G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
                                     
                     // t - G( T ) is a standard Gaussian.
@@ -279,8 +269,7 @@ private:
                     // Check for sufficient confidence.
                     
                     const Real current_confidence = N_CDF(z_hi) - N_CDF(z_lo);
-                    
-                    // TODO: Boundary of checked world.
+
                     
 //                    valprint( "current confidence of  " + F_list_[i]->Tag(), current_confidence );
                     
@@ -339,7 +328,9 @@ private:
             
             Real error_F = radii[i];
             
-              // TODO: Add line search!
+            // TODO: Make the root finding more robust
+            // TODO: Add line search?
+            // TODO: Switch to regula falsi or bisection search?
             {
                 Real T_lo = T - error_F;
                 Real T_hi = T + error_F;

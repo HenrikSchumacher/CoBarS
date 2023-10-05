@@ -414,9 +414,7 @@ public:
                 {
                     S.ReadInitialEdgeCoordinates( x_in, k, normalize );
 
-                    S.ComputeShiftVector();
-
-                    S.Optimize();
+                    S.ComputeConformalClosure();
 
                     S.WriteShiftVector( w_out, k );
 

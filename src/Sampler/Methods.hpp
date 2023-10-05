@@ -183,12 +183,12 @@ public:
             {
                 // Normalize bins and moments.
                 
-                mut<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
+                mut<Real> bins_i_j = &bins[ (i*fun_count+j) * bin_count ];
                 
-                mut<Real> moments_i_j = &moments_[ (i*fun_count+j)*moment_count ];
+                mut<Real> moments_i_j = &moments_[ (i*fun_count+j) * moment_count ];
                 
                 // The field for zeroth moment is assumed to contain the total mass.
-                Real factor = Real(1)/moments_i_j[0];
+                Real factor = Inv( moments_i_j[0] );
                 
                 scale_buffer( factor, bins_i_j,    bin_count    );
                 

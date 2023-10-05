@@ -28,9 +28,7 @@ public:
                     
                     S.WriteInitialEdgeCoordinates(x_out, k);
                     
-                    S.ComputeShiftVector();
-                    
-                    S.Optimize();
+                    S.ComputeConformalClosure();
                     
                     S.WriteShiftVector(w_out,k);
                     

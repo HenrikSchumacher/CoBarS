@@ -452,6 +452,13 @@ namespace CycleSampler
         }
         
 
+        virtual void ComputeConformalClosure() override
+        {
+            ComputeShiftVector();
+
+            Optimize();
+        }
+        
         virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const override
         {
             return F_list;

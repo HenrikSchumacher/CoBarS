@@ -120,6 +120,8 @@ namespace CycleSampler
         
         virtual Int MaxIterationCount() const = 0;
         
+        virtual void ComputeConformalClosure() = 0;
+        
         virtual void OptimizeBatch(
             ptr<Real>  x_in,
             mut<Real>  w_out,

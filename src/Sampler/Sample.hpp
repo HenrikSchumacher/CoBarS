@@ -88,9 +88,7 @@ private:
                 {
                     S.RandomizeInitialEdgeCoordinates();
 
-                    S.ComputeShiftVector();
-
-                    S.Optimize();
+                    S.ComputeConformalClosure();
 
                     S.ComputeSpaceCoordinates();
 
@@ -208,9 +206,7 @@ public:
                 {
                     S.RandomizeInitialEdgeCoordinates();
                     
-                    S.ComputeShiftVector();
-                    
-                    S.Optimize();
+                    S.ComputeConformalClosure();
                     
                     S.ComputeSpaceCoordinates();
                     

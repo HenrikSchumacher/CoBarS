@@ -74,9 +74,7 @@ public:
                 {
                     S.RandomizeInitialEdgeCoordinates();
 
-                    S.ComputeShiftVector();
-
-                    S.Optimize();
+                    S.ComputeConformalClosure();
 
                     S.ComputeSpaceCoordinates();
                     
