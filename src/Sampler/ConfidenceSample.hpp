@@ -107,12 +107,6 @@ private:
         
         std::vector<Sampler> samplers (thread_count);
         
-        for( Int thread = 0; thread < thread_count; ++thread )
-        {
-
-
-        }
-        
         ParallelDo(
             [&,this]( const Int thread )
             {
@@ -131,7 +125,7 @@ private:
         
         ptoc("Preparation");
         
-        std::mutex mutex;
+        std::mutex moment_mutex;
         
         bool completed = false;
         
@@ -165,38 +159,42 @@ private:
                         
                         S.ComputeEdgeSpaceSamplingWeight();
                         
-                        Real weight = 0;
+                        Real K = 0;
                         
                         if constexpr ( quotient_space_Q )
                         {
                             S.ComputeEdgeQuotientSpaceSamplingCorrection();
                             
-                            weight = S.EdgeQuotientSpaceSamplingWeight();
+                            K = S.EdgeQuotientSpaceSamplingWeight();
                         }
                         else
                         {
-                            weight = S.EdgeSpaceSamplingWeight();
+                            K = S.EdgeSpaceSamplingWeight();
                         }
                         
-                        Real weight_squared = weight * weight;
+                        Real K_squared = K * K;
                         
                         for( Int i = 0; i < fun_count; ++i )
                         {
-                            const Real value = S.EvaluateRandomVariable(i);
+                            const Real f = S.EvaluateRandomVariable(i);
 
-                            const Real value_squared = value * value;
+                            const Real f_squared = f * f;
                             
-                            S.moments[0][i] += weight * value;
-                            S.moments[1][i] += weight * value_squared;
-                            S.moments[2][i] += weight_squared * value;
+                            S.moments[0][i] += K * f;
+//                            S.moments[1][i] += weight * value_squared;
+                            // TODO: or this one
+                            S.moments[1][i] += K_squared * f_squared;
+
+                            S.moments[2][i] += K_squared * f ;
+
                         }
                         
-                        S.moments[0][fun_count] += weight;
-                        S.moments[1][fun_count] += weight_squared;
+                        S.moments[0][fun_count] += K;
+                        S.moments[1][fun_count] += K_squared;
                     }
                     
                     {
-                        const std::lock_guard<std::mutex> lock ( mutex );
+                        const std::lock_guard<std::mutex> lock ( moment_mutex );
                         
                         add_to_buffer(
                             S.moments.data(), moments.data(), 3 * (fun_count+1)
@@ -223,13 +221,13 @@ private:
             
             const Real Bessel_corr = Frac<Real>( N, N-1 );
             
-            const Real mean_K = Frac( moments[0][fun_count], N );
+            const Real mean_K = Frac<Real>( moments[0][fun_count], N );
             
-            const Real var_K  = Bessel_corr * ( Frac( moments[1][fun_count], N ) - mean_K * mean_K );
+            const Real var_K  = Bessel_corr  * ( Frac<Real>( moments[1][fun_count], N ) - mean_K * mean_K );
             
             const Real mean_Y = mean_K;
             
-            const Real var_Y  = Frac( var_K, N );
+            const Real var_Y  = Frac<Real>( var_K, N );
             
 //            dump( mean_Y );
 //            dump( std::sqrt(var_Y)  );
@@ -250,24 +248,19 @@ private:
                                 
                 for( Int i = 0; i < fun_count; ++i )
                 {
-                    const Real mean_F = Frac( moments[0][i], N );
+                    const Real mean_KF  = Frac<Real>( moments[0][i], N );
                     
-                    const Real var_F  = Bessel_corr * ( Frac( moments[1][i], N ) - mean_F * mean_F );
+                    const Real var_KF   = Bessel_corr * ( Frac<Real>( moments[1][i], N ) - mean_KF * mean_KF );
                     
-                    const Real cov_FK = Bessel_corr * ( Frac( moments[2][i], N ) - mean_F * mean_K );
+                    const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments[2][i], N ) - mean_KF * mean_K  );
                     
-                    const Real T = moments[0][i] / moments[0][fun_count];
-
+                    const Real mean_X = mean_KF;
                     
-                    const Real mean_X = mean_F;
+                    const Real var_X  = Frac<Real>( var_KF, N );
                     
-                    const Real var_X  = Frac( var_F, N );
+                    const Real cov_XY = Frac<Real>( cov_KF_K, N );
                     
-                    const Real cov_XY = Frac( cov_FK, N );
-                    
-//                    dump( mean_X );
-//                    dump( std::sqrt(var_X)  );
-//                    dump( cov_XY  / ( std::sqrt(var_X * var_Y) ));
+                    const Real T = mean_X / mean_Y;
                     
                     const GearyTransform G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
                                     
@@ -280,11 +273,9 @@ private:
                     
                     // Check for sufficient confidence.
                     
-//                    dump( T );
-//                    dump( z_lo );
-//                    dump( z_hi );
-                    
                     const Real current_confidence = N_CDF(z_hi) - N_CDF(z_lo);
+                    
+                    // TODO: Boundary of checked world.
                     
                     valprint( "current confidence of " + F_list_[i]->Tag(), current_confidence );
                                         
@@ -319,22 +310,21 @@ private:
         {
             print( F_list_[i]->Tag() );
             
-            const Real mean_F = Frac( moments[0][i], N );
+            const Real mean_KF  = Frac<Real>( moments[0][i], N );
             
-            const Real var_F  = Bessel_corr * ( Frac( moments[1][i], N ) - mean_F * mean_F );
+            const Real var_KF   = Bessel_corr * ( Frac<Real>( moments[1][i], N ) - mean_KF * mean_KF );
             
-            const Real cov_FK = Bessel_corr * ( Frac( moments[2][i], N ) - mean_F * mean_K );
+            const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments[2][i], N ) - mean_KF * mean_K  );
             
-            const Real mean_X = mean_F;
+            const Real mean_X = mean_KF;
+
+            const Real var_X  = Frac<Real>( var_KF, N );
             
-            const Real var_X  = Frac( var_F, N );
-            
-            const Real cov_XY = Frac( cov_FK, N );
+            const Real cov_XY = Frac<Real>( cov_KF_K, N );
             
             const GearyTransform G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
             
-            const Real T = moments[0][i] / moments[0][fun_count];
-            
+            const Real T = mean_X / mean_Y;
             
             // Newton's method to find confidence interval
             // Initial guess.
@@ -385,7 +375,7 @@ private:
                 }
             }
             
-            means[i]  = mean_F / mean_K;
+            means[i]  = mean_KF / mean_K;
             errors[i] = error_F;
             
 //            dump( means[i] );
