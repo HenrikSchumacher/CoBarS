@@ -1,7 +1,5 @@
 public:
-   // TODO: Use long double for moment containers?
-
-
+   
     virtual Int ConfidenceSample(
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         mptr<Real> means,
@@ -273,7 +271,7 @@ private:
                     
 //                    valprint( "current confidence of  " + F_list_[i]->Tag(), current_confidence );
                     
-                    print( "current sample mean of " + F_list_[i]->Tag() + " = " +  ToString(T) + " with confidence = " + ToString(current_confidence) );
+                    print( "  Current estimate of " + F_list_[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(radii[i]) + " with confidence = " + ToString(current_confidence) + "." );
                                         
                     completed = completed && ( current_confidence > confidence );
                 }
@@ -283,10 +281,6 @@ private:
         
         ptoc("Sampling");
         
-        if( !completed )
-        {
-            // TODO: print warnings.
-        }
         
         valprint( "N", N );
         
@@ -323,59 +317,45 @@ private:
             
             const Real T = mean_X / mean_Y;
             
-            // Newton's method to find confidence interval
-            // Initial guess.
+            // Interval bisection to find the actual confidence radius.
             
-            Real error_F = radii[i];
+            Real a = 0;
+            Real b = radii[i];
             
-            // TODO: Make the root finding more robust
-            // TODO: Add line search?
-            // TODO: Switch to regula falsi or bisection search?
+            Real P_a = 0;
+            Real P_b = N_CDF( G( T + b ) ) - N_CDF( G( T - b ) );
+            
+            
+            // Extend the search interval to make sure that the actual confidence radius lies within [a,b)
+            while( P_b <= confidence )
             {
-                Real T_lo = T - error_F;
-                Real T_hi = T + error_F;
+                a = b;
                 
-                Real z_lo = G( T_lo );
-                Real z_hi = G( T_hi );
+                b *= Scalar::Two<Real>;
                 
-                Real failure = N_CDF(z_hi) - N_CDF(z_lo) - confidence;
+                P_b = N_CDF( G( T + b ) ) - N_CDF( G( T - b ) );
+            }
+            
+            while( b - a > 0.001 * b )
+            {
+                const Real c = Scalar::Half<Real> * (a + b);
                 
-                dump(failure);
+                const Real P_c = N_CDF( G( T + c ) ) - N_CDF( G( T - c ) );
                 
-                Int Newton_iter = 0;
-                Int max_Newton_iter = 10;
-                
-                while( ( std::abs(failure) >= 0.0001 ) && ( Newton_iter < max_Newton_iter ) )
+                if( P_c > confidence )
                 {
-                    ++Newton_iter;
-                    const Real Dfailure = N_PDF(z_hi) * G.D(T_hi) + N_PDF(z_lo) * G.D(T_lo);
-                    
-                    dump(Dfailure);
-                    
-                    error_F -= failure / Dfailure;
-                    
-                    T_lo = T - error_F;
-                    T_hi = T + error_F;
-                    
-                    z_lo = G( T_lo );
-                    z_hi = G( T_hi );
-                    
-                    failure = N_CDF(z_hi) - N_CDF(z_lo) - confidence;
-                    
-                    dump(failure);
+                    b   = c;
+                    P_b = P_c;
                 }
-                
-                // TODO: Better warning message.
-                if( Newton_iter >= max_Newton_iter )
+                else
                 {
-                    dump(Newton_iter);
-                    
-                    wprint( "max_Newton_iter" );
+                    a   = c;
+                    P_a = P_c;
                 }
             }
             
             means[i]  = mean_KF / mean_K;
-            errors[i] = error_F;
+            errors[i] = Scalar::Half<Real> * b;
         }
         
         ptoc("Postprocessing");
