@@ -87,6 +87,7 @@ protected:
                 Vector_T y_k ( y, k );
                 
                 const Real rho_squared = rho[k] * rho[k];
+                
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = rho_squared * y_k[i];
@@ -154,13 +155,13 @@ protected:
             const Real S_20 = Sigma[0][2] * Sigma[0][2];
             const Real S_21 = Sigma[1][2] * Sigma[1][2];
             
-            const Real det = std::abs(
+            const Real det = Abs(
                   Sigma[0][0] * ( S_11 + S_22 - S_10 - S_20 )
                 + Sigma[1][1] * ( S_00 + S_22 - S_10 - S_21 )
                 + Sigma[2][2] * ( S_00 + S_11 - S_20 - S_21 )
                 + two * (Sigma[0][0]*Sigma[1][1]*Sigma[2][2] - Sigma[0][1]*Sigma[0][2]*Sigma[1][2])
             );
-            edge_quotient_space_sampling_correction = one / std::sqrt(det);
+            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
         }
         else
         {
@@ -180,6 +181,8 @@ protected:
                 }
             }
             
-            edge_quotient_space_sampling_correction = one / std::sqrt(det);
+            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
+            
+            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
         }
     }

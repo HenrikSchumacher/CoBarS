@@ -40,7 +40,7 @@ namespace CycleSampler
             Real sum = Scalar::Zero<Real>;
             Real r2  = Scalar::Zero<Real>;
             
-            const Int n             = C.EdgeCount();
+            const Int n = C.EdgeCount();
             
             for( Int k = 0; k < n; ++k )
             {

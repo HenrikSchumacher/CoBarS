@@ -28,7 +28,7 @@ namespace CycleSampler
         
         CLASS( const Int first_vertex_, const Int last_vertex_)
         :   first_vertex( std::max( static_cast<Int>(0), first_vertex_) )
-        ,   last_vertex(last_vertex_)
+        ,   last_vertex ( std::max( static_cast<Int>(0), last_vertex_ ) )
         {}
         
         // Copy constructor
@@ -41,7 +41,7 @@ namespace CycleSampler
         CLASS( CLASS && other ) noexcept
         :
         first_vertex(other.first_vertex),
-        last_vertex(other.last_vertex)
+        last_vertex (other.last_vertex )
         {}
         
         virtual ~CLASS() override = default;

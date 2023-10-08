@@ -98,6 +98,7 @@ private:
         // moments[0] - 1-st moments
         // moments[1] - 2-nd moments
         // moments[2] - moments for covariance
+        // moments[3] - moments for sample variance
         
         // Prepare samplers.
         
