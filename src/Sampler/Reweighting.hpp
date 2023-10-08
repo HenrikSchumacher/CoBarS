@@ -182,7 +182,5 @@ protected:
             }
             
             edge_quotient_space_sampling_correction = Inv(Sqrt(det));
-            
-            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
         }
     }
