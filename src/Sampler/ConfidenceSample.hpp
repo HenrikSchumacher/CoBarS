@@ -154,12 +154,15 @@ private:
                         
                         S.ComputeEdgeSpaceSamplingWeight();
                         
+                        if constexpr ( quotient_space_Q )
+                        {
+                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                        }
+                        
                         Real K = 0;
                         
                         if constexpr ( quotient_space_Q )
                         {
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                            
                             K = S.EdgeQuotientSpaceSamplingWeight();
                         }
                         else

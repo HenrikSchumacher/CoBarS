@@ -58,6 +58,9 @@ namespace CycleSampler
         ,   rho ( edge_count, one )
         ,   total_r_inv ( one )
         {
+            ComputeEdgeSpaceSamplingHelper();
+            ComputeEdgeQuotientSpaceSamplingHelper();
+            
             if constexpr ( vectorizeQ )
             {
                 x = VectorList_T( edge_count     );
@@ -83,6 +86,9 @@ namespace CycleSampler
         ,   r   ( edge_count )
         ,   rho ( rho_in, edge_count )
         {
+            ComputeEdgeSpaceSamplingHelper();
+            ComputeEdgeQuotientSpaceSamplingHelper();
+            
             if constexpr ( vectorizeQ )
             {
                 x = VectorList_T( edge_count     );
@@ -119,8 +125,10 @@ namespace CycleSampler
         ,   iter(other.iter)
         ,   squared_residual(other.squared_residual)
         ,   residual(other.residual)
-        ,   edge_space_sampling_weight(other.edge_space_sampling_weight)
-        ,   edge_quotient_space_sampling_correction(other.edge_quotient_space_sampling_correction)
+        ,   edge_space_sampling_helper              ( other.edge_space_sampling_helper              )
+        ,   edge_quotient_space_sampling_helper     ( other.edge_quotient_space_sampling_helper     )
+        ,   edge_space_sampling_weight              ( other.edge_space_sampling_weight              )
+        ,   edge_quotient_space_sampling_correction ( other.edge_quotient_space_sampling_correction )
         ,   lambda_min(other.lambda_min)
         ,   q(other.q)
         ,   errorestimator(errorestimator)
@@ -162,8 +170,12 @@ namespace CycleSampler
             swap(A.iter,             B.iter             );
             swap(A.squared_residual, B.squared_residual );
             swap(A.residual,         B.residual         );
-            swap(A.edge_space_sampling_weight,A.edge_space_sampling_weight);
-            swap(A.edge_quotient_space_sampling_correction,A.edge_quotient_space_sampling_correction);
+            
+            swap(A.edge_space_sampling_helper,                  B.edge_space_sampling_helper              );
+            swap(A.edge_quotient_space_sampling_helper,         B.edge_quotient_space_sampling_helper     );
+            swap(A.edge_space_sampling_weight,                  B.edge_space_sampling_weight              );
+            swap(A.edge_quotient_space_sampling_correction,     B.edge_quotient_space_sampling_correction );
+            
             swap(A.lambda_min,B.lambda_min);
             swap(A.q,B.q);
             swap(A.errorestimator,B.errorestimator);
@@ -225,8 +237,11 @@ namespace CycleSampler
         
         Real squared_residual = 1;
         Real         residual = 1;
+
+        Real edge_space_sampling_helper              = 1;
+        Real edge_quotient_space_sampling_helper     = 1;
         
-        Real edge_space_sampling_weight = 0;
+        Real edge_space_sampling_weight              = 0;
         Real edge_quotient_space_sampling_correction = 0;
         
         Real lambda_min = eps;
@@ -347,6 +362,14 @@ namespace CycleSampler
             }
         }
         
+        
+        virtual void ComputeConformalClosure() override
+        {
+            ComputeShiftVector();
+
+            Optimize();
+        }
+        
         // This routine seems to be somewhat slow; better not use it if you can avoid it.
         virtual Real EdgeCoordinates( const Int k, const Int i ) const override
         {
@@ -451,14 +474,6 @@ namespace CycleSampler
             }
         }
         
-
-        virtual void ComputeConformalClosure() override
-        {
-            ComputeShiftVector();
-
-            Optimize();
-        }
-        
         virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const override
         {
             return F_list;
@@ -488,6 +503,7 @@ namespace CycleSampler
         {
             return (*F_list[i])( *this );
         }
+
         
     public:
         

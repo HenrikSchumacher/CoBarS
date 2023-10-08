@@ -17,6 +17,17 @@ public:
 
 protected:
 
+
+    void ComputeEdgeSpaceSamplingHelper()
+    {
+        edge_space_sampling_helper
+            =
+            Frac(
+                 GammaQuotient( static_cast<Real>((AmbDim-1) * (edge_count-1)), Scalar::Half<Real> * AmbDim ),
+                 Power( Scalar::Two<Real> * Sqrt( Scalar::Pi<Real>), AmbDim )
+            );
+    }
+
     void ComputeEdgeSpaceSamplingWeight()
     {
         // Shifts all entries of x along y and writes the results to y.
@@ -62,22 +73,29 @@ protected:
         // We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
         //  cbar *= static_cast<Real>(2)/(one_minus_ww);
         
-        edge_space_sampling_weight = Power(prod, static_cast<Int>(AmbDim-1)) * sqrt(gamma.Det()) / cbar.Det();
+        edge_space_sampling_weight = 
+            edge_space_sampling_helper 
+            *
+            Power(prod, static_cast<Int>(AmbDim-1)) * Sqrt(gamma.Det()) / cbar.Det();
+    }
+
+
+    void ComputeEdgeQuotientSpaceSamplingHelper()
+    {
+        edge_quotient_space_sampling_helper
+            =
+            Frac(
+                std::pow( Scalar::Two<Real>, Scalar::Quarter<Real> * static_cast<Real>( AmbDim * (AmbDim-1) ) ),
+                SOVolume<Real>(AmbDim)
+            );
     }
 
     void ComputeEdgeQuotientSpaceSamplingCorrection()
     {
-        if constexpr ( AmbDim == 2)
-        {
-            edge_quotient_space_sampling_correction = one;
-            return;
-        }
-        
         Tiny::SelfAdjointMatrix<AmbDim, Real, Int> Sigma;
         
         // We fill only the upper triangle of Sigma, because that's the only thing that the function Eigenvalues needs.
       
-        
         if constexpr ( zerofyfirstQ )
         {
             Sigma.SetZero();
@@ -137,8 +155,12 @@ protected:
             }
         }
         
+        Real det;
         
-        
+        if constexpr ( AmbDim == 2 )
+        {
+            det = Abs( Sigma[0][0] * Sigma[1][1] - Sigma[0][1] * Sigma[0][1] );
+        }
         if constexpr ( AmbDim == 3 )
         {
             // Exploiting that
@@ -155,13 +177,12 @@ protected:
             const Real S_20 = Sigma[0][2] * Sigma[0][2];
             const Real S_21 = Sigma[1][2] * Sigma[1][2];
             
-            const Real det = Abs(
+            det = Abs(
                   Sigma[0][0] * ( S_11 + S_22 - S_10 - S_20 )
                 + Sigma[1][1] * ( S_00 + S_22 - S_10 - S_21 )
                 + Sigma[2][2] * ( S_00 + S_11 - S_20 - S_21 )
                 + two * (Sigma[0][0]*Sigma[1][1]*Sigma[2][2] - Sigma[0][1]*Sigma[0][2]*Sigma[1][2])
             );
-            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
         }
         else
         {
@@ -171,7 +192,7 @@ protected:
             
             Sigma.Eigenvalues(lambda, Sqrt(Scalar::eps<Real>), 16);
             
-            Real det = one;
+            det = one;
             
             for( Int i = 0; i < AmbDim; ++i )
             {
@@ -180,7 +201,7 @@ protected:
                     det *= (lambda(i)+lambda(j));
                 }
             }
-            
-            edge_quotient_space_sampling_correction = Inv(Sqrt(det));
         }
+        
+        edge_quotient_space_sampling_correction = edge_quotient_space_sampling_helper * Inv(Sqrt(det));
     }
