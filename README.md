@@ -1,4 +1,4 @@
-# CycleSampler
+# CoBarS - Conformal Barycenter Sampling
 
 by Jason Cantarella and Henrik Schumacher
 
@@ -21,7 +21,7 @@ Pull changes from the remote repositories of any submodule by executing
     
 # Usage
 
-Just include the header CycleSampler.hpp. See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
+Just include the header CoBarS.hpp. See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
     
 # Trouble shooting
 
