@@ -55,7 +55,7 @@ namespace CoBarS
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-             if( last_vertex > C.EdgeCount() )
+            if( last_vertex > C.EdgeCount() )
             {
                 return Scalar::Zero<Real>;
             }

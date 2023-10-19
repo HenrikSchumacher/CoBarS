@@ -200,13 +200,16 @@ namespace CoBarS
         virtual Int ConfidenceSample(
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             mptr<Real> means,
+            mptr<Real> sample_variances,
             mptr<Real> errors,
             cptr<Real> tolerances,  // desired radii of the confidence intervals
             const Int  max_sample_count,
             const bool quotient_space_Q,
             const Int  thread_count = 1,
             const Real confidence_level = 0.95,
-            const Int  chunk_size = 1000000
+            const Int  chunk_size = 1000000,
+            const bool relativeQ = false,
+            const bool verboseQ = true
         ) const = 0;
         
         const Setting_T & Settings() const

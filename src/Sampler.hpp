@@ -294,8 +294,6 @@ namespace CoBarS
         
 #include "Sampler/BinnedSample.hpp"
         
-#include "Sampler/NormalDistribution.hpp"
-        
 #include "Sampler/ConfidenceSample.hpp"
         
     public:

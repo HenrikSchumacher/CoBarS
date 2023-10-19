@@ -23,6 +23,7 @@ namespace CoBarS
     public:
         
         using Weights_T         = typename Base_T::Weights_T;
+        using Vector_T          = typename Base_T::Vector_T;
         
         CLASS( const Real exponent_ )
         :   exponent( exponent_ )
@@ -58,18 +59,15 @@ namespace CoBarS
             
             for( Int k = 0; k < n; ++k )
             {
+                Vector_T u = C.SpaceCoordinates(k);
+                
                 for( Int l = k+1; l < n; ++l )
                 {
-                    r2 = Scalar::Zero<Real>;
+                    Vector_T v = u;
                     
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        const Real delta = C.SpaceCoordinates(l,i) - C.SpaceCoordinates(k,i);
-                        
-                        r2 += delta * delta;
-                    }
+                    v -= C.SpaceCoordinates(l);
                     
-                    sum+= std::pow(r2,power);
+                    sum+= std::pow(v.SquaredNorm(),power);
                 }
             }
             

@@ -39,9 +39,9 @@ namespace CoBarS
             const Int last_vertex = C.EdgeCount()/2;
             
             Vector_T u = C.SpaceCoordinates( last_vertex );
-            Vector_T v = C.SpaceCoordinates( 0 );
+            Vector_T v = C.SpaceCoordinates( 0           );
             
-            u -=v;
+            u -= v;
             
             return u.Norm();
         }

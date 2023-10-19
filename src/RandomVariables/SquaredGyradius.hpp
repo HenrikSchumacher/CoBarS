@@ -41,10 +41,7 @@ namespace CoBarS
 
             for( Int k = 0; k < n; ++k )
             {
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    r2 += C.SpaceCoordinates(k,i) * C.SpaceCoordinates(k,i);
-                }
+                r2 += C.SpaceCoordinates(k).SquaredNorm();
             }
             
             return r2/n;

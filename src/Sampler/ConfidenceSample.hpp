@@ -2,14 +2,17 @@ public:
    
     virtual Int ConfidenceSample(
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-        mptr<Real> means,
+        mptr<Real> sample_means,
+        mptr<Real> sample_variances,
         mptr<Real> errors,
         cptr<Real> radii,  // desired radii of the confidence intervals
         const Int  max_sample_count,
         const bool quotient_space_Q,
-        const Int thread_count = 1,
+        const Int  thread_count = 1,
         const Real confidence = 0.95,
-        const Int chunk_size = 1000000
+        const Int  chunk_size = 1000000,
+        const bool relativeQ = false,
+        const bool verboseQ = true
     ) const override
     {
         // means, errors and radii are expected to be allocated arrays sufficiently large to hold at least F_list_.size() numbers.
@@ -18,16 +21,16 @@ public:
         {
             return confidenceSample<true>(
                 F_list_,
-                means, errors, radii,
-                max_sample_count, thread_count, confidence, chunk_size
+                sample_means, sample_variances, errors, radii,
+                max_sample_count, thread_count, confidence, chunk_size, relativeQ, verboseQ
             );
         }
         else
         {
             return confidenceSample<false>(
                 F_list_,
-                means, errors, radii,
-                max_sample_count, thread_count, confidence, chunk_size
+                sample_means, sample_variances, errors, radii,
+                max_sample_count, thread_count, confidence, chunk_size, relativeQ, verboseQ
             );
         }
     }
@@ -35,16 +38,20 @@ public:
 
 private:
 
+
     template<bool quotient_space_Q>
     Int confidenceSample(
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
-        mptr<Real> means,
+        mptr<Real> sample_means,
+        mptr<Real> sample_variances,
         mptr<Real> errors,
         cptr<Real> radii,  // desired radii of the confidence intervals
         const Int  max_sample_count,
-        const Int  thread_count = 1,
-        const Real confidence = 0.95,
-        const Int  chunk_size = 1000000
+        const Int  thread_count,
+        const Real confidence,
+        const Int  chunk_size,
+        const bool relativeQ,
+        const bool verboseQ
     ) const
     {
         // Samples the random variables in F_list_ until the radii of the confidence intervals of each function are lower or equal to the prescribed radii (or until max_sample_count samples have been drawn, whatever happens first).
@@ -76,23 +83,37 @@ private:
         
         const Int fun_count = static_cast<Int>(F_list_.size());
                 
-                                                            
-        valprint( "dimension       ", AmbDim            );
-        valprint( "edge_count      ", edge_count        );
-        valprint( "fun_count       ", fun_count         );
-        valprint( "thread_count    ", thread_count      );
-        valprint( "confidence level", confidence        );
-        
-        print("ConfidenceSample works on the following random variables:");
-        
-        for( RandomVariable_Ptr f : F_list_ )
+              
+        if( verboseQ )
         {
-            print("    " + f->Tag());
+            valprint( "dimension       ", AmbDim            );
+            valprint( "edge_count      ", edge_count        );
+            valprint( "fun_count       ", fun_count         );
+            valprint( "thread_count    ", thread_count      );
+            valprint( "confidence level", confidence        );
+            
+            if( relativeQ )
+            {
+                print("Using relative error measures.");
+            }
+            else
+            {
+                print("Using absolute error measures.");
+            }
+            
+            print("ConfidenceSample works on the following random variables:");
+            
+            for( RandomVariable_Ptr f : F_list_ )
+            {
+                print("    " + f->Tag());
+            }
         }
         
         Int N = 0;
         
-        moments.Resize( 3, fun_count + 1 );
+        Real total_time = 0;
+        
+        moments.Resize( 4, fun_count + 1 );
         moments.SetZero();
         
         // moments[0] - 1-st moments
@@ -111,7 +132,7 @@ private:
                                 
                 S.LoadRandomVariables( F_list_ );
                 
-                S.moments.Resize( 3, fun_count + 1 );
+                S.moments.Resize( 4, fun_count + 1 );
                 
                 samplers[thread] = std::move(S);
                 
@@ -130,6 +151,8 @@ private:
         
         while( !completed )
         {
+            Time start_time = Clock::now();
+            
             ParallelDo(
                 [&,this]( const Int thread )
                 {
@@ -172,11 +195,13 @@ private:
                         
                         for( Int i = 0; i < fun_count; ++i )
                         {
-                            const Real KF = K * S.EvaluateRandomVariable(i);
+                            const Real F_ = S.EvaluateRandomVariable(i);
+                            const Real KF = K * F_;
                             
                             S.moments[0][i] += KF;
                             S.moments[1][i] += KF * KF;
                             S.moments[2][i] += KF * K ;
+                            S.moments[3][i] += KF * F_;
 
                         }
                         
@@ -188,7 +213,7 @@ private:
                         const std::lock_guard<std::mutex> lock ( moment_mutex );
                         
                         add_to_buffer(
-                            S.moments.data(), moments.data(), 3 * (fun_count+1)
+                            S.moments.data(), moments.data(), 4 * (fun_count+1)
                         );
                     }
                     
@@ -200,9 +225,13 @@ private:
                 thread_count
             );
             
-            N += chunk_size;
+            Time stop_time = Clock::now();
             
-            dump( N );
+            Real time = Tools::Duration(start_time,stop_time);
+
+            total_time += time;
+            
+            N += chunk_size;
             
             if( N > max_sample_count )
             {
@@ -225,7 +254,7 @@ private:
             
             const Real Geary_factor = mean_Y / std::sqrt( var_Y );
             
-            dump( Geary_factor );
+//            valprint( "  Geary_factor", Geary_factor );
             
             // Check Geary condition
             if( Geary_factor < Scalar::Three<Real> )
@@ -257,6 +286,8 @@ private:
                     
                     const Real T = mean_X / mean_Y;
                     
+                    const Real absolute_radius = relativeQ ? radii[i] * T : radii[i];
+                    
                     // TODO: Boundary of checked world.
                     
                     const GearyTransform<Real> G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
@@ -265,18 +296,22 @@ private:
                     // See Geary - The Frequency Distribution of the Quotient of Two Normal Variates (1930)
                     // https://www.jstor.org/stable/2342070
                     
-                    const Real z_lo = G( T - radii[i] );
-                    const Real z_hi = G( T + radii[i] );
+                    const Real z_lo = G( T - absolute_radius );
+                    const Real z_hi = G( T + absolute_radius );
                     
                     // Check for sufficient confidence.
                     
                     const Real current_confidence = N_CDF(z_hi) - N_CDF(z_lo);
 
+                    if( verboseQ )
+                    {
+                        dump( N );
+                        
+                        valprint("  total_time ", total_time );
+                        
+                        print( "  Current estimate of " + F_list_[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );
+                    }
                     
-//                    valprint( "current confidence of  " + F_list_[i]->Tag(), current_confidence );
-                    
-                    print( "  Current estimate of " + F_list_[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(radii[i]) + " with confidence = " + ToString(current_confidence) + "." );
-                                        
                     completed = completed && ( current_confidence > confidence );
                 }
             }
@@ -284,9 +319,6 @@ private:
         }
         
         ptoc("Sampling");
-        
-        
-        valprint( "N", N );
         
         ptic("Postprocessing");
         
@@ -303,8 +335,6 @@ private:
         
         for( Int i = 0; i < fun_count; ++i )
         {
-            print( F_list_[i]->Tag() );
-            
             const Real mean_KF  = Frac<Real>( moments[0][i], N );
             
             const Real var_KF   = Bessel_corr * ( Frac<Real>( moments[1][i], N ) - mean_KF * mean_KF );
@@ -320,47 +350,34 @@ private:
             const GearyTransform<Real> G ( mean_X, mean_Y, var_X, cov_XY, var_Y );
             
             const Real T = mean_X / mean_Y;
+
+            const Real absolute_radius = relativeQ ? radii[i] * T : radii[i];
             
             // Interval bisection to find the actual confidence radius.
             
+            auto P = [T,&G]( const Real b )
+            {
+                return N_CDF( G( T + b ) ) - N_CDF( G( T - b ) );
+            };
+            
             Real a = 0;
-            Real b = radii[i];
-            
-            Real P_a = 0;
-            Real P_b = N_CDF( G( T + b ) ) - N_CDF( G( T - b ) );
-            
+            Real b = absolute_radius;
             
             // Extend the search interval to make sure that the actual confidence radius lies within [a,b)
-            while( P_b <= confidence )
+            while( P(b) <= confidence )
             {
                 a = b;
                 
                 b *= Scalar::Two<Real>;
-                
-                P_b = N_CDF( G( T + b ) ) - N_CDF( G( T - b ) );
             }
             
-            while( b - a > 0.001 * b )
-            {
-                const Real c = Scalar::Half<Real> * (a + b);
-                
-                const Real P_c = N_CDF( G( T + c ) ) - N_CDF( G( T - c ) );
-                
-                if( P_c > confidence )
-                {
-                    b   = c;
-                    P_b = P_c;
-                }
-                else
-                {
-                    a   = c;
-                    P_a = P_c;
-                }
-            }
+            const Real error = BisectionSearch<1>( std::move(P), a, b, confidence, 0.001 );
             
-            means[i]  = mean_KF / mean_K;
-            errors[i] = Scalar::Half<Real> * b;
+            sample_means[i]     = T;
+            sample_variances[i] = Bessel_corr * ( Frac( moments[3][i], moments[0][fun_count] ) - T * T );
+            errors[i]           = error;
         }
+        
         
         ptoc("Postprocessing");
         

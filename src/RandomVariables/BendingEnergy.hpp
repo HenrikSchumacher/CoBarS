@@ -57,8 +57,8 @@ namespace CoBarS
             {
                 const Real len = Scalar::Half<Real> * (r[n-1]+r[0]);
                 
-                Vector_T u = C.EdgeCoordinates(n-1);
-                Vector_T v = C.EdgeCoordinates(0);
+                Vector_T u = C.EdgeCoordinates( n - 1 );
+                Vector_T v = C.EdgeCoordinates( 0     );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
@@ -69,8 +69,8 @@ namespace CoBarS
             {
                 const Real len = Scalar::Half<Real> * (r[k]+r[k+1]);
                 
-                Vector_T u = C.EdgeCoordinates(k);
-                Vector_T v = C.EdgeCoordinates(k+1);
+                Vector_T u = C.EdgeCoordinates( k     );
+                Vector_T v = C.EdgeCoordinates( k + 1 );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 

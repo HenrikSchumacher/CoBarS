@@ -42,14 +42,14 @@ namespace CoBarS
             
             {
                 Vector_T u = C.EdgeCoordinates( n-1 );
-                Vector_T v = C.EdgeCoordinates( 0 );
+                Vector_T v = C.EdgeCoordinates( 0   );
                 
                 max_angle = std::max(max_angle, AngleBetweenUnitVectors( u, v ) );
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                Vector_T u = C.EdgeCoordinates( k );
+                Vector_T u = C.EdgeCoordinates( k   );
                 Vector_T v = C.EdgeCoordinates( k+1 );
                 
                 max_angle = std::max(max_angle, AngleBetweenUnitVectors( u, v ) );
