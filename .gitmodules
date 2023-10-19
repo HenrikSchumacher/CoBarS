@@ -9,6 +9,3 @@
 	url = git@github.com:HenrikSchumacher/Tensors.git
 	branch = main
 	update = merge
-[submodule "submodules/erfinv"]
-	path = submodules/erfinv
-	url = git@github.com:lakshayg/erfinv.git
