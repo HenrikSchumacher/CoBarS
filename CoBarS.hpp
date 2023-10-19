@@ -71,6 +71,8 @@
     #include "src/RandomVariables/MaxAngle.hpp"
     #include "src/RandomVariables/EdgeSpaceSamplingWeight.hpp"
     #include "src/RandomVariables/EdgeQuotientSpaceSamplingWeight.hpp"
+    #include "src/RandomVariables/EdgeQuotientSpaceSamplingCorrection.hpp"
+
     #include "src/RandomVariables/IterationCount.hpp"
         
         

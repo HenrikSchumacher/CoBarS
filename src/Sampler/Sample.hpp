@@ -110,7 +110,7 @@ private:
     ) const
     {
         const Int fun_count = static_cast<Int>(F_list_.size());
-
+        
         ParallelDo(
             [&,this]( const Int thread )
             {
@@ -147,7 +147,7 @@ private:
                     
                     if constexpr ( quotient_space_flag )
                     {
-                        edge_quotient_space_sampling_weights[k] =  S.EdgeQuotientSpaceSamplingWeight();
+                        edge_quotient_space_sampling_weights[k] = S.EdgeQuotientSpaceSamplingWeight();
                     }
                     
                     for( Int i = 0; i < fun_count; ++i )
