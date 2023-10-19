@@ -36,7 +36,7 @@
 
 /* Begin PBXFileReference section */
 		AF19FEA428EC51A900593F55 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		AF19FEA628EC51A900593F55 /* CycleSampler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CycleSampler.hpp; sourceTree = "<group>"; };
+		AF19FEA628EC51A900593F55 /* CoBarS.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CoBarS.hpp; sourceTree = "<group>"; };
 		AF19FEA728EC51A900593F55 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		AF19FEA828EC51A900593F55 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		AF2AEB6128EC5C44004650E3 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -84,7 +84,7 @@
 			children = (
 				AFB96DE12A804D6500EE678B /* submodules */,
 				AF19FEA828EC51A900593F55 /* src */,
-				AF19FEA628EC51A900593F55 /* CycleSampler.hpp */,
+				AF19FEA628EC51A900593F55 /* CoBarS.hpp */,
 				AF19FEA428EC51A900593F55 /* LICENSE */,
 				AF19FEA728EC51A900593F55 /* README.md */,
 				AFE5555729C26F9900FC5BD7 /* Example_Sample_Binned */,
@@ -163,7 +163,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1420;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					AFE5555529C26F9900FC5BD7 = {
 						CreatedOnToolsVersion = 14.2;
@@ -173,7 +173,7 @@
 					};
 				};
 			};
-			buildConfigurationList = AFC72D6B28EC51460087C64D /* Build configuration list for PBXProject "CycleSampler" */;
+			buildConfigurationList = AFC72D6B28EC51460087C64D /* Build configuration list for PBXProject "CoBarS" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -253,6 +253,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -346,6 +347,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = fast;
@@ -444,7 +446,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AFC72D6B28EC51460087C64D /* Build configuration list for PBXProject "CycleSampler" */ = {
+		AFC72D6B28EC51460087C64D /* Build configuration list for PBXProject "CoBarS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AFC72D7528EC51460087C64D /* Debug */,

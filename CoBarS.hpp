@@ -13,7 +13,7 @@
     #include <istream>
     #include <ostream>
 
-    namespace CycleSampler
+    namespace CoBarS
     {
         using namespace Tools;
         using namespace Tensors;

@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS ChordLength
@@ -97,4 +97,4 @@ namespace CycleSampler
     
 #undef CLASS
     
-}
+}  // namespace CoBarS

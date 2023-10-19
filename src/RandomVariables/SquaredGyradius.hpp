@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
 
 #define CLASS SquaredGyradius
@@ -72,5 +72,5 @@ namespace CycleSampler
     
 #undef CLASS
     
-}
+}  // namespace CoBarS
 

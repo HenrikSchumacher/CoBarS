@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     template<int AmbDim_, typename Real_ = double, typename Int_ = int_fast32_t>
     class SamplerBase
@@ -252,8 +252,8 @@ namespace CycleSampler
         
         virtual std::string ClassName() const
         {
-            return std::string("SamplerBase") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + ">";
+            return std::string("CoBarS::SamplerBase") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + ">";
         }
     };
     
-} // namespace CycleSampler
+} // namespace CoBarS

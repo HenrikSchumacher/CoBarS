@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     
     template<
@@ -510,9 +510,9 @@ namespace CycleSampler
         
         std::string ClassName() const override
         {
-            return std::string("Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine[0].ClassName() + "," + ToString(vectorizeQ) +"," + ToString(zerofyfirstQ) + ">";
+            return std::string("CoBarS::Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine[0].ClassName() + "," + ToString(vectorizeQ) +"," + ToString(zerofyfirstQ) + ">";
         }
         
     }; // class Sampler
     
-} // namespace CycleSampler
+} // namespace CoBarS

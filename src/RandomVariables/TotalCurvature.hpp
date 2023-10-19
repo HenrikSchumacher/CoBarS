@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS TotalCurvature
@@ -83,4 +83,5 @@ namespace CycleSampler
     };
     
 #undef CLASS
-}
+    
+}  // namespace CoBarS

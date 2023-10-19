@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     
     template<typename Real>
@@ -49,4 +49,4 @@ namespace CycleSampler
         }
     };
     
-} // namespace CycleSampler
+} // namespace CoBarS

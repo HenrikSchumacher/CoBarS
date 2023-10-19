@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
         
 #define CLASS BarycenterNorm
@@ -80,4 +80,4 @@ namespace CycleSampler
         
 #undef CLASS
         
-} // namespace CycleSampler
+} // namespace CoBarS

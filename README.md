@@ -8,7 +8,7 @@ A header-only C++ library for Monte-Carlo sampling of cylic polygons with prescr
 
 Please clone with
 
-    git clone --recurse-submodules git@github.com:HenrikSchumacher/CycleSampler.git
+    git clone --recurse-submodules git@github.com:HenrikSchumacher/CoBarS.git
 
 to load also all submodules. If you forgot to do that, you can also run the following afterwards:
 

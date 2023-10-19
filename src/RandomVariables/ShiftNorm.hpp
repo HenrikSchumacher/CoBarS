@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS ShiftNorm
@@ -56,4 +56,5 @@ namespace CycleSampler
     };
     
 #undef CLASS
-}
+    
+}  // namespace CoBarS

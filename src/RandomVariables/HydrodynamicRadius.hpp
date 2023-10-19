@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS HydrodynamicRadius
@@ -81,4 +81,5 @@ namespace CycleSampler
     };
     
 #undef CLASS
-}
+    
+} // namespace CoBarS

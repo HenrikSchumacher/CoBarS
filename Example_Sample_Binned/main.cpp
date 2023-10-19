@@ -1,9 +1,9 @@
 #include <iostream>
-#include "CycleSampler.hpp"
+#include "CoBarS.hpp"
 
 using namespace Tools;
 using namespace Tensors;
-using namespace CycleSampler;
+using namespace CoBarS;
 
 int main(int argc, const char * argv[])
 {

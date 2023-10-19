@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS DiagonalLength
@@ -77,4 +77,4 @@ namespace CycleSampler
     
 #undef CLASS
     
-}
+}  // namespace CoBarS

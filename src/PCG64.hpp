@@ -5,7 +5,7 @@
 
 // This is just a thin wrapper for std::mt19937_64 with a constructor that properly seeds its state from std::random_device.
 
-namespace CycleSampler
+namespace CoBarS
 {
     class PCG64
     {
@@ -53,4 +53,4 @@ namespace CycleSampler
         }
     };
     
-}
+} // namespace CoBarS

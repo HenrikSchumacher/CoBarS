@@ -1,10 +1,15 @@
 #pragma once
 
-namespace CycleSampler
+namespace AAM
 {
+    using namespace Tools;
+    using namespace Tensors;
+    
+    
+    // Namespace for the Action-Angle Method and the Progressive Action Angle Method
 
-    template<typename Real, typename Int, typename PRNG_T = Xoshiro256Plus, bool RejectEarlyQ = true>
-    class ActionAngleSampler
+    template<typename Real, typename Int, typename PRNG_T = CoBarS::Xoshiro256Plus, bool ProgressiveQ = true>
+    class Sampler
     {
         ASSERT_FLOAT(Real);
         ASSERT_INT(Int);
@@ -18,11 +23,11 @@ namespace CycleSampler
         
         using Vector_T = Tensors::Tiny::Vector<AmbDim,Real,Int>;
         
-        ActionAngleSampler() = default;
+        Sampler() = default;
         
-        ~ActionAngleSampler(){}
+        ~Sampler(){}
         
-        explicit ActionAngleSampler( const Int edge_count_ )
+        explicit Sampler( const Int edge_count_ )
         :   edge_count ( edge_count_)
         {}
 
@@ -113,7 +118,7 @@ namespace CycleSampler
             {
                 ++trials;
                 
-                if constexpr ( RejectEarlyQ )
+                if constexpr ( ProgressiveQ )
                 {
                     for( Int i = 1; i < (n-2); ++i )
                     {
@@ -266,7 +271,7 @@ namespace CycleSampler
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
                     
                     // Create a new instance of the class with its own random number generator.
-                    ActionAngleSampler C ( edge_count );
+                    Sampler C ( edge_count );
                 
                     Int trials = 0;
                     
@@ -297,8 +302,8 @@ namespace CycleSampler
         
         std::string ClassName()
         {
-            return std::string("ActionAngleSampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ","+ Tools::ToString(RejectEarlyQ)+ ">";
+            return std::string("AAM::Sampler") + "<" + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine.ClassName() + ","+ Tools::ToString(ProgressiveQ)+ ">";
         }
     };
     
-} // namespace CycleSampler
+} // namespace AAM

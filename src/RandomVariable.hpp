@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CycleSampler
+namespace CoBarS
 {
     template<int AmbDim, typename Real, typename Int>
     class RandomVariable<SamplerBase<AmbDim,Real,Int>>
@@ -37,4 +37,4 @@ namespace CycleSampler
         
     }; // RandomVariable
     
-} // namespace CycleSampler
+} // namespace CoBarS

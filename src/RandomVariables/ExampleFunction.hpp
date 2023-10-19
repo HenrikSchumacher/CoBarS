@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace CycleSampler
+namespace CoBarS
 {
     
     // Just fill in the name of your new class in the next line; it will be automatically filled in below by the preprocessor.
@@ -81,4 +81,4 @@ namespace CycleSampler
     
 #undef CLASS
     
-}
+}  // namespace CoBarS

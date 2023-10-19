@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace CycleSampler
+namespace CoBarS
 {
     
 #define CLASS EdgeQuotientSpaceSamplingWeight
@@ -58,4 +58,4 @@ namespace CycleSampler
     
 #undef CLASS
     
-}
+}  // namespace CoBarS
