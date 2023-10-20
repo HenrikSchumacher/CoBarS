@@ -22,11 +22,3 @@ Pull changes from the remote repositories of any submodule by executing
 # Usage
 
 Just include the header CoBarS.hpp. See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
-    
-# Trouble shooting
-
-If you accidentally modified one of the submodules you can run
-
-    git submodule foreach --recursive git reset --hard
-    
-to repair this.
