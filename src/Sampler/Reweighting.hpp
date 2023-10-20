@@ -190,7 +190,7 @@ protected:
             
             // Compute eigenvalues by QR algorithm.
             
-            Sigma.Eigenvalues(lambda, Sqrt(Scalar::eps<Real>), 16);
+            Sigma.Eigenvalues( lambda );
             
             det = one;
             

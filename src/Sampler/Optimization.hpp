@@ -171,7 +171,6 @@ protected:
         
         if constexpr ( zerofyfirstQ )
         {
-            
             F.SetZero();
             DF.SetZero();
 
@@ -255,7 +254,9 @@ protected:
         if( residual < static_cast<Real>(100.) * Settings().tolerance )
         {
             // We have to compute eigenvalue _before_ we add the regularization.
+            
             lambda_min = DF.SmallestEigenvalue();
+            
             q = four * residual / (lambda_min * lambda_min);
             
             if( q < one )

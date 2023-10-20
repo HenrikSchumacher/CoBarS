@@ -37,11 +37,14 @@ int main(int argc, const char * argv[])
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
 
-    AAM::Sampler<Real,Int,MT64,false>           M_MT64_0 (edge_count);
-    AAM::Sampler<Real,Int,MT64,true >           M_MT64_1 (edge_count);
     
-    AAM::Sampler<Real,Int,PCG64,false>          M_PCG64_0 (edge_count);
-    AAM::Sampler<Real,Int,PCG64,true >          M_PCG64_1 (edge_count);
+    // The boolean in the AAM::Sampler template stands for progressive (PAAM) or not (AAM).
+    
+    AAM::Sampler<Real,Int,MT64,false>           M_MT64_0    (edge_count);
+    AAM::Sampler<Real,Int,MT64,true >           M_MT64_1    (edge_count);
+    
+    AAM::Sampler<Real,Int,PCG64,false>          M_PCG64_0   (edge_count);
+    AAM::Sampler<Real,Int,PCG64,true >          M_PCG64_1   (edge_count);
     
     AAM::Sampler<Real,Int,Xoshiro256Plus,false> M_Xoshiro_0 (edge_count);
     AAM::Sampler<Real,Int,Xoshiro256Plus,true > M_Xoshiro_1 (edge_count);
