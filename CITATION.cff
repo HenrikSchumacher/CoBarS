@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: CoBarS - Conformal Barycenter Sampling
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jason
+    family-names: Cantarella
+    affiliation: University of Georgia
+    orcid: 'https://orcid.org/0000-0002-0613-6131'
+  - given-names: Henrik
+    family-names: Schumacher
+    affiliation: University of Georgia
+    orcid: 'https://orcid.org/0000-0002-8700-5570'
+repository-code: 'https://github.com/HenrikSchumacher/CoBarS'
+abstract: >-
+  A header-only C++ library for Monte-Carlo sampling of
+  cylic polygons with prescribed edge lengths.
+license: MIT
