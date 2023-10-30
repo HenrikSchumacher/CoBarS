@@ -57,7 +57,7 @@ namespace AAM
         
     public:
         
-        Int RandomClosedPolygon( mut<Real> p )
+        Int RandomClosedPolygon( mptr<Real> p )
         {
             // Port of the routine "plc_random_equilateral_closed_polygon" from the C library "plCurve" by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
             // https://jasoncantarella.com/wordpress/software/plcurve/
@@ -70,7 +70,7 @@ namespace AAM
             const Int n = edge_count;
             
             // We use the user-supplied buffer as scratch space for the diagonal lengths.
-            mut<Real> d = &p[2*edge_count+1];
+            mptr<Real> d = &p[2*edge_count+1];
             
             bool rejectedQ = true;
 
@@ -259,7 +259,7 @@ namespace AAM
         }
         
         
-        Int RandomClosedPolygons( mut<Real> p, const Int sample_count, const Int thread_count = 1 )
+        Int RandomClosedPolygons( mptr<Real> p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             

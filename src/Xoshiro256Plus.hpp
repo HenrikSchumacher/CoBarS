@@ -26,7 +26,7 @@ namespace CoBarS
             
             std::random_device r;
             
-            mut<std::uint32_t> seeds_ = reinterpret_cast<std::uint32_t *>(&seeds[0]);
+            mptr<std::uint32_t> seeds_ = reinterpret_cast<std::uint32_t *>(&seeds[0]);
             
             for( int i = 0; i < 8; ++i )
             {

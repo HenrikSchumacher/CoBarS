@@ -1,7 +1,7 @@
 public:
 
     virtual void RandomOpenPolygons(
-        mut<Real> x_out,
+        mptr<Real> x_out,
         const Int sample_count,
         const Int thread_count = 1
     ) const override

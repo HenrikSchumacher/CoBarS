@@ -391,9 +391,9 @@ public:
 
 
     virtual void OptimizeBatch(
-        ptr<Real>  x_in,
-        mut<Real>  w_out,
-        mut<Real>  y_out,
+        cptr<Real>  x_in,
+        mptr<Real>  w_out,
+        mptr<Real>  y_out,
         const Int  sample_count,
         const Int  thread_count = 1,
         const bool normalize = true

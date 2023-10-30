@@ -76,8 +76,8 @@ namespace CoBarS
         }
         
         explicit Sampler(
-            ptr<Real> r_in,
-            ptr<Real> rho_in,
+            cptr<Real> r_in,
+            cptr<Real> rho_in,
             const Int edge_count_,
             const Setting_T settings_ = Setting_T()
         )
@@ -379,17 +379,17 @@ namespace CoBarS
             return Vector_T ( y, k );
         }
         
-        virtual void ReadEdgeCoordinates( ptr<Real> y_in ) override
+        virtual void ReadEdgeCoordinates( cptr<Real> y_in ) override
         {
             y.Read( y_in );
         }
         
-        virtual void ReadEdgeCoordinates( ptr<Real> y_in, const Int k ) override
+        virtual void ReadEdgeCoordinates( cptr<Real> y_in, const Int k ) override
         {
             ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
         }
         
-        virtual void WriteEdgeCoordinates( mut<Real> y_out ) const override
+        virtual void WriteEdgeCoordinates( mptr<Real> y_out ) const override
         {
             y.Write( y_out );
         }

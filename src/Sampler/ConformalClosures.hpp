@@ -1,11 +1,11 @@
 public:
 
     virtual void ConformalClosures(
-        ptr<Real> x_in,
-        mut<Real> w_out,
-        mut<Real> y_out,
-        mut<Real> K_edge_space,
-        mut<Real> K_edge_quotient_space,
+        cptr<Real> x_in,
+        mptr<Real> w_out,
+        mptr<Real> y_out,
+        mptr<Real> K_edge_space,
+        mptr<Real> K_edge_quotient_space,
         const Int sample_count,
         const Int thread_count = 1
     ) const override

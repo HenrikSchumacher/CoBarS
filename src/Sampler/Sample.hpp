@@ -1,9 +1,9 @@
 public:
     
     virtual void Sample(
-        mut<Real> sampled_values,
-        mut<Real> edge_space_sampling_weights,
-        mut<Real> edge_quotient_space_sampling_weights,
+        mptr<Real> sampled_values,
+        mptr<Real> edge_space_sampling_weights,
+        mptr<Real> edge_quotient_space_sampling_weights,
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         const Int sample_count,
         const Int  thread_count = 1
@@ -39,9 +39,9 @@ public:
 
 
     virtual void Sample(
-        mut<Real> sampled_values,
-        mut<Real> edge_space_sampling_weights,
-        mut<Real> edge_quotient_space_sampling_weights,
+        mptr<Real> sampled_values,
+        mptr<Real> edge_space_sampling_weights,
+        mptr<Real> edge_quotient_space_sampling_weights,
         std::shared_ptr<RandomVariable_T> & F_,
         const Int sample_count,
         const Int thread_count = 1
@@ -74,9 +74,9 @@ private:
 
     template<bool edge_space_flag>
     void sample_1(
-        mut<Real> sampled_values,
-        mut<Real> edge_space_sampling_weights,
-        mut<Real> edge_quotient_space_sampling_weights,
+        mptr<Real> sampled_values,
+        mptr<Real> edge_space_sampling_weights,
+        mptr<Real> edge_quotient_space_sampling_weights,
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         const Int sample_count,
         const Int thread_count = 1
@@ -101,9 +101,9 @@ private:
 
     template<bool edge_space_flag, bool quotient_space_flag>
     void sample_2(
-        mut<Real> sampled_values,
-        mut<Real> edge_space_sampling_weights,
-        mut<Real> edge_quotient_space_sampling_weights,
+        mptr<Real> sampled_values,
+        mptr<Real> edge_space_sampling_weights,
+        mptr<Real> edge_quotient_space_sampling_weights,
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         const Int sample_count,
         const Int thread_count = 1

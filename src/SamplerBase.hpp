@@ -71,11 +71,11 @@ namespace CoBarS
         
         virtual Vector_T EdgeCoordinates( const Int k ) const = 0;
         
-        virtual void ReadEdgeCoordinates( ptr<Real> y_in ) = 0;
+        virtual void ReadEdgeCoordinates( cptr<Real> y_in ) = 0;
         
-        virtual void ReadEdgeCoordinates( ptr<Real> y_in, const Int k ) = 0;
+        virtual void ReadEdgeCoordinates( cptr<Real> y_in, const Int k ) = 0;
         
-        virtual void WriteEdgeCoordinates( mut<Real> y_out ) const = 0;
+        virtual void WriteEdgeCoordinates( mptr<Real> y_out ) const = 0;
         
         virtual void WriteEdgeCoordinates( Real * y_out, const Int k ) const = 0;
         
@@ -123,64 +123,64 @@ namespace CoBarS
         virtual void ComputeConformalClosure() = 0;
         
         virtual void OptimizeBatch(
-            ptr<Real>  x_in,
-            mut<Real>  w_out,
-            mut<Real>  y_out,
+            cptr<Real>  x_in,
+            mptr<Real>  w_out,
+            mptr<Real>  y_out,
             const Int  sample_count,
             const Int  thread_count = 1,
             const bool normalize = true
         ) = 0;
 
         virtual void RandomOpenPolygons(
-            mut<Real> x_out,
+            mptr<Real> x_out,
             const Int sample_count,
             const Int thread_count = 1
         ) const = 0;
         
         virtual void RandomClosedPolygons(
-            mut<Real> x_out,
-            mut<Real> w_out,
-            mut<Real> y_out,
-            mut<Real> K_edge_space,
-            mut<Real> K_edge_quotient_space,
+            mptr<Real> x_out,
+            mptr<Real> w_out,
+            mptr<Real> y_out,
+            mptr<Real> K_edge_space,
+            mptr<Real> K_edge_quotient_space,
             const Int sample_count,
             const Int thread_count = 1
         ) const = 0;
         
         virtual void ConformalClosures(
-            ptr<Real> x_out,
-            mut<Real> w_out,
-            mut<Real> y_out,
-            mut<Real> K_edge_space,
-            mut<Real> K_edge_quotient_space,
+            cptr<Real> x_out,
+            mptr<Real> w_out,
+            mptr<Real> y_out,
+            mptr<Real> K_edge_space,
+            mptr<Real> K_edge_quotient_space,
             const Int sample_count,
             const Int thread_count = 1
         ) const = 0;
         
         virtual void Sample(
-            mut<Real> sampled_values,
-            mut<Real> edge_space_sampling_weights,
-            mut<Real> edge_quotient_space_sampling_weights,
+            mptr<Real> sampled_values,
+            mptr<Real> edge_space_sampling_weights,
+            mptr<Real> edge_quotient_space_sampling_weights,
             std::shared_ptr<RandomVariable_T> & F_,
             const Int sample_count,
             const Int thread_count = 1
         ) const = 0;
         
         virtual void Sample(
-            mut<Real> sampled_values,
-            mut<Real> edge_space_sampling_weights,
-            mut<Real> edge_quotient_space_sampling_weights,
+            mptr<Real> sampled_values,
+            mptr<Real> edge_space_sampling_weights,
+            mptr<Real> edge_quotient_space_sampling_weights,
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int  thread_count = 1
         ) const = 0;
         
         virtual void BinnedSample(
-            mut<Real> bins_out,
+            mptr<Real> bins_out,
             const Int bin_count_,
-            mut<Real> moments_out,
+            mptr<Real> moments_out,
             const Int moment_count_,
-            ptr<Real> ranges,
+            cptr<Real> ranges,
             const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
             const Int sample_count,
             const Int thread_count = 1
@@ -224,9 +224,9 @@ namespace CoBarS
         
         
         void NormalizeBinnedSamples(
-            mut<Real> bins,
+            mptr<Real> bins,
             const Int bin_count,
-            mut<Real> moments,
+            mptr<Real> moments,
             const Int moment_count,
             const Int fun_count
         ) const
@@ -238,9 +238,9 @@ namespace CoBarS
                 {
                     // Normalize bins and moments.
                     
-                    mut<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
+                    mptr<Real> bins_i_j = &bins[ (i*fun_count+j)*bin_count ];
                     
-                    mut<Real> moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
+                    mptr<Real> moments_i_j = &moments[ (i*fun_count+j)*moment_count ];
                     
                     // The field for zeroth moment is assumed to contain the total mass.
                     Real factor = Real(1)/moments_i_j[0];

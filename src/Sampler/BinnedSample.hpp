@@ -1,11 +1,11 @@
 public:
 
     virtual void BinnedSample(
-        mut<Real> bins_inout,
+        mptr<Real> bins_inout,
         const Int bin_count_,
-        mut<Real> moments_inout,
+        mptr<Real> moments_inout,
         const Int moment_count_,
-        ptr<Real> ranges,
+        cptr<Real> ranges,
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
         const Int sample_count,
         const Int thread_count = 1
