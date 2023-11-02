@@ -23,4 +23,4 @@ Pull changes from the remote repositories of any submodule by executing
 
 Just include the header CoBarS.hpp. See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
 
-See also https://github.com/HenrikSchumacher/CoBarSLink for a more user-friendly _Mathematica_ package.
+See also [CoBarSLink](https://github.com/HenrikSchumacher/CoBarSLink) for a more user-friendly _Mathematica_ package.
