@@ -43,15 +43,19 @@ namespace AAM
         static constexpr Real infty             = std::numeric_limits<Real>::max();
         static constexpr Real small_one         = one - 16 * eps;
         static constexpr Real big_one           = one + 16 * eps;
-        static constexpr Real two_pi            = Scalar::TwoPi<Real>;
+//        static constexpr Real two_pi            = Scalar::TwoPi<Real>;
         
         const Int edge_count;
         
         mutable PRNG_T random_engine;
                     
-        std::uniform_real_distribution<Real> dist_1 { -one, one    };
+        std::uniform_real_distribution<Real> dist_1 { -one, one };
         
-        std::uniform_real_distribution<Real> dist_2 { zero, two_pi };
+        std::uniform_real_distribution<Real> dist_2 { -Scalar::Pi<Real>, Scalar::Pi<Real> };
+        
+//        Tools::uniform_dist<Real,UInt64> dist_1 {-one, one};
+//        
+//        Tools::uniform_dist<Real,UInt64> dist_2 { -Scalar::Pi<Real>, Scalar::Pi<Real> };
         
         static constexpr Int max_trials = 10000000;
         

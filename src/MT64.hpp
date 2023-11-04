@@ -38,7 +38,7 @@ namespace CoBarS
             
         }
         
-        result_type operator()() noexcept
+        force_inline result_type operator()() noexcept
         {
             return random_engine();
         }
@@ -51,16 +51,6 @@ namespace CoBarS
         static constexpr result_type max() noexcept
         {
             return std::mt19937_64::max();
-        }
-        
-        friend bool operator ==(const MT64& lhs, const MT64& rhs) noexcept
-        {
-            return (lhs.random_engine == rhs.random_engine);
-        }
-        
-        friend bool operator !=(const MT64& lhs, const MT64& rhs) noexcept
-        {
-            return (lhs.random_engine != rhs.random_engine);
         }
         
         std::string ClassName()

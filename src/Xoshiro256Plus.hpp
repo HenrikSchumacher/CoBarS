@@ -36,7 +36,7 @@ namespace CoBarS
             random_engine = XoshiroCpp::Xoshiro256Plus( seeds );
         }
         
-        result_type operator()() noexcept
+        force_inline result_type operator()() noexcept
         {
             return random_engine();
         }
@@ -50,16 +50,6 @@ namespace CoBarS
         static constexpr result_type max() noexcept
         {
             return XoshiroCpp::Xoshiro256Plus::max();
-        }
-        
-        friend bool operator ==(const Xoshiro256Plus& lhs, const Xoshiro256Plus& rhs) noexcept
-        {
-            return (lhs.random_engine == rhs.random_engine);
-        }
-        
-        friend bool operator !=(const Xoshiro256Plus& lhs, const Xoshiro256Plus& rhs) noexcept
-        {
-            return (lhs.random_engine != rhs.random_engine);
         }
         
         std::string ClassName()

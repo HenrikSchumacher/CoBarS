@@ -7,3 +7,6 @@
 [submodule "submodules/Tensors"]
 	path = submodules/Tensors
 	url = git@github.com:HenrikSchumacher/Tensors.git
+[submodule "submodules/wy"]
+	path = submodules/wy
+	url = git@github.com:alainesp/wy.git

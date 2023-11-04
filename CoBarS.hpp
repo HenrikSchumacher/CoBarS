@@ -48,6 +48,7 @@
     #include "src/MT64.hpp"
     #include "src/Xoshiro256Plus.hpp"
     #include "src/PCG64.hpp"
+    #include "src/WyRand.hpp"
 
     #include "src/GearyTransform.hpp"
 

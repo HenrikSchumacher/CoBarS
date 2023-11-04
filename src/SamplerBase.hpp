@@ -253,6 +253,8 @@ namespace CoBarS
             ptoc(this->ClassName()+"::BinnedSamples");
         }
         
+        virtual std::string PRNG_Name() const = 0;
+        
         virtual std::string ClassName() const
         {
             return std::string("CoBarS::SamplerBase") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + ">";

@@ -22,7 +22,7 @@ namespace CoBarS
         :   random_engine( pcg_extras::seed_seq_from<std::random_device>() )
         {}
         
-        result_type operator()() noexcept
+        force_inline result_type operator()() noexcept
         {
             return random_engine();
         }
@@ -35,16 +35,6 @@ namespace CoBarS
         static constexpr result_type max() noexcept
         {
             return pcg64::max();
-        }
-        
-        friend bool operator ==(const PCG64& lhs, const PCG64& rhs) noexcept
-        {
-            return (lhs.random_engine == rhs.random_engine);
-        }
-        
-        friend bool operator !=(const PCG64& lhs, const PCG64& rhs) noexcept
-        {
-            return (lhs.random_engine != rhs.random_engine);
         }
         
         std::string ClassName()

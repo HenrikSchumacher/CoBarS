@@ -138,10 +138,12 @@ namespace CoBarS
         ,   ArmijoQ(ArmijoQ)
         ,   moments(moments)
         {
-            for( Int i = 0; i < AmbDim; ++i )
-            {
-                random_engine[i].seed(pcg_extras::seed_seq_from<std::random_device>());
-            }
+//            for( Int i = 0; i < AmbDim; ++i )
+//            {
+//                random_engine[i].seed(pcg_extras::seed_seq_from<std::random_device>());
+//            }
+            
+            random_engine.seed(pcg_extras::seed_seq_from<std::random_device>());
             
             LoadRandomVariables( other.F_list );
         }
@@ -209,9 +211,11 @@ namespace CoBarS
         
         Int edge_count = 0;
         
-        mutable PRNG_T random_engine [AmbDim];
+        mutable PRNG_T random_engine;
         
         mutable std::normal_distribution<Real> normal_dist {zero,one};
+        
+        mutable std::uniform_real_distribution<Real> phi_dist {Scalar::Zero<Real>,Scalar::TwoPi<Real>};
         
         Setting_T settings;
 
@@ -348,14 +352,14 @@ namespace CoBarS
             for( Int k = 0; k < edge_count; ++k )
             {
                 Vector_T x_k;
-
+                
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    x_k[i] = normal_dist( random_engine[i] );
+                    x_k[i] = normal_dist( random_engine );
                 }
-
+                
                 x_k.Normalize();
-
+                
                 x_k.Write( x, k );
             }
         }
@@ -506,9 +510,15 @@ namespace CoBarS
     public:
         
         
+        std::string PRNG_Name() const override
+        {
+//            return random_engine[0].ClassName();
+            return random_engine.ClassName();
+        }
+        
         std::string ClassName() const override
         {
-            return std::string("CoBarS::Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + "," + random_engine[0].ClassName() + "," + ToString(vectorizeQ) +"," + ToString(zerofyfirstQ) + ">";
+            return std::string("CoBarS::Sampler") + "<" + ToString(AmbDim) + "," + TypeName<Real> + "," + TypeName<Int>  + "," + PRNG_Name() + "," + ToString(vectorizeQ) +"," + ToString(zerofyfirstQ) + ">";
         }
         
     }; // class Sampler
