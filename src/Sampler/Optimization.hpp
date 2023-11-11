@@ -330,6 +330,8 @@ protected:
         }
     }
     
+public:
+
     void Shift()
     {
         // Shifts all entries of x along w and writes the results to y.

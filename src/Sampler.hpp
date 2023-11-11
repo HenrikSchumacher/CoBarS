@@ -131,20 +131,13 @@ namespace CoBarS
         ,   edge_quotient_space_sampling_correction ( other.edge_quotient_space_sampling_correction )
         ,   lambda_min(other.lambda_min)
         ,   q(other.q)
-        ,   errorestimator(errorestimator)
-        ,   linesearchQ(linesearchQ)
-        ,   succeededQ(succeededQ)
-        ,   continueQ(continueQ)
-        ,   ArmijoQ(ArmijoQ)
-        ,   moments(moments)
+        ,   errorestimator(other.errorestimator)
+        ,   linesearchQ(other.linesearchQ)
+        ,   succeededQ(other.succeededQ)
+        ,   continueQ(other.continueQ)
+        ,   ArmijoQ(other.ArmijoQ)
+        ,   moments(other.moments)
         {
-//            for( Int i = 0; i < AmbDim; ++i )
-//            {
-//                random_engine[i].seed(pcg_extras::seed_seq_from<std::random_device>());
-//            }
-            
-            random_engine.seed(pcg_extras::seed_seq_from<std::random_device>());
-            
             LoadRandomVariables( other.F_list );
         }
         
@@ -313,7 +306,7 @@ namespace CoBarS
             return Vector_T ( x, k );
         }
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, bool normalize = true ) override
+        virtual void ReadInitialEdgeCoordinates( cptr<Real> x_in, bool normalize = true ) override
         {
             if( normalize )
             {
@@ -331,22 +324,50 @@ namespace CoBarS
                 x.Read( x_in );
             }
         }
+
+        void ReadInitialEdgeCoordinates( cref<Vector_T> x_in, const Int k, bool normalize = true )
+        {
+            Vector_T x_k ( x_in );
+            
+            if( normalize )
+            {
+                x_k.Normalize();
+            }
+            
+            x_k.Write( x, k );
+        }
         
-        virtual void ReadInitialEdgeCoordinates( const Real * const x_in, const Int k, bool normalize = true ) override
+        virtual void ReadInitialEdgeCoordinates( cptr<Real> x_in, const Int k, bool normalize = true ) override
         {
             ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize );
         }
         
-        virtual void WriteInitialEdgeCoordinates( Real * x_out ) const override
+        virtual void WriteInitialEdgeCoordinates( mptr<Real> x_out ) const override
         {
             x.Write( x_out );
         }
         
-        virtual void WriteInitialEdgeCoordinates( Real * x_out, const Int k ) const override
+        virtual void WriteInitialEdgeCoordinates( mptr<Real> x_out, const Int k ) const override
         {
             WriteInitialEdgeCoordinates( &x_out[ AmbDim * edge_count * k ]);
         }
 
+        void DumpInitialEdgeCoordinates() const
+        {
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                valprint( "x["+ToString(i)+"]", x[i] );
+            }
+        }
+        
+        void DumpEdgeCoordinates() const
+        {
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                valprint( "y["+ToString(i)+"]", y[i] );
+            }
+        }
+        
         virtual void RandomizeInitialEdgeCoordinates() override
         {
             for( Int k = 0; k < edge_count; ++k )
@@ -398,11 +419,15 @@ namespace CoBarS
             y.Write( y_out );
         }
         
-        virtual void WriteEdgeCoordinates( Real * y_out, const Int k ) const override
+        virtual void WriteEdgeCoordinates( mptr<Real> y_out, const Int k ) const override
         {
             WriteEdgeCoordinates( &y_out[ AmbDim * edge_count * k ]);
         }
         
+        void WriteEdgeCoordinates( mref<Vector_T> y_out, const Int k ) const
+        {
+            y_out.Read( y, k );
+        }
         
 
         // This routine seems to be somewhat slow; better not use it if you can avoid it.
@@ -416,12 +441,12 @@ namespace CoBarS
             return Vector_T ( p, k );
         }
         
-        virtual void WriteSpaceCoordinates( Real * p_out ) const override
+        virtual void WriteSpaceCoordinates( mptr<Real> p_out ) const override
         {
             p.Write( p_out );
         }
         
-        virtual void WriteSpaceCoordinates( Real * p_out, const Int k ) const override
+        virtual void WriteSpaceCoordinates( mptr<Real> p_out, const Int k ) const override
         {
             WriteSpaceCoordinates( &p_out[ (edge_count+1) * AmbDim * k ]);
         }

@@ -79,11 +79,9 @@
     // Add your own random variables here!
     #include "src/RandomVariables/ExampleFunction.hpp"
 
-
-
     #include "src/ActionAngleSampler.hpp"
 
-
+    #include "src/DouadyEarleExtension.hpp"
 
 
 #endif

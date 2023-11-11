@@ -33,10 +33,10 @@ public:
     
     virtual void ComputeShiftVector() override
     {
-        w.SetZero();
-        
         if constexpr ( zerofyfirstQ )
         {
+            w.SetZero();
+            
             for( Int k = 0; k < edge_count; ++k )
             {
                 Vector_T x_k ( x, k );
