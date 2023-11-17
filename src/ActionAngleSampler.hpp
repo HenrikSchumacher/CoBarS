@@ -183,10 +183,10 @@ namespace AAM
             
             // The current triangle's normal.
             Vector_T nu;
-            e[0] = zero;
-            e[1] = zero;
-            e[2] = one;
-            
+            nu[0] = zero;
+            nu[1] = zero;
+            nu[2] = one;
+                        
             for( Int i = 0; i < n - 3; ++i )
             {
                 // Next we compute the new unit vector that points to e by rotating e by the angle alpha about the unit normal of the triangle.
