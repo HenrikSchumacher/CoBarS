@@ -163,7 +163,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					AFE5555529C26F9900FC5BD7 = {
 						CreatedOnToolsVersion = 14.2;
@@ -284,13 +284,10 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
-					"-Xpreprocessor",
-					"-fopenmp",
-					"-Xpreprocessor",
-					"-fopenmp-simd",
 					"-flto",
 					"-fno-math-errno",
 					"-ffast-math",
+					"-fenable-matrix",
 				);
 				OTHER_LDFLAGS = (
 					"-ldl",
@@ -373,13 +370,10 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
-					"-Xpreprocessor",
-					"-fopenmp",
-					"-Xpreprocessor",
-					"-fopenmp-simd",
 					"-flto",
 					"-fno-math-errno",
 					"-ffast-math",
+					"-fenable-matrix",
 				);
 				OTHER_LDFLAGS = (
 					"-ldl",
