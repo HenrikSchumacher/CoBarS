@@ -15,11 +15,11 @@ namespace CoBarS
         GearyTransform( const Real mean_X_, const Real mean_Y_,
                         const Real var_X_,  const Real cov_X_Y_, const Real var_Y_
         )
-        :   mean_X ( mean_X_   )
-        ,   mean_Y ( mean_Y_   )
-        ,   var_X  ( var_X_    )
+        :   mean_X  ( mean_X_   )
+        ,   mean_Y  ( mean_Y_   )
+        ,   var_X   ( var_X_    )
         ,   cov_X_Y ( cov_X_Y_ )
-        ,   var_Y  ( var_Y_    )
+        ,   var_Y   ( var_Y_    )
         {}
         
         GearyTransform( GearyTransform & other )

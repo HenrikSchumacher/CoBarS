@@ -77,7 +77,7 @@ namespace AAM
             mptr<Real> d = &p[2*edge_count+1];
             
             bool rejectedQ = true;
-
+            
             Int trials = 0;
             
             // We need to find d[0], d[1], ... , d[n-2] from the moment polytope.
@@ -97,7 +97,7 @@ namespace AAM
             
             // (7')     |d[n-3] - 1| <= 1
             // (8')     d[n-3] >= 0             obsolete, follows from (6) for i = n-3.
-        
+            
             // Because d[n-3] >0, the condition (4') reduces to
             
             //  (7'') d[n-3] <= 2.
@@ -173,19 +173,13 @@ namespace AAM
             p[5] = zero;
             
             // Unit vector pointing to position of currect vertex..
-            Vector_T e;
-            e[0] = one;
-            e[1] = zero;
-            e[2] = zero;
+            Vector_T e { one, zero, zero };
             
             // Some buffer for the cross product in Rodrigues' formula.
             Vector_T v;
             
             // The current triangle's normal.
-            Vector_T nu;
-            nu[0] = zero;
-            nu[1] = zero;
-            nu[2] = one;
+            Vector_T nu { zero, zero, one };
                         
             for( Int i = 0; i < n - 3; ++i )
             {
