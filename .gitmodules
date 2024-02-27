@@ -1,4 +1,4 @@
-[submodule "submodules/pcg-cpp"]
+ [submodule "submodules/pcg-cpp"]
 	path = submodules/pcg-cpp
 	url = git@github.com:imneme/pcg-cpp.git
 [submodule "submodules/Xoshiro-cpp"]
@@ -7,3 +7,6 @@
 [submodule "submodules/Tensors"]
 	path = submodules/Tensors
 	url = git@github.com:HenrikSchumacher/Tensors.git
+[submodule "submodules/wy"]
+	path = submodules/wy
+	url = git@github.com:alainesp/wy.git
