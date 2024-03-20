@@ -315,6 +315,8 @@ protected:
     
     void InverseShift()
     {
+        // Shifts just the point w.
+        
         const Real ww  = Dot(w,w);
         const Real wz2 = Dot(w,z) * two;
         const Real zz  = Dot(z,z);
@@ -337,57 +339,53 @@ public:
         // Shifts all entries of x along w and writes the results to y.
         
         const Real ww = Dot(w,w);
-        const Real one_minus_ww = big_one - ww;
-        const Real one_plus_ww  = big_one + ww;
         
         if( ww <= norm_threshold )
         {
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                Vector_T x_k ( x, k );
-                                     
-                const Real wx2 = two * Dot(w,x_k);
-                
-                const Real denom = one / ( one_plus_ww - wx2 );
-                
-                const Real wx2_minus_2 = wx2 - two;
-                
-                Vector_T y_k;
-                
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    y_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
-                }
-                
-                y_k.Write( y, k );
-            }
+            // If w lies away from the boundary of the ball, we don't normalize output after shift.
+            shift<false>(ww);
         }
         else
         {
             // If w lies close to the boundary of the ball, then normalizing the output is a good idea.
-            
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                Vector_T x_k ( x, k );
-                
-                const Real wx2 = two * Dot(w,x_k);
-                
-                const Real denom = one / ( one_plus_ww - wx2 );
-                
-                const Real wx2_minus_2 = wx2 - two;
-                
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    x_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
-                }
-                
-                x_k.Normalize();
-                
-                x_k.Write( y, k );
-            }
+            shift<true>(ww);
         }
     }
 
+private:
+
+    template< bool normalizeQ>
+    void shift( const Real ww )
+    {
+        // This function is meant to reduce code duplication.
+        // It is only meant to be called directly from Shift.
+        
+        const Real one_minus_ww = big_one - ww;
+        const Real one_plus_ww  = big_one + ww;
+        
+        for( Int k = 0; k < edge_count; ++k )
+        {
+            Vector_T x_k ( x, k );
+            
+            const Real wx2 = two * Dot(w,x_k);
+            
+            const Real denom = one / ( one_plus_ww - wx2 );
+            
+            const Real wx2_minus_2 = wx2 - two;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                x_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
+            }
+            
+            if constexpr ( normalizeQ )
+            {
+                x_k.Normalize();
+            }
+            
+            x_k.Write( y, k );
+        }
+    }
 
 public:
 
