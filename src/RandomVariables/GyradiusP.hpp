@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS GyradiusP
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class GyradiusP;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class GyradiusP<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,24 +22,36 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS( const Real exponent_ )
+        GyradiusP( const Real exponent_ )
         :   exponent( exponent_ )
         {}
         
         // Copy constructor
-        CLASS( const CLASS & other )
+        GyradiusP( const GyradiusP & other )
         :   exponent(other.exponent)
         {}
         
         // Move constructor
-        CLASS( CLASS && other ) noexcept
+        GyradiusP( GyradiusP && other ) noexcept
         :
         exponent(other.exponent)
         {}
         
-        virtual ~CLASS() override = default;
+        virtual ~GyradiusP() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<GyradiusP> Clone () const
+        {
+            return std::shared_ptr<GyradiusP>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual GyradiusP * CloneImplementation() const override
+        {
+            return new GyradiusP(*this);
+        }
         
     protected:
         
@@ -50,10 +59,10 @@ namespace CoBarS
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real sum = Scalar::Zero<Real>;
-            Real r2  = Scalar::Zero<Real>;
+            Real sum = 0;
+            Real r2  = 0;
             
-            const Real power = Scalar::Half<Real> * exponent;
+            const Real power = Frac<Real>(exponent,2);
             
             const Int n      = C.EdgeCount();
             
@@ -76,7 +85,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -88,10 +97,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS)+"("+ToString(exponent)+")";
+            return std::string("GyradiusP")+"("+ToString(exponent)+")";
         }
     };
-    
-#undef CLASS
     
 } // namespace CoBarS

@@ -36,7 +36,7 @@ namespace CoBarS
             random_engine = XoshiroCpp::Xoshiro256Plus( seeds );
         }
         
-        force_inline result_type operator()() noexcept
+        result_type operator()() noexcept
         {
             return random_engine();
         }

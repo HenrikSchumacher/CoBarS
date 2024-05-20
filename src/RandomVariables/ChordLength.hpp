@@ -3,13 +3,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS ChordLength
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class ChordLength;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class ChordLength<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -26,27 +23,39 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS( const Int first_vertex_, const Int last_vertex_)
+        ChordLength( const Int first_vertex_, const Int last_vertex_)
         :   first_vertex( std::max( static_cast<Int>(0), first_vertex_) )
         ,   last_vertex ( std::max( static_cast<Int>(0), last_vertex_ ) )
         {}
         
         // Copy constructor
-        CLASS( const CLASS & other )
+        ChordLength( const ChordLength & other )
         :   first_vertex(other.first_vertex),
         last_vertex(other.last_vertex)
         {}
         
         // Move constructor
-        CLASS( CLASS && other ) noexcept
+        ChordLength( ChordLength && other ) noexcept
         :
         first_vertex(other.first_vertex),
         last_vertex (other.last_vertex )
         {}
         
-        virtual ~CLASS() override = default;
+        virtual ~ChordLength() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<ChordLength> Clone () const
+        {
+            return std::shared_ptr<ChordLength>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual ChordLength * CloneImplementation() const override
+        {
+            return new ChordLength(*this);
+        }
         
     protected:
         
@@ -57,7 +66,7 @@ namespace CoBarS
         {
             if( last_vertex > C.EdgeCount() )
             {
-                return Scalar::Zero<Real>;
+                return 0;
             }
             
             Vector_T u = C.SpaceCoordinates( last_vertex  );
@@ -70,14 +79,14 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
             const Weights_T & r = C.EdgeLengths();
             
-            Real L = Scalar::Zero<Real>;
+            Real L = 0;
             
             for( Int k = first_vertex; k < last_vertex; ++k )
             {
@@ -91,10 +100,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS)+"("+ToString(first_vertex)+","+ToString(last_vertex)+")";
+            return std::string("ChordLength")+"("+ToString(first_vertex)+","+ToString(last_vertex)+")";
         }
     };
-    
-#undef CLASS
     
 }  // namespace CoBarS

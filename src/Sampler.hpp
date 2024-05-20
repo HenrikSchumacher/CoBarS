@@ -13,9 +13,9 @@ namespace CoBarS
     >
     class Sampler : public SamplerBase<AmbDim_,Real_,Int_>
     {
-        ASSERT_FLOAT(Real_);
-        ASSERT_REAL(Real_);
-        ASSERT_INT(Int_);
+        static_assert(FloatQ<Real_>,"");
+        static_assert(Scalar::RealQ<Real_>,"");
+        static_assert(IntQ<Int_>,"");
 
     private:
         
@@ -208,7 +208,7 @@ namespace CoBarS
         
         mutable std::normal_distribution<Real> normal_dist {zero,one};
         
-        mutable std::uniform_real_distribution<Real> phi_dist {Scalar::Zero<Real>,Scalar::TwoPi<Real>};
+        mutable std::uniform_real_distribution<Real> phi_dist {0,Scalar::TwoPi<Real>};
         
         Setting_T settings;
 
@@ -262,7 +262,7 @@ namespace CoBarS
         static constexpr Real big_one           = 1 + 16 * eps;
         static constexpr Real g_factor          = 4;
         static constexpr Real g_factor_inv      = one/g_factor;
-        static constexpr Real norm_threshold    = static_cast<Real>(0.99 * 0.99 + 16 * eps);
+        static constexpr Real norm_threshold    = 0.99 * 0.99 + 16 * eps;
         static constexpr Real two_pi            = Scalar::TwoPi<Real>;
 
         
@@ -325,7 +325,7 @@ namespace CoBarS
             }
         }
 
-        void ReadInitialEdgeCoordinates( cref<Vector_T> x_in, const Int k, bool normalize = true )
+        void ReadInitialEdgeCoordinates( const Vector_T & x_in, const Int k, bool normalize = true )
         {
             Vector_T x_k ( x_in );
             
@@ -424,7 +424,7 @@ namespace CoBarS
             WriteEdgeCoordinates( &y_out[ AmbDim * edge_count * k ]);
         }
         
-        void WriteEdgeCoordinates( mref<Vector_T> y_out, const Int k ) const
+        void WriteEdgeCoordinates( Vector_T & y_out, const Int k ) const
         {
             y_out.Read( y, k );
         }

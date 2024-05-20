@@ -3,13 +3,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS EdgeQuotientSpaceSamplingWeight
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class EdgeQuotientSpaceSamplingWeight;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class EdgeQuotientSpaceSamplingWeight<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,11 +22,21 @@ namespace CoBarS
         
         using Weights_T     = typename Base_T::Weights_T;
         
-        CLASS() = default;
+        EdgeQuotientSpaceSamplingWeight() = default;
         
-        virtual ~CLASS() override = default;
+    public:
         
-        __ADD_CLONE_CODE__(CLASS)
+        [[nodiscard]] std::shared_ptr<EdgeQuotientSpaceSamplingWeight> Clone () const
+        {
+            return std::shared_ptr<EdgeQuotientSpaceSamplingWeight>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual EdgeQuotientSpaceSamplingWeight * CloneImplementation() const override
+        {
+            return new EdgeQuotientSpaceSamplingWeight(*this);
+        }
         
     protected:
         
@@ -41,7 +48,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -52,10 +59,8 @@ namespace CoBarS
     public:
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("EdgeQuotientSpaceSamplingWeight");
         }
     };
-    
-#undef CLASS
     
 }  // namespace CoBarS

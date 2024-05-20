@@ -12,9 +12,9 @@ namespace CoBarS
     {
         // Load a polyline, project the vertices onto the sphere and allow for evaluation of the Douady-Earle extension
         
-        ASSERT_FLOAT(Real_);
-        ASSERT_REAL(Real_);
-        ASSERT_INT(Int_);
+        static_assert(FloatQ<Real_>,"");
+        static_assert(Scalar::RealQ<Real_>,"");
+        static_assert(IntQ<Int_>,"");
         
     public:
 
@@ -135,18 +135,18 @@ namespace CoBarS
             
             w.Read( w_in );
             
-            if( Abs( w.Norm() - Scalar::One<Real>) <= 128 * Scalar::eps<Real> )
+            if( Abs( w.Norm() - static_cast<Real>(1)) <= 128 * Scalar::eps<Real> )
             {
                 
                 // phi in [0, 1).
                 const Real t = std::fmod(
-                    std::atan2( w[1], w[0] ) * Scalar::TwoPiInv<Real> + Scalar::One<Real>,
-                    Scalar::One<Real>
+                    std::atan2( w[1], w[0] ) * Scalar::TwoPiInv<Real> + static_cast<Real>(1),
+                    static_cast<Real>(1)
                 );
                 
                 // T in [0, edge_count).
                 const Real T = t * vertex_count;
-                const Real lambda = std::fmod(T,Scalar::One<Real>);
+                const Real lambda = std::fmod(T,static_cast<Real>(1));
                 const Int  j      = static_cast<Int>(std::floor(T));
                 const Int  j_next = (j+1 < vertex_count) ? j + 1 : 0;
                 
@@ -155,7 +155,7 @@ namespace CoBarS
                 
                 Vector_T x; // Point on the unit sphere;
                 
-                LinearCombine( Scalar::One<Real> - lambda, a, lambda, b, x );
+                LinearCombine( static_cast<Real>(1) - lambda, a, lambda, b, x );
                 
                 x.Normalize();
                 
@@ -164,7 +164,7 @@ namespace CoBarS
                 return;
             }
             
-            w *= -Scalar::One<Real>;
+            w *= -static_cast<Real>(1);
             
             S2D.ReadShiftVector( w.data() );
             
@@ -178,17 +178,15 @@ namespace CoBarS
                 
                 S2D.WriteEdgeCoordinates( y2D_k, k );
                 
-//                if( k == 0 ) dump(y2D_k);
-                
                 // phi in [0, 1).
                 const Real t = std::fmod(
-                    std::atan2( y2D_k[1], y2D_k[0] ) * Scalar::TwoPiInv<Real> + Scalar::One<Real>,
-                    Scalar::One<Real>
+                    std::atan2( y2D_k[1], y2D_k[0] ) * Scalar::TwoPiInv<Real> + static_cast<Real>(1),
+                    static_cast<Real>(1)
                 );
                 
                 // T in [0, edge_count).
                 const Real T = t * vertex_count;
-                const Real lambda = std::fmod(T,Scalar::One<Real>);
+                const Real lambda = std::fmod(T,static_cast<Real>(1));
                 const Int  j      = static_cast<Int>(std::floor(T));
                 const Int  j_next = (j+1 < vertex_count) ? j + 1 : 0;
                 
@@ -197,7 +195,7 @@ namespace CoBarS
                 
                 Vector_T x_k; // Point on the unit sphere;
                 
-                LinearCombine( Scalar::One<Real> - lambda, a, lambda, b, x_k );
+                LinearCombine( static_cast<Real>(1) - lambda, a, lambda, b, x_k );
                 
                 S.ReadInitialEdgeCoordinates( x_k, k, true );
             }

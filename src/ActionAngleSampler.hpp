@@ -11,8 +11,8 @@ namespace AAM
     template<typename Real, typename Int, typename PRNG_T = CoBarS::Xoshiro256Plus, bool ProgressiveQ = true>
     class Sampler
     {
-        ASSERT_FLOAT(Real);
-        ASSERT_INT(Int);
+        static_assert(FloatQ<Real>,"");
+        static_assert(IntQ<Int>,"");
         
     public:
         

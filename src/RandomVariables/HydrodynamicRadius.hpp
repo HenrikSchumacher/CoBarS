@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS HydrodynamicRadius
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class HydrodynamicRadius;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class HydrodynamicRadius<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,11 +22,23 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS() = default;
+        HydrodynamicRadius() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~HydrodynamicRadius() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<HydrodynamicRadius> Clone () const
+        {
+            return std::shared_ptr<HydrodynamicRadius>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual HydrodynamicRadius * CloneImplementation() const override
+        {
+            return new HydrodynamicRadius(*this);
+        }
         
         static constexpr Real eps = std::numeric_limits<Real>::min();
         
@@ -38,8 +47,8 @@ namespace CoBarS
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real sum = Scalar::Zero<Real>;
-            Real r2  = Scalar::Zero<Real>;
+            Real sum = 0;
+            Real r2  = 0;
             
             const Int n = C.EdgeCount();
             
@@ -49,7 +58,7 @@ namespace CoBarS
                 
                 for( Int l = k+1; l < n; ++l )
                 {
-                    r2 = Scalar::Zero<Real>;
+                    r2 = 0;
                     
                     Vector_T v = u;
                     
@@ -64,7 +73,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -76,10 +85,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("HydrodynamicRadius");
         }
     };
-    
-#undef CLASS
     
 } // namespace CoBarS

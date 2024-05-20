@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-
-#define CLASS SquaredGyradius
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class SquaredGyradius;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class SquaredGyradius<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -24,18 +21,30 @@ namespace CoBarS
         
         using Weights_T         = typename Base_T::Weights_T;
         
-        CLASS() = default;
+        SquaredGyradius() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~SquaredGyradius() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<SquaredGyradius> Clone () const
+        {
+            return std::shared_ptr<SquaredGyradius>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual SquaredGyradius * CloneImplementation() const override
+        {
+            return new SquaredGyradius(*this);
+        }
         
     protected:
         
         
         virtual Real operator()( const SamplerBase_T & C ) const override
         {
-            Real r2 = Scalar::Zero<Real>;
+            Real r2 = 0;
             
             const Int n = C.EdgeCount();
 
@@ -49,7 +58,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -63,11 +72,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("SquaredGyradius");
         }
     };
-    
-#undef CLASS
-    
 }  // namespace CoBarS
 

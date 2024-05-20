@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS TotalCurvature
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class TotalCurvature;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class TotalCurvature<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,11 +22,23 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS() = default;
+        TotalCurvature() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~TotalCurvature() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<TotalCurvature> Clone () const
+        {
+            return std::shared_ptr<TotalCurvature>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual TotalCurvature * CloneImplementation() const override
+        {
+            return new TotalCurvature(*this);
+        }
         
     protected:
         
@@ -65,7 +74,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -78,10 +87,9 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("TotalCurvature");
         }
     };
     
-#undef CLASS
     
 }  // namespace CoBarS

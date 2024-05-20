@@ -5,9 +5,9 @@ namespace CoBarS
     template<int AmbDim_, typename Real_ = double, typename Int_ = int_fast32_t>
     class SamplerBase
     {
-        ASSERT_FLOAT(Real_);
-        ASSERT_REAL(Real_);
-        ASSERT_INT(Int_);
+        static_assert(FloatQ<Real_>,"");
+        static_assert(Scalar::RealQ<Real_>,"");
+        static_assert(IntQ<Int_>,"");
         
     public:
         

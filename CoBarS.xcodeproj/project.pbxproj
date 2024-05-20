@@ -163,7 +163,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					AFE5555529C26F9900FC5BD7 = {
 						CreatedOnToolsVersion = 14.2;
@@ -276,7 +276,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					/opt/homebrew/lib,
 					/opt/homebrew/opt/openblas/lib,
-					/opt/homebrew/opt/libomp/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -297,7 +296,6 @@
 				SYSTEM_HEADER_SEARCH_PATHS = (
 					/opt/homebrew/opt/openblas/include,
 					/opt/homebrew/include,
-					/opt/homebrew/opt/libomp/include,
 				);
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -362,7 +360,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					/opt/homebrew/lib,
 					/opt/homebrew/opt/openblas/lib,
-					/opt/homebrew/opt/libomp/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -383,7 +380,6 @@
 				SYSTEM_HEADER_SEARCH_PATHS = (
 					/opt/homebrew/opt/openblas/include,
 					/opt/homebrew/include,
-					/opt/homebrew/opt/libomp/include,
 				);
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -396,8 +392,16 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/opt/openblas/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					/opt/homebrew/opt/openblas/include,
+					/opt/homebrew/include,
+				);
 			};
 			name = Debug;
 		};
@@ -408,8 +412,16 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/opt/openblas/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					/opt/homebrew/opt/openblas/include,
+					/opt/homebrew/include,
+				);
 			};
 			name = Release;
 		};
@@ -420,8 +432,16 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/opt/openblas/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					/opt/homebrew/opt/openblas/include,
+					/opt/homebrew/include,
+				);
 			};
 			name = Debug;
 		};
@@ -432,8 +452,16 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/lib,
+					/opt/homebrew/opt/openblas/lib,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYSTEM_HEADER_SEARCH_PATHS = (
+					/opt/homebrew/opt/openblas/include,
+					/opt/homebrew/include,
+				);
 			};
 			name = Release;
 		};

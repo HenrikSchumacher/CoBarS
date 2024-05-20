@@ -249,15 +249,10 @@ private:
             
             const Real var_Y  = Frac<Real>( var_K, N );
             
-//            dump( mean_Y );
-//            dump( std::sqrt(var_Y)  );
-            
             const Real Geary_factor = mean_Y / std::sqrt( var_Y );
             
-//            valprint( "  Geary_factor", Geary_factor );
-            
             // Check Geary condition
-            if( Geary_factor < Scalar::Three<Real> )
+            if( Geary_factor < static_cast<Real>(3) )
             {
                 wprint("Geary condition failed.");
                 
@@ -305,8 +300,6 @@ private:
 
                     if( verboseQ )
                     {
-                        dump( N );
-                        
                         valprint("  total_time ", total_time );
                         
                         print( "  Current estimate of " + F_list_[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );
@@ -368,7 +361,7 @@ private:
             {
                 a = b;
                 
-                b *= Scalar::Two<Real>;
+                b *= static_cast<Real>(2);
             }
             
             const Real error = BisectionSearch<1>( std::move(P), a, b, confidence, 0.001 );

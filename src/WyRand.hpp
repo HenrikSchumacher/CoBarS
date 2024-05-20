@@ -28,7 +28,7 @@ namespace CoBarS
         
         ~WyRand() = default;
 
-        force_inline result_type operator()() noexcept
+        result_type operator()() noexcept
         {
             return random_engine();
         }

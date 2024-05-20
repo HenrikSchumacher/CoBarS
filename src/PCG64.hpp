@@ -22,7 +22,7 @@ namespace CoBarS
         :   random_engine( pcg_extras::seed_seq_from<std::random_device>() )
         {}
         
-        force_inline result_type operator()() noexcept
+        result_type operator()() noexcept
         {
             return random_engine();
         }

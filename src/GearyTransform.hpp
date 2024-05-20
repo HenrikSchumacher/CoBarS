@@ -33,7 +33,7 @@ namespace CoBarS
         Real operator()( const Real T ) const
         {
             const Real numerator = mean_Y * T - mean_X;
-            const Real denominator_squared = std::abs( var_Y * T * T + var_X - Scalar::Two<Real> * cov_X_Y * T );
+            const Real denominator_squared = std::abs( var_Y * T * T + var_X - static_cast<Real>(2) * cov_X_Y * T );
             const Real denominator = std::sqrt( denominator_squared );
             
             return numerator / denominator;
@@ -42,10 +42,10 @@ namespace CoBarS
         Real D( const Real T ) const
         {
             const Real numerator = mean_Y * T - mean_X;
-            const Real denominator_squared = Abs( var_Y * T * T + var_X - Scalar::Two<Real> * cov_X_Y * T );
+            const Real denominator_squared = Abs( var_Y * T * T + var_X - static_cast<Real>(2) * cov_X_Y * T );
             const Real denominator = Sqrt( denominator_squared );
             
-            return ( mean_Y * denominator - numerator * Scalar::Two<Real> * (var_Y * T - cov_X_Y) ) / denominator_squared;
+            return ( mean_Y * denominator - numerator * static_cast<Real>(2) * (var_Y * T - cov_X_Y) ) / denominator_squared;
         }
     };
     

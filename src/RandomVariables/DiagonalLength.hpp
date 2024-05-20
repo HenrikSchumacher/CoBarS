@@ -3,13 +3,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS DiagonalLength
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class DiagonalLength;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class DiagonalLength<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -26,11 +23,23 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS() = default;
+        DiagonalLength() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~DiagonalLength() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<DiagonalLength> Clone () const
+        {
+            return std::shared_ptr<DiagonalLength>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual DiagonalLength * CloneImplementation() const override
+        {
+            return new DiagonalLength(*this);
+        }
         
     protected:
         
@@ -48,14 +57,14 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
             const Weights_T & r = C.EdgeLengths();
             
-            Real L = Scalar::Zero<Real>;
+            Real L = 0;
             
             const Int last_vertex = C.EdgeCount()/2;
             
@@ -71,10 +80,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return "DiagonalLength";
         }
     };
-    
-#undef CLASS
     
 }  // namespace CoBarS

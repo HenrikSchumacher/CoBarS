@@ -5,8 +5,8 @@ namespace CoBarS
     template<int AmbDim, typename Real, typename Int>
     class RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
-        ASSERT_FLOAT(Real);
-        ASSERT_INT(Int);
+        static_assert(FloatQ<Real>,"");
+        static_assert(IntQ<Int>,"");
         
     public:
         
@@ -24,7 +24,16 @@ namespace CoBarS
         
         virtual Real MaxValue( const SamplerBase_T & C ) const = 0;
         
-        __ADD_CLONE_CODE_FOR_BASE_CLASS__(RandomVariable)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<RandomVariable> Clone () const
+        {
+            return std::shared_ptr<RandomVariable>(CloneImplementation());
+        }
+        
+    private:
+        
+        [[nodiscard]] virtual RandomVariable * CloneImplementation() const = 0;
 
     public:
         

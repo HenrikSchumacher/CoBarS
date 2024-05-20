@@ -23,8 +23,11 @@ protected:
         edge_space_sampling_helper
             =
             Frac(
-                 GammaQuotient( static_cast<Real>((AmbDim-1) * (edge_count-1)), Scalar::Half<Real> * AmbDim ),
-                 Power( Scalar::Two<Real> * Sqrt( Scalar::Pi<Real>), AmbDim )
+                GammaQuotient(
+                    static_cast<Real>((AmbDim-1) * (edge_count-1)), 
+                    Frac<Real>( AmbDim, 2 )
+                ),
+                Power( static_cast<Real>(2) * Sqrt( Scalar::Pi<Real>), AmbDim )
             );
     }
 
@@ -76,7 +79,7 @@ protected:
         edge_space_sampling_weight = 
             edge_space_sampling_helper 
             *
-            Power(prod, static_cast<Int>(AmbDim-1)) * Sqrt(gamma.Det()) / cbar.Det();
+            Power( prod, static_cast<Int>(AmbDim-1) ) * Sqrt(gamma.Det()) / cbar.Det();
     }
 
 
@@ -85,7 +88,7 @@ protected:
         edge_quotient_space_sampling_helper
             =
             Frac(
-                std::pow( Scalar::Two<Real>, Scalar::Quarter<Real> * static_cast<Real>( AmbDim * (AmbDim-1) ) ),
+                std::exp2( Scalar::Quarter<Real> * static_cast<Real>( AmbDim * (AmbDim-1) ) ),
                 SOVolume<Real>(AmbDim)
             );
     }

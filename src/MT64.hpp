@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-//#include <array>
 #include <limits>
 //#include <type_traits>
 
@@ -9,7 +8,6 @@
 
 namespace CoBarS
 {
-    
     class MT64
     {
     private:
@@ -38,7 +36,7 @@ namespace CoBarS
             
         }
         
-        force_inline result_type operator()() noexcept
+        result_type operator()() noexcept
         {
             return random_engine();
         }

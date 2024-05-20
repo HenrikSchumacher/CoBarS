@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS ShiftNorm
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class ShiftNorm;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class ShiftNorm<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -24,11 +21,23 @@ namespace CoBarS
         
         using Weights_T         = typename Base_T::Weights_T;
         
-        CLASS() = default;
+        ShiftNorm() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~ShiftNorm() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<ShiftNorm> Clone () const
+        {
+            return std::shared_ptr<ShiftNorm>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual ShiftNorm * CloneImplementation() const override
+        {
+            return new ShiftNorm(*this);
+        }
         
     protected:
         
@@ -39,22 +48,20 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::One<Real>;
+            return 1;
         }
         
     public:
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("ShiftNorm");
         }
     };
-    
-#undef CLASS
     
 }  // namespace CoBarS

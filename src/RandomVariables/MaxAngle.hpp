@@ -2,13 +2,10 @@
 
 namespace CoBarS
 {
-    
-#define CLASS MaxAngle
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class MaxAngle;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class MaxAngle<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,11 +22,23 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        CLASS() = default;
+        MaxAngle() = default;
         
-        virtual ~CLASS() override = default;
+        virtual ~MaxAngle() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<MaxAngle> Clone () const
+        {
+            return std::shared_ptr<MaxAngle>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual MaxAngle * CloneImplementation() const override
+        {
+            return new MaxAngle(*this);
+        }
         
     protected:
         
@@ -38,7 +47,7 @@ namespace CoBarS
             
             const Int n    = C.EdgeCount();
             
-            Real max_angle = Scalar::Zero<Real>;
+            Real max_angle = 0;
             
             {
                 Vector_T u = C.EdgeCoordinates( n-1 );
@@ -60,7 +69,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -72,10 +81,8 @@ namespace CoBarS
         
         virtual std::string Tag() const override
         {
-            return TO_STD_STRING(CLASS);
+            return std::string("MaxAngle");
         }
     };
-    
-#undef CLASS
     
 }  // namespace CoBarS

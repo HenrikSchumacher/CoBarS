@@ -3,12 +3,10 @@
 
 namespace CoBarS
 {
-#define CLASS BendingEnergy
-    
-    template<typename SamplerBase_T> class CLASS;
+    template<typename SamplerBase_T> class BendingEnergy;
     
     template<int AmbDim, typename Real, typename Int>
-    class CLASS<SamplerBase<AmbDim,Real,Int>>
+    class BendingEnergy<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
             
@@ -25,23 +23,35 @@ namespace CoBarS
         using Weights_T         = typename Base_T::Weights_T;
         using Vector_T          = typename Base_T::Vector_T;
         
-        explicit CLASS( const Real p_ )
+        explicit BendingEnergy( const Real p_ )
         :   p( p_ )
         {}
         
         // Copy constructor
-        explicit CLASS( const CLASS & other )
+        explicit BendingEnergy( const BendingEnergy & other )
         :   p( other.p )
         {}
         
         // Move constructor
-        explicit CLASS( CLASS && other ) noexcept
+        explicit BendingEnergy( BendingEnergy && other ) noexcept
         :   p( other.p )
         {}
         
-        virtual ~CLASS() override = default;
+        virtual ~BendingEnergy() override = default;
         
-        __ADD_CLONE_CODE__(CLASS)
+    public:
+        
+        [[nodiscard]] std::shared_ptr<BendingEnergy> Clone () const
+        {
+            return std::shared_ptr<BendingEnergy>(CloneImplementation());
+        }
+                                                                                    
+    private:
+        
+        [[nodiscard]] virtual BendingEnergy * CloneImplementation() const override
+        {
+            return new BendingEnergy(*this);
+        }
         
     protected:
         
@@ -82,7 +92,7 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
-            return Scalar::Zero<Real>;
+            return 0;
         }
         
         virtual Real MaxValue( const SamplerBase_T & C ) const override
@@ -117,10 +127,8 @@ namespace CoBarS
         
         virtual std::string Tag() const  override
         {
-            return TO_STD_STRING(CLASS)+"("+ToString(p)+")";
+            return std::string("BendingEnergy")+"("+ToString(p)+")";
         }
     };
-    
-#undef CLASS
     
 } // namespace CoBarS
