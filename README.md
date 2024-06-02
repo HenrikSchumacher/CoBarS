@@ -26,24 +26,40 @@ First create a `CoBarS::Sampler` object.
     const     int edge_count   = 64;
             
     // Create an instance of the cycle sampler.
-    CoBarS::Sampler<d,double,int> S(edge_count);
+    CoBarS::Sampler<d,double,int> S (edge_count);
     
 Then generate the desired edge weights and preallocate memory for the outputs
     
     
     const     int sample_count = 10000000;
     
-    std::vector<double> w
+    // The edge vectors of open polygons,
+    // to be interpreted as 3-tensor of size `sample_count` x `edge_count` x `d`.
+    std::vector<double> x ( sample_count * edge_count * d );
+    
+    // The conformal barycenters,
+    // to be interpreted as 2-tensor of size `sample_count` x `d`.
+    std::vector<double> w ( sample_count * d );
+    
+    // The unit edge vectors of closed polygons,
+    // to be interpreted as 3-tensor of `size sample_count` x `edge_count` x `d`.
+    std::vector<double> y ( sample_count * edge_count * d );
+    
+    // The sample weights for the Pol space.
+    std::vector<double> K ( sample_count );
+    
+    // The sample weights for the quotient space.
+    std::vector<double> K_quot ( sample_count );
     
     
-    const     int thread_count = 8;
+    const int thread_count = 8;
     
     
-            S_MT_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
+    S.RandomClosedPolygons(
+         &x[0], &w[0], &y[0], &K[0], &K_quot[0], sample_count, thread_count
+    );
 
 
-See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples.
+See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples and compilation instructions.
 
 See also [CoBarSLink](https://github.com/HenrikSchumacher/CoBarSLink) for a more user-friendly _Mathematica_ package.
