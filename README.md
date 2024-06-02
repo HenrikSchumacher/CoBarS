@@ -23,15 +23,16 @@ Just include the header `CoBarS.hpp` into your C++ program via
 First create a `CoBarS::Sampler` object. 
     
     constexpr int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     int edge_count   = 64;
+    const int edge_count   = 64;
             
     // Create an instance of the cycle sampler.
+    // This assumes that equilateral polygons shall be created.
     CoBarS::Sampler<d,double,int> S (edge_count);
     
 Then generate the desired edge weights and preallocate memory for the outputs
     
     
-    const     int sample_count = 10000000;
+    const int sample_count = 10000000;
     
     // The edge vectors of open polygons,
     // to be interpreted as 3-tensor of size `sample_count` x `edge_count` x `d`.
@@ -51,10 +52,9 @@ Then generate the desired edge weights and preallocate memory for the outputs
     // The sample weights for the quotient space.
     std::vector<double> K_quot ( sample_count );
     
-    
     const int thread_count = 8;
     
-    
+    // Do the actual sampling.
     S.RandomClosedPolygons(
          &x[0], &w[0], &y[0], &K[0], &K_quot[0], sample_count, thread_count
     );
