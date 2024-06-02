@@ -13,6 +13,8 @@ using CoBarS::WyRand;
 
 int main(int argc, const char * argv[])
 {
+    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Actio Angle Method (PAMM). Moreover, I use it to detect compile errors in all code paths.");
+    
     using Real = double;
     using Int  = int_fast32_t;
 
@@ -129,31 +131,6 @@ int main(int argc, const char * argv[])
     toc(S_PCG64_vec_1.ClassName());
 
     
-    tic(S_Xoshiro_0.ClassName());
-        S_Xoshiro_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_0.ClassName());
-
-    tic(S_Xoshiro_1.ClassName());
-        S_Xoshiro_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_1.ClassName());
-
-    tic(S_Xoshiro_vec_0.ClassName());
-        S_Xoshiro_vec_0.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_vec_0.ClassName());
-
-    tic(S_Xoshiro_vec_1.ClassName());
-        S_Xoshiro_vec_1.RandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_vec_1.ClassName());
-    
-    
     tic(S_WyRand_0.ClassName());
         S_WyRand_0.RandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
@@ -177,6 +154,31 @@ int main(int argc, const char * argv[])
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_WyRand_vec_1.ClassName());
+    
+    
+    tic(S_Xoshiro_0.ClassName());
+        S_Xoshiro_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_0.ClassName());
+
+    tic(S_Xoshiro_1.ClassName());
+        S_Xoshiro_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_1.ClassName());
+
+    tic(S_Xoshiro_vec_0.ClassName());
+        S_Xoshiro_vec_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_vec_0.ClassName());
+
+    tic(S_Xoshiro_vec_1.ClassName());
+        S_Xoshiro_vec_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_vec_1.ClassName());
     
 
 
@@ -203,15 +205,6 @@ int main(int argc, const char * argv[])
     toc(M_PCG64_1.ClassName());
     
     
-    tic(M_Xoshiro_0.ClassName());
-        M_Xoshiro_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_Xoshiro_0.ClassName());
-    
-    tic(M_Xoshiro_1.ClassName());
-        M_Xoshiro_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_Xoshiro_1.ClassName());
-    
-    
     tic(M_WyRand_0.ClassName());
         M_WyRand_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_WyRand_0.ClassName());
@@ -219,6 +212,16 @@ int main(int argc, const char * argv[])
     tic(M_WyRand_1.ClassName());
         M_WyRand_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_WyRand_1.ClassName());
+    
+    
+    tic(M_Xoshiro_0.ClassName());
+        M_Xoshiro_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
+    toc(M_Xoshiro_0.ClassName());
+    
+    tic(M_Xoshiro_1.ClassName());
+        M_Xoshiro_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
+    toc(M_Xoshiro_1.ClassName());
+
     
     
     print("");

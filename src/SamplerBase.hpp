@@ -2,7 +2,11 @@
 
 namespace CoBarS
 {
-    template<int AmbDim_, typename Real_ = double, typename Int_ = int_fast32_t>
+    template<
+        int AmbDim_,
+        typename Real_ = double,
+        typename Int_  = int_fast32_t
+    >
     class SamplerBase
     {
         static_assert(FloatQ<Real_>,"");

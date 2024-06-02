@@ -11,7 +11,9 @@ int main(int argc, const char * argv[])
     using Real = double;
     using Int  = int_fast32_t;
     
-    constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
+    // Dimensions of the ambient space has to be a compile-time constant.
+    constexpr Int d            = 3;
+    
     const     Int edge_count   = 4;
     const     Int sample_count = 10000000;
     const     Int thread_count = 8;
@@ -25,15 +27,15 @@ int main(int argc, const char * argv[])
     
     SamplerSettings<Real,Int> opts;
     
-    Tensor1<Real,Int> r   ( edge_count, Scalar::One<Real> );
-    Tensor1<Real,Int> rho ( edge_count, Scalar::One<Real> );
-    Sampler<d,Real,Int,Xoshiro256Plus> S ( r.data(), rho.data(), edge_count, opts );
+    std::vector<Real> r   ( edge_count, Scalar::One<Real> );
+    std::vector<Real> rho ( edge_count, Scalar::One<Real> );
+    
+    Sampler<d,Real,Int,Xoshiro256Plus> S ( &r[0], &rho[0], edge_count, opts );
     
     dump(S.EdgeLengths());
     
     // A list of random variables to sample. We start with an empty list.
 
-//    std::vector< std::shared_ptr<RandomVariableBase_T> > F_list;
     std::vector< std::shared_ptr<RandomVariable_T> > F_list;
     
     // Push as many descendants of RandomVariable_T onto F_list as you like.
@@ -61,21 +63,22 @@ int main(int argc, const char * argv[])
     // i == 0: Naive weighting. This is actually the wrong weighting.
     // i == 1: Appropriate reweighting for the total space (without modding out SO(3)).
     // i == 2: Appropriate reweighting for the quotient space (after modding out SO(3)).
-    Tensor3<Real,Int> bins    ( 3, fun_count, bin_count,    Real(0) );
+    
+    std::vector<Real> bins    ( 3 * fun_count * bin_count, Real(0) );
     
     // moments is a 3D-array of size 3 x fun_count x bin_count. Entry moments(i,j,k) will store the sampled weighted k-th moment of the j-th random variable from the list F_list -- with respect to the weights corresponding to the value of i (see above).
     
-    Tensor3<Real,Int> moments ( 3, fun_count, moment_count, Real(0) );
+    std::vector<Real> moments ( 3 * fun_count * moment_count, Real(0) );
     
     // Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be divided into bin_count bins.
-    Tensor2<Real,Int> ranges  ( fun_count, 2 );
+    std::vector<Real>  ranges  ( fun_count * 2 );
 
     // The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler_T C.
     
     for( Int j = 0; j < fun_count; ++j )
     {
-        ranges(j,0) = F_list[j]->MinValue(S);
-        ranges(j,1) = F_list[j]->MaxValue(S);
+        ranges[2 * j + 0] = F_list[j]->MinValue(S);
+        ranges[2 * j + 1] = F_list[j]->MaxValue(S);
     }
 
     print("");
@@ -90,11 +93,9 @@ int main(int argc, const char * argv[])
     // The interface operates via raw pointers for more flexibility.
     tic("BinnedSample");
         S.BinnedSample(
-            bins.data(),
-            bin_count,
-            moments.data(),
-            moment_count,
-            ranges.data(),
+            &bins[0],    bin_count,
+            &moments[0], moment_count,
+            &ranges[0],
             F_list,
             sample_count,
             thread_count
@@ -103,47 +104,64 @@ int main(int argc, const char * argv[])
     
     // C.Sample adds into the output arrays, but it does _NOT_ normalize bins and moments. This way we can add further results into them later; we can also simply use them in a further call to C.Sample_Binned.
     
-    // Get normalized bins.
+    // So we have to normalize explicitly.
     S.NormalizeBinnedSamples(
-       bins.data(),    bin_count,
-       moments.data(), moment_count,
+       &bins[0],    bin_count,
+       &moments[0], moment_count,
        fun_count
     );
+    
+    
     
     // Plot a very simplistic histogram
     print("");
     print("Histogram for variable "+F_list[0]->Tag()+" (naive weighting):");
     print("");
-    print( "+ <--- " + ToString( ranges(0,0) ) );
+    print( "+ <--- " + ToString( ranges[0] ) );
     for( Int i = 0; i < bin_count; ++i )
     {
-        print( "|"+std::string( static_cast<Int>(bins(0,0,i)*500), '#') );
+        // Make a bar of length proportional to entry bins[0][0][i].
+        print( "|"+std::string(
+                Int(bins[(0 * fun_count + 0 )* bin_count + i] * 1500),
+                '#'
+            )
+        );
     }
-    print( "+ <--- " + ToString( ranges(0,1) ) );
+    print( "+ <--- " + ToString( ranges[1] ) );
     print("");
     
     // Plot a very simplistic histogram
     print("");
     print("Histogram for variable "+F_list[0]->Tag()+" (Pol space weighting):");
     print("");
-    print( "+ <--- " + ToString( ranges(0,0) ) );
+    print( "+ <--- " + ToString( ranges[0] ) );
     for( Int i = 0; i < bin_count; ++i )
     {
-        print( "|"+std::string( static_cast<Int>(bins(1,0,i)*500), '#') );
+        // Make a bar of length proportional to entry bins[1][0][i].
+        print( "|"+std::string(
+                Int(bins[(1 * fun_count + 0 )* bin_count + i] * 1500),
+                '#'
+            )
+        );
     }
-    print( "+ <--- " + ToString( ranges(0,1) ) );
+    print( "+ <--- " + ToString( ranges[1] ) );
     print("");
     
     // Plot a very simplistic histogram
     print("");
     print("Histogram for variable "+F_list[0]->Tag()+" (Quotient space weighting):");
     print("");
-    print( "+ <--- " + ToString( ranges(0,0) ) );
+    print( "+ <--- " + ToString( ranges[0] ) );
     for( Int i = 0; i < bin_count; ++i )
     {
-        print( "|"+std::string( static_cast<Int>(bins(2,0,i)*500), '#') );
+        // Make a bar of length proportional to entry bins[2][0][i].
+        print( "|"+std::string(
+               Int(bins[(2 * fun_count + 0 )* bin_count + i] * 1500),
+               '#'
+            )
+        );
     }
-    print( "+ <--- " + ToString( ranges(0,1) ) );
+    print( "+ <--- " + ToString( ranges[1] ) );
     print("");
 
     

@@ -15,7 +15,7 @@ int main(int argc, const char * argv[])
     constexpr Int d = 3;
     
     const     Int edge_count        = 64;
-    const     Int sample_count      = 10000000;
+    const     Int sample_count      = 1000000;
     const     Int thread_count      = 8;
     
     // Create an instance of the CoBarS sampler.

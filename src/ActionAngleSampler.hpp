@@ -8,13 +8,22 @@ namespace AAM
     
     // Namespace for the Action-Angle Method and the Progressive Action Angle Method
 
-    template<typename Real, typename Int, typename PRNG_T = CoBarS::Xoshiro256Plus, bool ProgressiveQ = true>
+    template<
+        typename Real_    = double,
+        typename Int_     = std::int_fast32_t,
+        typename PRNG_T_  = CoBarS::Xoshiro256Plus,
+        bool ProgressiveQ = true
+    >
     class Sampler
     {
-        static_assert(FloatQ<Real>,"");
-        static_assert(IntQ<Int>,"");
+        static_assert(FloatQ<Real_>,"");
+        static_assert(IntQ<Int_>,"");
         
     public:
+        
+        using Real   = Real_;
+        using Int    = Int_;
+        using PRNG_T = PRNG_T_;
         
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;

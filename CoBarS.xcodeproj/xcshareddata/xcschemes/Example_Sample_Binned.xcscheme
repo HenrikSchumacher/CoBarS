@@ -44,7 +44,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AFE5555529C26F9900FC5BD7"
+            BlueprintIdentifier = "AFB2F40F2C0CC76600459E94"
             BuildableName = "Example_Sample_Binned"
             BlueprintName = "Example_Sample_Binned"
             ReferencedContainer = "container:CoBarS.xcodeproj">
@@ -59,6 +59,13 @@
             ReferencedContainer = "container:CycleSampler.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "IDEPreferLogStreaming"
+            value = "YES"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
