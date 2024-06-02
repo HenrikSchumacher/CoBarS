@@ -166,10 +166,10 @@ namespace CoBarS
             swap(A.squared_residual, B.squared_residual );
             swap(A.residual,         B.residual         );
             
-            swap(A.edge_space_sampling_helper,                  B.edge_space_sampling_helper              );
-            swap(A.edge_quotient_space_sampling_helper,         B.edge_quotient_space_sampling_helper     );
-            swap(A.edge_space_sampling_weight,                  B.edge_space_sampling_weight              );
-            swap(A.edge_quotient_space_sampling_correction,     B.edge_quotient_space_sampling_correction );
+            swap(A.edge_space_sampling_helper,              B.edge_space_sampling_helper              );
+            swap(A.edge_quotient_space_sampling_helper,     B.edge_quotient_space_sampling_helper     );
+            swap(A.edge_space_sampling_weight,              B.edge_space_sampling_weight              );
+            swap(A.edge_quotient_space_sampling_correction, B.edge_quotient_space_sampling_correction );
             
             swap(A.lambda_min,B.lambda_min);
             swap(A.q,B.q);
