@@ -3,7 +3,7 @@
 // This demonstrate how to create an instance of `CoBarS::Sampler` and how to call its main method `RandomClosedPolygons` to generate random polygons along with their weights.
 
 
-int main(int argc, const char * argv[])
+int main()
 {
     // Choose your base data types.
     // We recommend to use double and int, but you are free yo pick others.

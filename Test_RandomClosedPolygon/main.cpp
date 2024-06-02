@@ -3,15 +3,28 @@
 
 using namespace Tools;
 using namespace Tensors;
-//using namespace CoBarS;
 
+// There are multiple pseudorandom number generators available in CoBarS.
+// In order to unify the interface, I had to write wrapper classes for them:
 
+// The Mersenne-Twister from the standard library.
 using CoBarS::MT64;
+
+// Permuted congruential generator by Melissa O'Neill.
 using CoBarS::PCG64;
-using CoBarS::Xoshiro256Plus;
+
+// A wrapper for wyrand, written by Alain Espinosa.
 using CoBarS::WyRand;
 
-int main(int argc, const char * argv[])
+// Xoshiro256+ by David Blackman and Sebastiano Vigna.
+using CoBarS::Xoshiro256Plus;
+
+// Typically, CoBarS::Xoshiro256Plus is the fastest number generator for doubles, because it creates only the 53 random bits required for a double---not more.
+// CoBarS::WyRand is almost as fast; it may have
+
+// See src/MT64.hpp, src/PCG64.hpp, src/WyRand.hpp, and src/Xoshiro256Plus.hpp for the implementation. This should also tell you how to roll out the pseudorandom number generator of your choice.
+
+int main()
 {
     print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Actio Angle Method (PAMM). Moreover, I use it to detect compile errors in all code paths.");
     

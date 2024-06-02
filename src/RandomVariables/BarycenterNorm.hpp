@@ -71,6 +71,8 @@ namespace CoBarS
         
         virtual Real MinValue( const SamplerBase_T & C ) const override
         {
+            (void)C;
+            
             return 0;
         }
         

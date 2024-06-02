@@ -1,11 +1,10 @@
-//#include <iostream>
 #include "CoBarS.hpp"
 
 using namespace Tools;
-using namespace Tensors;
+//using namespace Tensors;
 using namespace CoBarS;
 
-int main(int argc, const char * argv[])
+int main()
 {
     // Some type aliases to make out lives a bit easier.
     using Real = double;
@@ -43,13 +42,16 @@ int main(int argc, const char * argv[])
     F_list.push_back( std::make_shared<ChordLength            <SamplerBase_T>>(0,2));
     F_list.push_back( std::make_shared<ShiftNorm              <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<EdgeQuotientSpaceSamplingWeight<SamplerBase_T>>() );
+    F_list.push_back( std::make_shared<EdgeSpaceSamplingWeight<SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<IterationCount         <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<Gyradius               <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<HydrodynamicRadius     <SamplerBase_T>>()   );
-    F_list.push_back( std::make_shared<EdgeSpaceSamplingWeight<SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<BendingEnergy          <SamplerBase_T>>(2)  );
     F_list.push_back( std::make_shared<MaxAngle               <SamplerBase_T>>()   );
     F_list.push_back( std::make_shared<TotalCurvature         <SamplerBase_T>>()   );
+    
+    // If you like, you can create your own classes for random variables by inheriting from the abstract class RandomVariable.
+    // See src/RandomVariables for examples.
 
     const Int fun_count    = static_cast<Int>(F_list.size());
     const Int bin_count    = 40;

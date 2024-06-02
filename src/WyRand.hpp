@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <array>
+//#include <array>
 
 #include "../deps/wy/wy.hpp"
 
@@ -9,7 +9,6 @@
 
 namespace CoBarS
 {
-    
     class WyRand
     {
     public:
