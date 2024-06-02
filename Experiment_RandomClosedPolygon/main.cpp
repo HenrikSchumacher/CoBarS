@@ -60,9 +60,9 @@ int main(int argc, const char * argv[])
     AAM::Sampler<Real,Int,WyRand,true > M_WyRand_1 (edge_count);
 
     // Create containers for the data samples.
-    Tensor3<Real,Int> x      ( sample_count, d, edge_count ); // unit edge vectors of open polygons
+    Tensor3<Real,Int> x      ( sample_count, edge_count, d ); // unit edge vectors of open polygons
     Tensor2<Real,Int> w      ( sample_count, d             ); // conformal barycenters
-    Tensor3<Real,Int> y      ( sample_count, d, edge_count ); // unit edge vectors of closed polygons
+    Tensor3<Real,Int> y      ( sample_count, edge_count, d ); // unit edge vectors of closed polygons
     Tensor1<Real,Int> K      ( sample_count                ); // sample weights for the Pol space
     Tensor1<Real,Int> K_quot ( sample_count                ); // sample weights for the quotient space
 
@@ -183,7 +183,7 @@ int main(int argc, const char * argv[])
     
     print("");
     
-    Tensor3<Real,Int> p ( sample_count, d, edge_count+1 ); // vertex positions of polygon
+    Tensor3<Real,Int> p ( sample_count, edge_count+1, d ); // vertex positions of polygon
 
     tic(M_MT64_0.ClassName());
         M_MT64_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
