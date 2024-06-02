@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <array>
 
-#include "../submodules/wy/wy.hpp"
+#include "../deps/wy/wy.hpp"
 
 
 // This is just a thin wrapper for wy::rand with a constructor that properly seeds its state from std::random_device;

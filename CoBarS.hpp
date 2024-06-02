@@ -1,5 +1,6 @@
-#ifndef CYCLE_SAMPLER_HPP
-    #define CYCLE_SAMPLER_HPP
+#ifndef COBARS_HPP
+
+    #define COBARS_HPP
 
     #include <cmath>
     #include <algorithm>

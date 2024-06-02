@@ -24,23 +24,23 @@ int main(int argc, const char * argv[])
 
     
     // Create an instance of the cycle sampler.
-//    CoBarS::Sampler<d,Real,Int,MT64,false,false>            S_MT_0          (edge_count);
-//    CoBarS::Sampler<d,Real,Int,MT64,false,true >            S_MT_1          (edge_count);
+    CoBarS::Sampler<d,Real,Int,MT64,false,false>            S_MT_0          (edge_count);
+    CoBarS::Sampler<d,Real,Int,MT64,false,true >            S_MT_1          (edge_count);
     CoBarS::Sampler<d,Real,Int,MT64,true ,false>            S_MT_vec_0      (edge_count);
     CoBarS::Sampler<d,Real,Int,MT64,true ,true >            S_MT_vec_1      (edge_count);
     
-//    CoBarS::Sampler<d,Real,Int,PCG64,false,false>           S_PCG64_0       (edge_count);
-//    CoBarS::Sampler<d,Real,Int,PCG64,false,true >           S_PCG64_1       (edge_count);
+    CoBarS::Sampler<d,Real,Int,PCG64,false,false>           S_PCG64_0       (edge_count);
+    CoBarS::Sampler<d,Real,Int,PCG64,false,true >           S_PCG64_1       (edge_count);
     CoBarS::Sampler<d,Real,Int,PCG64,true ,false>           S_PCG64_vec_0   (edge_count);
     CoBarS::Sampler<d,Real,Int,PCG64,true ,true >           S_PCG64_vec_1   (edge_count);
     
-//    CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,false>  S_Xoshiro_0     (edge_count);
-//    CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,true >  S_Xoshiro_1     (edge_count);
+    CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,false>  S_Xoshiro_0     (edge_count);
+    CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,true >  S_Xoshiro_1     (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
     
-//    CoBarS::Sampler<d,Real,Int,WyRand,false,false>  S_WyRand_0     (edge_count);
-//    CoBarS::Sampler<d,Real,Int,WyRand,false,true >  S_WyRand_1     (edge_count);
+    CoBarS::Sampler<d,Real,Int,WyRand,false,false>  S_WyRand_0     (edge_count);
+    CoBarS::Sampler<d,Real,Int,WyRand,false,true >  S_WyRand_1     (edge_count);
     CoBarS::Sampler<d,Real,Int,WyRand,true ,false>  S_WyRand_vec_0 (edge_count);
     CoBarS::Sampler<d,Real,Int,WyRand,true ,true >  S_WyRand_vec_1 (edge_count);
 
@@ -79,17 +79,17 @@ int main(int argc, const char * argv[])
     
     
     
-//    tic(S_MT_0.ClassName());
-//        S_MT_0.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_MT_0.ClassName());
-//
-//    tic(S_MT_1.ClassName());
-//        S_MT_1.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_MT_1.ClassName());
+    tic(S_MT_0.ClassName());
+        S_MT_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_MT_0.ClassName());
+
+    tic(S_MT_1.ClassName());
+        S_MT_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_MT_1.ClassName());
 
     tic(S_MT_vec_0.ClassName());
         S_MT_vec_0.RandomClosedPolygons(
@@ -104,17 +104,17 @@ int main(int argc, const char * argv[])
     toc(S_MT_vec_1.ClassName());
 
 
-//    tic(S_PCG64_0.ClassName());
-//        S_PCG64_0.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_PCG64_0.ClassName());
-//
-//    tic(S_PCG64_1.ClassName());
-//        S_PCG64_1.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_PCG64_1.ClassName());
+    tic(S_PCG64_0.ClassName());
+        S_PCG64_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64_0.ClassName());
+
+    tic(S_PCG64_1.ClassName());
+        S_PCG64_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_PCG64_1.ClassName());
 
     tic(S_PCG64_vec_0.ClassName());
         S_PCG64_vec_0.RandomClosedPolygons(
@@ -129,17 +129,17 @@ int main(int argc, const char * argv[])
     toc(S_PCG64_vec_1.ClassName());
 
     
-//    tic(S_Xoshiro_0.ClassName());
-//        S_Xoshiro_0.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_Xoshiro_0.ClassName());
-//
-//    tic(S_Xoshiro_1.ClassName());
-//        S_Xoshiro_1.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_Xoshiro_1.ClassName());
+    tic(S_Xoshiro_0.ClassName());
+        S_Xoshiro_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_0.ClassName());
+
+    tic(S_Xoshiro_1.ClassName());
+        S_Xoshiro_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_Xoshiro_1.ClassName());
 
     tic(S_Xoshiro_vec_0.ClassName());
         S_Xoshiro_vec_0.RandomClosedPolygons(
@@ -154,17 +154,17 @@ int main(int argc, const char * argv[])
     toc(S_Xoshiro_vec_1.ClassName());
     
     
-//    tic(S_WyRand_0.ClassName());
-//        S_WyRand_0.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_WyRand_0.ClassName());
-//
-//    tic(S_WyRand_1.ClassName());
-//        S_WyRand_1.RandomClosedPolygons(
-//            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-//        );
-//    toc(S_WyRand_1.ClassName());
+    tic(S_WyRand_0.ClassName());
+        S_WyRand_0.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_WyRand_0.ClassName());
+
+    tic(S_WyRand_1.ClassName());
+        S_WyRand_1.RandomClosedPolygons(
+            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
+        );
+    toc(S_WyRand_1.ClassName());
 
     tic(S_WyRand_vec_0.ClassName());
         S_WyRand_vec_0.RandomClosedPolygons(
