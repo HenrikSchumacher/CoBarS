@@ -51,6 +51,9 @@
 		AF5230FF2C0CC4D3004098D5 /* deps */ = {isa = PBXFileReference; lastKnownFileType = folder; path = deps; sourceTree = "<group>"; };
 		AF597E3429C64C4E00ABD4A0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AF597E3629C64C5800ABD4A0 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		AF8EEFD92C0E197900A3C466 /* Compile.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile.sh; sourceTree = "<group>"; };
+		AF8EEFDA2C0E197F00A3C466 /* Compile.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile.sh; sourceTree = "<group>"; };
+		AF8EEFDB2C0E198800A3C466 /* Compile.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile.sh; sourceTree = "<group>"; };
 		AFB2F4052C0CC6F300459E94 /* Example_RandomClosedPolygon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_RandomClosedPolygon; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFB2F4072C0CC6F300459E94 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AFB2F4102C0CC76600459E94 /* Example_Sample_Binned */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_Sample_Binned; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -100,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				AFB2F4072C0CC6F300459E94 /* main.cpp */,
+				AF8EEFDB2C0E198800A3C466 /* Compile.sh */,
 			);
 			path = Example_RandomClosedPolygon;
 			sourceTree = "<group>";
@@ -108,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				AFB2F4122C0CC76600459E94 /* main.cpp */,
+				AF8EEFDA2C0E197F00A3C466 /* Compile.sh */,
 			);
 			path = Example_Sample_Binned;
 			sourceTree = "<group>";
@@ -115,6 +120,7 @@
 		AFB2F41C2C0CCB0D00459E94 /* Test_RandomClosedPolygon */ = {
 			isa = PBXGroup;
 			children = (
+				AF8EEFD92C0E197900A3C466 /* Compile.sh */,
 				AFB2F41D2C0CCB0D00459E94 /* main.cpp */,
 			);
 			path = Test_RandomClosedPolygon;
@@ -338,7 +344,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -353,7 +358,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Y6DQ749ZRT;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.5;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -146,9 +146,21 @@ namespace CoBarS
         virtual void WriteEdgeVectors( Real * restrict const y, const Int offset = 0 ) const = 0;
         
 
+        /*!
+         * @brief Returns the position of `k`-th edge vertex of the closed polygon.
+         */
+        
         virtual Vector_T VertexPosition( const Int k ) const = 0;
         
 //        virtual Real VertexCoordinate( const Int k, const Int i ) const = 0;
+        
+        /*!
+         * @brief Writes the vertex positions of the closed polygon to buffer `p`.
+         *
+         * @param p Target array; assumed to be of size of at least `(EdgeCount()+1) * AmbientDimension() * (offset + 1)`. The coordinates are stored in interleaved form and the `EdgeCount() * AmbientDimension()` coordinates of a single polygon are stored consecutively. IMPORTANT: The position of the first vertex is appended to the list, so this are `EdgeCount()+1` vertices.
+         *
+         * @param offset Indicates that the polygon starts at `&[EdgeCount() * AmbientDimension() * offset]`.
+         */
         
         virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const = 0;
         
