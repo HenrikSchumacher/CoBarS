@@ -14,6 +14,12 @@ to load also all submodules. If you forgot to do that, you can also run the foll
 
     git submodule update --init --recursive
     
+To build the documentation, please install doxygen and then run
+
+    doxygen Doxyfile
+    
+The documentation is then available in `doc/index.html`.
+    
 # Usage
 
 Just include the header `CoBarS.hpp` into your C++ program via
@@ -58,7 +64,6 @@ Then generate the desired edge weights and preallocate memory for the outputs
     S.RandomClosedPolygons(
          &x[0], &w[0], &y[0], &K[0], &K_quot[0], sample_count, thread_count
     );
-
 
 See also the example programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples and compilation instructions.
 

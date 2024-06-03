@@ -59,6 +59,10 @@ namespace CoBarS
         
     public:
         
+        /*!
+         * @brief Returns the number of edges.
+         */
+        
         virtual Int EdgeCount() const = 0;
         
         /*!
@@ -126,16 +130,6 @@ namespace CoBarS
         virtual Vector_T EdgeVector( const Int k ) const = 0;
         
         /*!
-         * @brief Reads the edge vectors of the `k`-th closed polygon in the buffer `y`.
-         *
-         * @param y Source array; assumed to be of size of at least `EdgeCount() * AmbientDimension() * (offset + 1)`. It is assumed that that the coordinates are stored in interleaved form and that the `EdgeCount() * AmbientDimension()` coordinates of a single polygon are stored consecutively.
-         *
-         * @param offset Indicates that the polygon starts at `&[EdgeCount() * AmbientDimension() * offset]`.
-         */
-        
-        virtual void ReadEdgeVectors( const Real * restrict const y, const Int offset = 0 ) = 0;
-        
-        /*!
          * @brief Writes the edge vectors of the closed polygon to buffer `y`.
          *
          * @param y Target array; assumed to be of size of at least `EdgeCount() * AmbientDimension() * (offset + 1)`. The coordinates are stored in interleaved form and the `EdgeCount() * AmbientDimension()` coordinates of a single polygon are stored consecutively.
@@ -168,12 +162,15 @@ namespace CoBarS
          * @brief Makes sure that the vertex coordinates of the closed polygon are computed.
          */
         
-        virtual void RequireVertexPositions() const = 0;
+    private:
         
-        
+        virtual void ComputeVertexPositions() const = 0;
+
         /*!
          * @brief Returns the list of edge lengths.
          */
+        
+    public:
         
         virtual const Weights_T & EdgeLengths() const = 0;
         

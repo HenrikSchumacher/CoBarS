@@ -2,66 +2,11 @@ public:
 
     virtual Real EdgeSpaceSamplingWeight() const override
     {
-        if( edge_space_sampling_weight < Real(0) )
-        {
-            // Shifts all entries of x along y and writes the results to y.
-            // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
-            
-            SquareMatrix_T cbar  (zero);
-            SquareMatrix_T gamma (zero);
-            
-            Real prod = one;
-            
-            const Real ww = Dot(w_,w_);
-            
-            const Real one_plus_ww = big_one + ww;
-            
-            for( Int k = 0; k < edge_count_; ++k )
-            {
-                Vector_T y_k ( y_, k );
-                
-                const Real wy = Dot(w_,y_k);
-                
-                const Real factor = one_plus_ww + two * wy;
-                
-                // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
-                prod *= factor;
-                
-                const Real r_k = r_[k];
-                const Real r_over_rho_k = r_k / rho_[k];
-                const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
-                
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    for( Int j = 0; j < AmbDim; ++j )
-                    {
-                        const Real scratch = static_cast<Real>(i==j) - y_k[i] * y_k[j];
-                        
-                        gamma[i][j] += r_over_rho_k_squared * scratch;
-                        
-                        cbar [i][j] += r_k * scratch;
-                    }
-                }
-            }
-            
-            // We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
-            //  cbar *= static_cast<Real>(2)/(one_minus_ww);
-            
-            edge_space_sampling_weight =
-                edge_space_sampling_helper
-                *
-                Power( prod, static_cast<Int>(AmbDim-1) ) * Sqrt(gamma.Det()) / cbar.Det();
-        }
-        
         return edge_space_sampling_weight;
     }
 
     virtual Real EdgeQuotientSpaceSamplingWeight() const override
     {
-        if( edge_quotient_space_sampling_weight < Real(0) )
-        {
-            edge_quotient_space_sampling_weight = EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
-        }
         return edge_quotient_space_sampling_weight;
     }
 
@@ -209,3 +154,58 @@ private:
             );
     }
 
+    void ComputeEdgeSpaceSamplingWeight() const
+    {
+        // Shifts all entries of x along y and writes the results to y.
+        // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
+        
+        SquareMatrix_T cbar  (zero);
+        SquareMatrix_T gamma (zero);
+        
+        Real prod = one;
+        
+        const Real ww = Dot(w_,w_);
+        
+        const Real one_plus_ww = big_one + ww;
+        
+        for( Int k = 0; k < edge_count_; ++k )
+        {
+            Vector_T y_k ( y_, k );
+            
+            const Real wy = Dot(w_,y_k);
+            
+            const Real factor = one_plus_ww + two * wy;
+            
+            // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
+            prod *= factor;
+            
+            const Real r_k = r_[k];
+            const Real r_over_rho_k = r_k / rho_[k];
+            const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
+            
+            for( Int i = 0; i < AmbDim; ++i )
+            {
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    const Real scratch = static_cast<Real>(i==j) - y_k[i] * y_k[j];
+                    
+                    gamma[i][j] += r_over_rho_k_squared * scratch;
+                    
+                    cbar [i][j] += r_k * scratch;
+                }
+            }
+        }
+        
+        // We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
+        //  cbar *= static_cast<Real>(2)/(one_minus_ww);
+        
+        edge_space_sampling_weight =
+            edge_space_sampling_helper
+            *
+            Power( prod, static_cast<Int>(AmbDim-1) ) * Sqrt(gamma.Det()) / cbar.Det();
+    }
+
+    void ComputeEdgeQuotientSpaceSamplingWeight() const
+    {
+        edge_quotient_space_sampling_weight = EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
+    }

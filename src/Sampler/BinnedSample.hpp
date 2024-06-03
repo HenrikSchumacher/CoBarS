@@ -71,8 +71,6 @@ public:
                     S.RandomizeInitialEdgeVectors();
 
                     S.ComputeConformalClosure();
-
-                    S.RequireVertexPositions();
                     
                     const Real K = S.EdgeSpaceSamplingWeight();
 

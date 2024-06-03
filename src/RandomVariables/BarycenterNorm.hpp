@@ -67,7 +67,13 @@ namespace CoBarS
             
             for( Int k = 0; k < n; ++ k )
             {
-                b += LinearCombine( r[k], C.VertexPosition(k), r[k], C.VertexPosition(k+1) );
+                Vector_T u = C.VertexPosition(k  );
+                Vector_T v = C.VertexPosition(k+1);
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    b[i] += r[k] * ( u[i] + v[i] );
+                }
             }
             
             const Real factor = Scalar::Half<Real> / n;

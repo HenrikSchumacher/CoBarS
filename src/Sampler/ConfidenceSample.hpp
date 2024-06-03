@@ -174,7 +174,7 @@ private:
                         S.RandomizeInitialEdgeVectors();
 
                         S.ComputeConformalClosure();
-
+                        
                         Real K = 0;
                         
                         if constexpr ( quotient_space_Q )
@@ -293,6 +293,8 @@ private:
 
                     if( verboseQ )
                     {
+                        dump(N)
+                        
                         valprint("  total_time ", total_time );
                         
                         print( "  Current estimate of " + F_list[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );

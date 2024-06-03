@@ -133,7 +133,7 @@ namespace CoBarS
         ,   x_(other.x_)
         ,   y_(other.y_)
         ,   p_(other.p_)
-        ,   p_initializedQ(other.p_initializedQ)
+//        ,   p_initializedQ(other.p_initializedQ)
         ,   r_(other.r_)
         ,   rho_(other.rho_)
         ,   total_r_inv(other.total_r_inv)
@@ -174,7 +174,7 @@ namespace CoBarS
             swap(A.x_,B.x_);
             swap(A.y_,B.y_);
             swap(A.p_,B.p_);
-            swap(A.p_initializedQ,B.p_initializedQ);
+//            swap(A.p_initializedQ,B.p_initializedQ);
             swap(A.r_,B.r_);
             swap(A.rho_,B.rho_);
             swap(A.total_r_inv,B.total_r_inv);
@@ -265,10 +265,10 @@ namespace CoBarS
          */
         mutable std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> p_;
         
-        /*!
-         * @brief Boolean that indicates whether `p_initializedQ` has been recomputed already.
-         */
-        mutable bool p_initializedQ = false;
+//        /*!
+//         * @brief Boolean that indicates whether `p_initializedQ` has been recomputed already.
+//         */
+//        mutable bool p_initializedQ = false;
         
         
         /*!
@@ -481,11 +481,17 @@ namespace CoBarS
         
         virtual void ComputeConformalClosure() override
         {
-            ResetResults();
+//            ResetResults();
             
             ComputeInitialShiftVector();
 
             Optimize();
+            
+            ComputeVertexPositions();
+            
+            ComputeEdgeSpaceSamplingWeight();
+            
+            ComputeEdgeQuotientSpaceSamplingWeight();
         }
         
 
@@ -493,13 +499,6 @@ namespace CoBarS
         virtual Vector_T EdgeVector( const Int k ) const override
         {
             return Vector_T (y_,k);
-        }
-        
-        virtual void ReadEdgeVectors( const Real * restrict const y, const Int offset = 0 ) override
-        {
-            ResetResults();
-            
-            y_.Read( &y[ AmbDim * edge_count_ * offset ]);
         }
         
         virtual void WriteEdgeVectors( Real * restrict const y, const Int offset = 0 ) const override
@@ -511,77 +510,71 @@ namespace CoBarS
 //        // This routine seems to be somewhat slow; better not use it if you can avoid it.
 //        virtual Real VertexCoordinate( const Int k, const Int i ) const override
 //        {
-//            RequireVertexPositions();
-//
 //            return COND(vectorizeQ, p_[i][k], p_[k][i] );
 //        }
         
         virtual Vector_T VertexPosition( const Int k ) const override
         {
-            RequireVertexPositions();
-
             return Vector_T (p_,k);
         }
         
         virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const override
         {
-            RequireVertexPositions();
-            
             p_.Write( &p[ (edge_count_+1) * AmbDim * offset ] );
         }
         
-        virtual void RequireVertexPositions() const override
+    private:
+        
+        virtual void ComputeVertexPositions() const override
         {
             //Caution: This gives only half the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
             
             // We treat the edges as massless.
             // All mass is concentrated in the vertices, and each vertex carries the same mass.
+            Vector_T barycenter        (zero);
+            Vector_T point_accumulator (zero);
             
-            if( !p_initializedQ )
+            for( Int k = 0; k < edge_count_; ++k )
             {
-                Vector_T barycenter        (zero);
-                Vector_T point_accumulator (zero);
+                const Vector_T y_k ( y_, k );
                 
-                for( Int k = 0; k < edge_count_; ++k )
+                const Real r_k = r_[k];
+                
+                for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Vector_T y_k ( y_, k );
+                    const Real offset = r_k * y_k[i];
                     
-                    const Real r_k = r_[k];
+                    barycenter[i] += (point_accumulator[i] + half * offset);
                     
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        const Real offset = r_k * y_k[i];
-                        
-                        barycenter[i] += (point_accumulator[i] + half * offset);
-                        
-                        point_accumulator[i] += offset;
-                    }
-                }
-                
-                barycenter *= Inv<Real>( edge_count_ );
-                
-                point_accumulator = barycenter;
-                
-                point_accumulator *= -one;
-                
-                point_accumulator.Write( p_, 0 );
-                
-                for( Int k = 0; k < edge_count_; ++k )
-                {
-                    const Vector_T y_k ( y_, k );
-                    
-                    const Real r_k = r_[k];
-                    
-                    for( Int i = 0; i < AmbDim; ++i )
-                    {
-                        point_accumulator[i] += r_k * y_k[i];
-                    }
-                    
-                    point_accumulator.Write( p_, k + 1 );
+                    point_accumulator[i] += offset;
                 }
             }
+            
+            barycenter *= Inv<Real>( edge_count_ );
+            
+            point_accumulator = barycenter;
+            
+            point_accumulator *= -one;
+            
+            point_accumulator.Write( p_, 0 );
+            
+            for( Int k = 0; k < edge_count_; ++k )
+            {
+                const Vector_T y_k ( y_, k );
+                
+                const Real r_k = r_[k];
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    point_accumulator[i] += r_k * y_k[i];
+                }
+                
+                point_accumulator.Write( p_, k + 1 );
+            }
         }
+        
+    public:
         
         virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const override
         {

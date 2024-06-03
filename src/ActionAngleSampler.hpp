@@ -84,16 +84,16 @@ namespace AAM
         
     public:
         
-        Int RandomClosedPolygon( mptr<Real> p )
+        /*!
+         * Generates a single closed, equilateral random polygon.
+         *
+         * This is a port of the routine `plc_random_equilateral_closed_polygon` from the C library [plCurve](https://jasoncantarella.com/wordpress/software/plcurve) by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
+         *
+         * @param p Buffer for vertex positions; assumed to be of size `EdgeCount() * AmbientDimension()`. Coordinates are stored in interleaved form, i.e. the coordinates of each vertex lie contiguously in memory.
+         */
+        
+        Int RandomClosedPolygon( Real * restrict const p )
         {
-            // Port of the routine "plc_random_equilateral_closed_polygon" from the C library "plCurve" by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
-            // https://jasoncantarella.com/wordpress/software/plcurve/
-            
-            // We assume that user-supplied buffer p has size edge_count_ * AmbDim;
-            
-            // Storing the coordinates in interleaved form, i.e.
-            // p = { x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2], ... }
-            
             const Int n = edge_count_;
             
             // We use the user-supplied buffer as scratch space for the diagonal lengths.
@@ -279,8 +279,19 @@ namespace AAM
             return trials;
         }
         
+        /*!
+         * Generates `sample_count` closed, equilateral random polygons.
+         *
+         * This is a port of the routine `plc_random_equilateral_closed_polygon` from the C library [plCurve](https://jasoncantarella.com/wordpress/software/plcurve) by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
+         *
+         * @param p Buffer for vertex positions; assumed to be of size `sample_count * EdgeCount() * AmbientDimension()`. Coordinates are stored in interleaved form, i.e. the coordinates of each vertex lie contiguously in memory.
+         *
+         * @param sample_count Number of sampels to generate.
+         *
+         * @param thread_count Number of threads to use. 
+         */
         
-        Int RandomClosedPolygons( mptr<Real> p, const Int sample_count, const Int thread_count = 1 )
+        Int RandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
         {
             ptic(ClassName()+"::RandomClosedPolygons");
             
@@ -316,10 +327,16 @@ namespace AAM
         
     public:
         
+        /*!
+         * @brief Returns the dimension of the ambient space.
+         */
+        
         static constexpr Int AmbientDimension()
         {
             return AmbDim;
         }
+        
+        /*! @brief Returns a string that identifies the class. Good for debugging and printing messages. */
         
         std::string ClassName()
         {

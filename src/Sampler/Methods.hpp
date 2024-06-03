@@ -14,7 +14,7 @@ public:
     
     virtual void ReadEdgeLengths( const Real * const r_in ) override
     {
-        ResetResults();
+//        ResetResults();
         
         r_.Read(r_in);
         
@@ -29,11 +29,12 @@ public:
     
     virtual void ReadRho( const Real * const rho_in ) override
     {
-        ResetResults();
+//        ResetResults();
         
         rho_.Read(rho_in);
     }
     
+private:
     
     virtual void ComputeInitialShiftVector() override
     {
@@ -85,6 +86,8 @@ public:
         // Normalize in that case that r does not sum up to 1.
         w_ *= total_r_inv;
     }
+
+public:
     
     virtual void ReadShiftVector( const Real * restrict const w, const Int offset = 0 ) override
     {
@@ -190,13 +193,13 @@ public:
         ptoc(ClassName()+"::NormalizeCompressedSamples");
     }
 
-
-private:
-
-    void ResetResults() const
-    {
-        p_initializedQ = false;
-        edge_space_sampling_weight = -1;
-        edge_quotient_space_sampling_weight = -1;
-    }
+//
+//private:
+//
+//    void ResetResults() const
+//    {
+//        p_initializedQ = false;
+//        edge_space_sampling_weight = -1;
+//        edge_quotient_space_sampling_weight = -1;
+//    }
 
