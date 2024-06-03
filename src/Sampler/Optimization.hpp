@@ -1,6 +1,11 @@
-public:
+private:
 
-    virtual void Optimize() override
+
+    /*!
+     * @brief Runs Newton-like algorithm to find the conformal closure of the open polygon (loaded with ReadInitialEdgeVectors or generated with ReadInitialEdgeVectors). Afterwards, the resulting closed polygon can be accessed with routines *EdgeVectors. The conformal barycenter can be accessed with *ShiftVector.
+     */
+
+    void Optimize()
     {
         const Int max_iter = Settings().max_iter;
         
@@ -24,12 +29,10 @@ public:
             SearchDirection_Hyperbolic();
         }
     }
-
-protected:
     
     Real Potential()
     {
-        const Real zz = Dot(z,z);
+        const Real zz = Dot(z_,z_);
         
         const Real a = big_one + zz;
         const Real c = (big_one-zz);
@@ -38,11 +41,11 @@ protected:
         
         Real value = 0;
         
-        for( Int k = 0; k < edge_count; ++k )
+        for( Int k = 0; k < edge_count_; ++k )
         {
-            Vector_T y_k ( y, k );
+            Vector_T y_k (y_,k);
             
-            value += r[k] * std::log( std::abs( (a - two * Dot(y_k,z) ) * b ) );
+            value += r_[k] * std::log( std::abs( (a - two * Dot(y_k,z_) ) * b ) );
         }
         
         return value * total_r_inv;
@@ -52,16 +55,16 @@ protected:
     void LineSearch_Hyperbolic_Residual()
     {
         // 2 F(0)^T.DF(0).u is the derivative of w\mapsto F(w)^T.F(w) at w = 0.
-        const Real slope = two * DF.InnerProduct(F,u);
+        const Real slope = two * DF_.InnerProduct(F_,u_);
         
         Real tau = one;
         
-        const Real u_norm = u.Norm();
+        const Real u_norm = u_.Norm();
         
-        // exponential map shooting from 0 to tau * u.
-        Times( tau * tanhc(tau * u_norm), u, z );
+        // exponential map shooting from 0 to tau * u_.
+        Times( tau * tanhc(tau * u_norm), u_, z_ );
 
-        // Shift the point z along -w to get new updated point w
+        // Shift the point z_ along -w to get new updated point w
         InverseShift();
         
         // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
@@ -90,12 +93,12 @@ protected:
                 
                 tau = std::max( tau_1, tau_2 );
                 
-                Times( tau * tanhc(tau * u_norm), u, z );
+                Times( tau * tanhc(tau * u_norm), u_, z_ );
                 
-                // Shift the point z along -w to get new updated point w .
+                // Shift the point z_ along -w_ to get new updated point w_.
                 InverseShift();
                 
-                // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
+                // Shift the input measure along w_ to 0 to simplify gradient, Hessian, and update computation .
                 Shift();
                 
                 DifferentialAndHessian_Hyperbolic();
@@ -109,11 +112,11 @@ protected:
     {
         Real tau = one;
         
-        const Real u_norm = u.Norm();
+        const Real u_norm = u_.Norm();
         
-        // exponential map shooting from 0 to tau * u.
+        // exponential map shooting from 0 to tau * u_.
         
-        Times( tau * tanhc(tau * u_norm), u, z );
+        Times( tau * tanhc(tau * u_norm), u_, z_ );
         
         if( linesearchQ )
         {
@@ -123,7 +126,7 @@ protected:
             
             const Real sigma = Settings().Armijo_slope_factor;
             
-            const Real Dphi_0 = g_factor * Dot(F,u);
+            const Real Dphi_0 = g_factor * Dot(F_,u_);
             
             Int backtrackings = 0;
             
@@ -147,7 +150,7 @@ protected:
                 
                 tau = std::max( tau_1, tau_2 );
                 
-                Times( tau * tanhc(tau * u_norm), u, z );
+                Times( tau * tanhc(tau * u_norm), u_, z_ );
                 
                 phi_tau = Potential();
                 
@@ -155,7 +158,7 @@ protected:
             }
         }
         
-        // Shift the point z along -w to get new updated point w .
+        // Shift the point z_ along -w_ to get new updated point w_.
         InverseShift();
         
         // Shift the input measure along w to 0 to simplify gradient, Hessian, and update computation .
@@ -166,27 +169,27 @@ protected:
     {
         // CAUTION: We use a different sign convention as in the paper!
         // Assemble  F = -1/2 y * r.
-        // Assemble DF = nabla F + regulatization:
+        // Assemble DF_ = nabla F + regulatization:
         // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
         
         if constexpr ( zerofyfirstQ )
         {
-            F.SetZero();
-            DF.SetZero();
+            F_.SetZero();
+            DF_.SetZero();
 
-            for( Int k = 0; k < edge_count; ++k )
+            for( Int k = 0; k < edge_count_; ++k )
             {
-                Vector_T y_k ( y, k );
+                Vector_T y_k ( y_, k );
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[k] * y_k[i];
+                    const Real factor = r_[k] * y_k[i];
 
-                    F[i] -= factor;
+                    F_[i] -= factor;
 
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF[i][j] -= factor * y_k[j];
+                        DF_[i][j] -= factor * y_k[j];
                     }
                 }
             }
@@ -194,37 +197,37 @@ protected:
         }
         else
         {
-            // Filling F and DF with first summand...
+            // Filling F_ and DF_ with first summand...
             {
-                Vector_T y_k ( y, 0 );
+                Vector_T y_k ( y_, 0 );
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[0] * y_k[i];
+                    const Real factor = r_[0] * y_k[i];
                     
-                    F[i] = - factor;
+                    F_[i] = - factor;
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF[i][j] = - factor * y_k[j];
+                        DF_[i][j] = - factor * y_k[j];
                     }
                 }
             }
             
             // ... and adding-in the other summands.
-            for( Int k = 1; k < edge_count; ++k )
+            for( Int k = 1; k < edge_count_; ++k )
             {
-                Vector_T y_k ( y, k );
+                Vector_T y_k ( y_, k );
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    const Real factor = r[k] * y_k[i];
+                    const Real factor = r_[k] * y_k[i];
                     
-                    F[i] -= factor;
+                    F_[i] -= factor;
                     
                     for( Int j = i; j < AmbDim; ++j )
                     {
-                        DF[i][j] -= factor * y_k[j];
+                        DF_[i][j] -= factor * y_k[j];
                     }
                 }
             }
@@ -232,19 +235,19 @@ protected:
         
         // Normalize for case that the weights in r do not sum to 1.
         
-        F  *= total_r_inv;
-        DF *= total_r_inv;
+        F_  *= total_r_inv;
+        DF_ *= total_r_inv;
         
-        squared_residual = Dot(F,F);
+        squared_residual = Dot(F_,F_);
         
         residual = std::sqrt( squared_residual );
         
-        F *= half;
+        F_ *= half;
         
         // Better add the identity afterwards for precision reasons.
         for( Int i = 0; i < AmbDim; ++i )
         {
-            DF[i][i] += one;
+            DF_[i][i] += one;
         }
     }
     
@@ -255,7 +258,7 @@ protected:
         {
             // We have to compute eigenvalue _before_ we add the regularization.
             
-            lambda_min = DF.SmallestEigenvalue();
+            lambda_min = DF_.SmallestEigenvalue();
             
             q = four * residual / (lambda_min * lambda_min);
             
@@ -291,35 +294,35 @@ protected:
         {
             for( Int j = i; j < AmbDim; ++j )
             {
-                L[i][j] = DF[i][j] + static_cast<Real>(i==j) * c;
+                L[i][j] = DF_[i][j] + static_cast<Real>(i==j) * c;
             }
         }
         
         L.Cholesky();
         
-        L.CholeskySolve(F,u);
+        L.CholeskySolve(F_,u_);
         
-        u *= -one;
+        u_ *= -one;
     }
     
     void Gradient_Hyperbolic()
     {
-        Times(-g_factor_inv, F, u);
+        Times(-g_factor_inv, F_, u_);
     }
     
     void Gradient_Planar()
     {
         // The factor 2 is here to reproduce the Abikoff-Ye algorithm (in the absence of linesearch.)
-        Times(-two, F, u);
+        Times(-two, F_, u_);
     }
     
     void InverseShift()
     {
         // Shifts just the point w.
         
-        const Real ww  = Dot(w,w);
-        const Real wz2 = Dot(w,z) * two;
-        const Real zz  = Dot(z,z);
+        const Real ww  = Dot(w_,w_);
+        const Real wz2 = Dot(w_,z_) * two;
+        const Real zz  = Dot(z_,z_);
         
         const Real a = one - ww;
         const Real b = one + zz + wz2;
@@ -328,7 +331,7 @@ protected:
         
         for( Int i = 0; i < AmbDim; ++i )
         {
-            w[i] = ( a * z[i] + b * w[i] ) * d;
+            w_[i] = ( a * z_[i] + b * w_[i] ) * d;
         }
     }
     
@@ -338,7 +341,7 @@ public:
     {
         // Shifts all entries of x along w and writes the results to y.
         
-        const Real ww = Dot(w,w);
+        const Real ww = Dot(w_,w_);
         
         if( ww <= norm_threshold )
         {
@@ -363,11 +366,11 @@ private:
         const Real one_minus_ww = big_one - ww;
         const Real one_plus_ww  = big_one + ww;
         
-        for( Int k = 0; k < edge_count; ++k )
+        for( Int k = 0; k < edge_count_; ++k )
         {
-            Vector_T x_k ( x, k );
+            Vector_T x_k ( x_, k );
             
-            const Real wx2 = two * Dot(w,x_k);
+            const Real wx2 = two * Dot(w_,x_k);
             
             const Real denom = one / ( one_plus_ww - wx2 );
             
@@ -375,7 +378,7 @@ private:
             
             for( Int i = 0; i < AmbDim; ++i )
             {
-                x_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w[i]) * denom;
+                x_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w_[i]) * denom;
             }
             
             if constexpr ( normalizeQ )
@@ -383,48 +386,6 @@ private:
                 x_k.Normalize();
             }
             
-            x_k.Write( y, k );
+            x_k.Write( y_, k );
         }
     }
-
-public:
-
-
-    virtual void OptimizeBatch(
-        cptr<Real>  x_in,
-        mptr<Real>  w_out,
-        mptr<Real>  y_out,
-        const Int  sample_count,
-        const Int  thread_count = 1,
-        const bool normalize = true
-    ) override
-    {
-        ptic(ClassName()+"::OptimizeBatch");
-        
-        ParallelDo(
-            [&,this]( const Int thread )
-            {
-                const Int k_begin = JobPointer( sample_count, thread_count, thread     );
-                const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
-
-                Sampler S( edge_count, Settings() );
-
-                S.ReadEdgeLengths( EdgeLengths().data() );
-
-                for( Int k = k_begin; k < k_end; ++k )
-                {
-                    S.ReadInitialEdgeCoordinates( x_in, k, normalize );
-
-                    S.ComputeConformalClosure();
-
-                    S.WriteShiftVector( w_out, k );
-
-                    S.WriteEdgeCoordinates( y_out, k );
-                }
-            },
-            thread_count
-        );
-        
-        ptoc(ClassName()+"::OptimizeBatch");
-    }
-

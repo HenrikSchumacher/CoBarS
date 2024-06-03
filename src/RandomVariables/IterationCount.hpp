@@ -4,6 +4,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class IterationCount;
     
+    /*!
+     * @brief Returns the number of iterations that `CoBarS::SamplerBase<AmbDim,Real,Int>` needed to converge.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class IterationCount<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>

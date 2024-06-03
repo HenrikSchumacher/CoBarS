@@ -5,6 +5,10 @@ namespace CoBarS
     template<typename Sampler_T> class RandomVariable;
 
     
+    /*!
+     * @brief A struct to carry the options for `CoBarS::SamplerBase` and `CoBarS::Sampler`.
+     */
+    
     template<typename Real, typename Int>
     struct SamplerSettings
     {

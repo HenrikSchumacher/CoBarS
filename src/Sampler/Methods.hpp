@@ -4,48 +4,52 @@ public:
       
     Int EdgeCount() const override
     {
-      return edge_count;
+      return edge_count_;
     }
 
     virtual const Weights_T & EdgeLengths() const override
     {
-        return r;
+        return r_;
     }
     
     virtual void ReadEdgeLengths( const Real * const r_in ) override
     {
-        r.Read(r_in);
+        ResetResults();
         
-        total_r_inv = Inv( r.Total() );
+        r_.Read(r_in);
+        
+        total_r_inv = Inv( r_.Total() );
     }
     
     
     virtual const Weights_T & Rho() const override
     {
-        return rho;
+        return rho_;
     }
     
     virtual void ReadRho( const Real * const rho_in ) override
     {
-        rho.Read(rho_in);
+        ResetResults();
+        
+        rho_.Read(rho_in);
     }
     
     
-    virtual void ComputeShiftVector() override
+    virtual void ComputeInitialShiftVector() override
     {
         if constexpr ( zerofyfirstQ )
         {
-            w.SetZero();
+            w_.SetZero();
             
-            for( Int k = 0; k < edge_count; ++k )
+            for( Int k = 0; k < edge_count_; ++k )
             {
-                Vector_T x_k ( x, k );
+                Vector_T x_k ( x_, k );
                 
-                const Real r_k = r[k];
+                const Real r_k = r_[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w[i] += x_k[i] * r_k;
+                    w_[i] += x_k[i] * r_k;
                 }
             }
         }
@@ -53,64 +57,54 @@ public:
         {
             // Overwrite by first summand.
             {
-                Vector_T x_k ( x, 0 );
+                Vector_T x_k ( x_, 0 );
                 
-                const Real r_k = r[0];
+                const Real r_k = r_[0];
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w[i] = x_k[i] * r_k;
+                    w_[i] = x_k[i] * r_k;
                 }
             }
 
             // Add-in the others.
-            for( Int k = 1; k < edge_count; ++k )
+            for( Int k = 1; k < edge_count_; ++k )
             {
-                Vector_T x_k ( x, k );
+                Vector_T x_k ( x_, k );
                 
-                const Real r_k = r[k];
+                const Real r_k = r_[k];
 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
-                    w[i] += x_k[i] * r_k;
+                    w_[i] += x_k[i] * r_k;
                 }
             }
         }
 
         
         // Normalize in that case that r does not sum up to 1.
-        w *= total_r_inv;
+        w_ *= total_r_inv;
     }
     
-    virtual void ReadShiftVector( const Real * const w_in ) override
+    virtual void ReadShiftVector( const Real * restrict const w, const Int offset = 0 ) override
     {
-        w.Read(w_in);
+        w_.Read( &w[ AmbDim * offset ] );
         
         // Use Euclidean barycenter as initial guess if the supplied initial guess does not make sense.
-        if( Dot(w,w) > small_one )
+        if( Dot(w_,w_) > small_one )
         {
-            ComputeShiftVector();
+            ComputeInitialShiftVector();
         }
     }
     
-    virtual void ReadShiftVector( const Real * const w_in, const Int k ) override
+    virtual void WriteShiftVector( Real * restrict w, const Int offset ) const override
     {
-        ReadShiftVector( &w_in[ AmbDim * k ] );
-    }
-    
-    virtual void WriteShiftVector( Real * w_out ) const override
-    {
-        w.Write( w_out );
-    }
-    
-    virtual void WriteShiftVector( Real * w_out, const Int k ) const override
-    {
-        w.Write( &w_out[ AmbDim * k] );
+        w_.Write( &w[ AmbDim * offset] );
     }
     
     virtual const Vector_T & ShiftVector() const override
     {
-        return w;
+        return w_;
     }
     
     
@@ -169,10 +163,8 @@ private:
 public:
 
     void NormalizeCompressedSamples(
-        mptr<Real> bins,
-        const Int bin_count,
-        mptr<Real> moments_,
-        const Int moment_count,
+        mptr<Real> bins, const Int bin_count,
+        mptr<Real> moms, const Int mom_count,
         const Int fun_count
     ) const
     {
@@ -185,15 +177,26 @@ public:
                 
                 mptr<Real> bins_i_j = &bins[ (i*fun_count+j) * bin_count ];
                 
-                mptr<Real> moments_i_j = &moments_[ (i*fun_count+j) * moment_count ];
+                mptr<Real> moments_i_j = &moms[ (i*fun_count+j) * mom_count ];
                 
                 // The field for zeroth moment is assumed to contain the total mass.
                 Real factor = Inv( moments_i_j[0] );
                 
                 scale_buffer( factor, bins_i_j,    bin_count    );
                 
-                scale_buffer( factor, moments_i_j, moment_count );
+                scale_buffer( factor, moments_i_j, mom_count );
             }
         }
         ptoc(ClassName()+"::NormalizeCompressedSamples");
     }
+
+
+private:
+
+    void ResetResults() const
+    {
+        p_initializedQ = false;
+        edge_space_sampling_weight = -1;
+        edge_quotient_space_sampling_weight = -1;
+    }
+

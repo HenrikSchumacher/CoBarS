@@ -3,6 +3,13 @@
 namespace CoBarS
 {
     
+    /*!
+     * @class GearyTransform
+     *
+     * @brief Implements the Geary transform as well as its derivative. See [Geary - _The Frequency Distribution of the Quotient of Two Normal Variates_ (1930)](https://www.jstor.org/stable/2342070).
+     *
+     */
+    
     template<typename Real>
     struct GearyTransform
     {

@@ -22,8 +22,8 @@ Just include the header `CoBarS.hpp` into your C++ program via
     
 First create a `CoBarS::Sampler` object. 
     
-    constexpr int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const int edge_count   = 64;
+    constexpr int d = 3; // Dimensions of the ambient space has to be a compile-time constant.
+    const int edge_count = 64;
             
     // Create an instance of the cycle sampler.
     // This assumes that equilateral polygons shall be created.
@@ -60,6 +60,6 @@ Then generate the desired edge weights and preallocate memory for the outputs
     );
 
 
-See also the examples programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples and compilation instructions.
+See also the example programs in the directories Example_RandomClosedPolygon and Example_Sample_Binned for usage examples and compilation instructions.
 
 See also [CoBarSLink](https://github.com/HenrikSchumacher/CoBarSLink) for a more user-friendly _Mathematica_ package.

@@ -4,6 +4,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class GyradiusP;
     
+    /*!
+     * @brief Computes the p-gyradius of an instance of `CoBarS::SamplerBase<AmbDim,Real,Int>`. This is very expensive as it takes the l^p-norm of all chords of the polygon!
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class GyradiusP<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
@@ -68,13 +78,13 @@ namespace CoBarS
             
             for( Int k = 0; k < n; ++k )
             {
-                Vector_T u = C.SpaceCoordinates(k);
+                Vector_T u = C.VertexPosition(k);
                 
                 for( Int l = k+1; l < n; ++l )
                 {
                     Vector_T v = u;
                     
-                    v -= C.SpaceCoordinates(l);
+                    v -= C.VertexPosition(l);
                     
                     sum+= std::pow(v.SquaredNorm(),power);
                 }

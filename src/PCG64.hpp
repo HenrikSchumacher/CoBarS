@@ -7,6 +7,10 @@
 
 namespace CoBarS
 {
+    /*!
+     * @brief A wrapper for the _Permuted Congruential Generator_ `pcg64` by [Melissa O'Neill](https://github.com/imneme/pcg-cpp).
+     */
+
     class PCG64
     {
     private:

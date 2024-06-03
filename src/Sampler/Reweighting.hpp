@@ -2,98 +2,72 @@ public:
 
     virtual Real EdgeSpaceSamplingWeight() const override
     {
+        if( edge_space_sampling_weight < Real(0) )
+        {
+            // Shifts all entries of x along y and writes the results to y.
+            // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
+            
+            SquareMatrix_T cbar  (zero);
+            SquareMatrix_T gamma (zero);
+            
+            Real prod = one;
+            
+            const Real ww = Dot(w_,w_);
+            
+            const Real one_plus_ww = big_one + ww;
+            
+            for( Int k = 0; k < edge_count_; ++k )
+            {
+                Vector_T y_k ( y_, k );
+                
+                const Real wy = Dot(w_,y_k);
+                
+                const Real factor = one_plus_ww + two * wy;
+                
+                // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
+                prod *= factor;
+                
+                const Real r_k = r_[k];
+                const Real r_over_rho_k = r_k / rho_[k];
+                const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
+                
+                for( Int i = 0; i < AmbDim; ++i )
+                {
+                    for( Int j = 0; j < AmbDim; ++j )
+                    {
+                        const Real scratch = static_cast<Real>(i==j) - y_k[i] * y_k[j];
+                        
+                        gamma[i][j] += r_over_rho_k_squared * scratch;
+                        
+                        cbar [i][j] += r_k * scratch;
+                    }
+                }
+            }
+            
+            // We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
+            //  cbar *= static_cast<Real>(2)/(one_minus_ww);
+            
+            edge_space_sampling_weight =
+                edge_space_sampling_helper
+                *
+                Power( prod, static_cast<Int>(AmbDim-1) ) * Sqrt(gamma.Det()) / cbar.Det();
+        }
+        
         return edge_space_sampling_weight;
-    }
-
-    virtual Real EdgeQuotientSpaceSamplingCorrection() const override
-    {
-        return edge_quotient_space_sampling_correction;
     }
 
     virtual Real EdgeQuotientSpaceSamplingWeight() const override
     {
-        return EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
+        if( edge_quotient_space_sampling_weight < Real(0) )
+        {
+            edge_quotient_space_sampling_weight = EdgeSpaceSamplingWeight() * EdgeQuotientSpaceSamplingCorrection();
+        }
+        return edge_quotient_space_sampling_weight;
     }
 
 protected:
 
-
-    void ComputeEdgeSpaceSamplingHelper()
-    {
-        edge_space_sampling_helper
-            =
-            Frac(
-                GammaQuotient(
-                    static_cast<Real>((AmbDim-1) * (edge_count-1)), 
-                    Frac<Real>( AmbDim, 2 )
-                ),
-                Power( static_cast<Real>(2) * Sqrt( Scalar::Pi<Real>), AmbDim )
-            );
-    }
-
-    void ComputeEdgeSpaceSamplingWeight()
-    {
-        // Shifts all entries of x along y and writes the results to y.
-        // Mind that x and y are stored in SoA fashion, i.e., as matrix of size AmbDim x point_count.
-        
-        SquareMatrix_T cbar  (zero);
-        SquareMatrix_T gamma (zero);
-        
-        Real prod = one;
-        
-        const Real ww = Dot(w,w);
-        
-        const Real one_plus_ww = big_one + ww;
-        
-        for( Int k = 0; k < edge_count; ++k )
-        {
-            Vector_T y_k ( y, k );
-            
-            const Real wy = Dot(w,y_k);
-            
-            const Real factor = one_plus_ww + two * wy;
-            
-            // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
-            prod *= factor;
-            
-            const Real r_k = r[k];
-            const Real r_over_rho_k = r_k / rho[k];
-            const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
-            
-            for( Int i = 0; i < AmbDim; ++i )
-            {
-                for( Int j = 0; j < AmbDim; ++j )
-                {
-                    const Real scratch = static_cast<Real>(i==j) - y_k[i] * y_k[j];
-                    
-                    gamma[i][j] += r_over_rho_k_squared * scratch;
-                    
-                    cbar [i][j] += r_k * scratch;
-                }
-            }
-        }
-        
-        // We can simply absorb the factor std::pow(2/(one_minus_ww),d) into the function chi.
-        //  cbar *= static_cast<Real>(2)/(one_minus_ww);
-        
-        edge_space_sampling_weight = 
-            edge_space_sampling_helper 
-            *
-            Power( prod, static_cast<Int>(AmbDim-1) ) * Sqrt(gamma.Det()) / cbar.Det();
-    }
-
-
-    void ComputeEdgeQuotientSpaceSamplingHelper()
-    {
-        edge_quotient_space_sampling_helper
-            =
-            Frac(
-                std::exp2( Scalar::Quarter<Real> * static_cast<Real>( AmbDim * (AmbDim-1) ) ),
-                SOVolume<Real>(AmbDim)
-            );
-    }
-
-    void ComputeEdgeQuotientSpaceSamplingCorrection()
+    Real EdgeQuotientSpaceSamplingCorrection() const
     {
         Tiny::SelfAdjointMatrix<AmbDim, Real, Int> Sigma;
         
@@ -103,11 +77,11 @@ protected:
         {
             Sigma.SetZero();
             
-            for( Int k = 0; k < edge_count; ++k )
+            for( Int k = 0; k < edge_count_; ++k )
             {
-                Vector_T y_k ( y, k );
+                Vector_T y_k ( y_, k );
                 
-                const Real rho_squared = rho[k] * rho[k];
+                const Real rho_squared = rho_[k] * rho_[k];
                 
                 for( Int i = 0; i < AmbDim; ++i )
                 {
@@ -126,9 +100,9 @@ protected:
             {
                 constexpr Int k = 0;
                 
-                Vector_T y_k ( y, k );
+                Vector_T y_k ( y_, k );
                 
-                const Real rho_squared = rho[0] * rho[0];
+                const Real rho_squared = rho_[0] * rho_[0];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = rho_squared * y_k[i];
@@ -141,11 +115,11 @@ protected:
             }
 
             // Now we add-in the other entries.
-            for( Int k = 1; k < edge_count; ++k )
+            for( Int k = 1; k < edge_count_; ++k )
             {
-                Vector_T y_k ( y, k );
+                Vector_T y_k ( y_, k );
                 
-                const Real rho_squared = rho[k] * rho[k];
+                const Real rho_squared = rho_[k] * rho_[k];
                 for( Int i = 0; i < AmbDim; ++i )
                 {
                     const Real factor = rho_squared * y_k[i];
@@ -206,5 +180,32 @@ protected:
             }
         }
         
-        edge_quotient_space_sampling_correction = edge_quotient_space_sampling_helper * Inv(Sqrt(det));
+        return edge_quotient_space_sampling_helper * Inv(Sqrt(det));
     }
+
+private:
+
+
+    void ComputeEdgeSpaceSamplingHelper()
+    {
+        edge_space_sampling_helper
+            =
+            Frac(
+                GammaQuotient(
+                    static_cast<Real>((AmbDim-1) * (edge_count_-1)),
+                    Frac<Real>( AmbDim, 2 )
+                ),
+                Power( static_cast<Real>(2) * Sqrt( Scalar::Pi<Real>), AmbDim )
+            );
+    }
+
+    void ComputeEdgeQuotientSpaceSamplingHelper()
+    {
+        edge_quotient_space_sampling_helper
+            =
+            Frac<Real>(
+                std::exp2( Scalar::Quarter<Real> * static_cast<Real>( AmbDim * (AmbDim-1) ) ),
+                SOVolume<Real>(AmbDim)
+            );
+    }
+

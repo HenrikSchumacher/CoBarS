@@ -3,6 +3,23 @@
 namespace CoBarS
 {
     
+/*!
+ * @brief The main class of CoBarS. It does the actual sampling.
+ *
+ * @tparam AmbDim_ The dimension of the ambient space.
+ *
+ * @tparam Real_ A real floating point type.
+ *
+ * @tparam Int_  An integer type.
+ *
+ * @tparam PRNG_T_ A class of a pseudorandom number generator.
+ * Possible values are
+ *  - CoBarS::MT64
+ *  - CoBarS::PCG64
+ *  - CoBarS::WyRand
+ *  - CoBarS::Xoshiro256Plus
+ */
+    
     template<
         int AmbDim_,
         typename Real_    = double,
@@ -22,25 +39,26 @@ namespace CoBarS
         using Base_T = SamplerBase<AmbDim_,Real_,Int_>;
 
     public:
-
-        using Real   = Real_;
-        using Int    = Int_;
+        
+        using typename Base_T::Real;
+        using typename Base_T::Int;
         using PRNG_T = PRNG_T_;
         
-        static constexpr Int AmbDim = int_cast<Int>(AmbDim_);
+        using Base_T::AmbDim;
         
-        using Vector_T           = typename Base_T::Vector_T;
-        using SquareMatrix_T     = typename Base_T::SquareMatrix_T;
-        using SymmetricMatrix_T  = typename Base_T::SymmetricMatrix_T;
+        using typename Base_T::Vector_T;
+        using typename Base_T::SquareMatrix_T;
+        using typename Base_T::SymmetricMatrix_T;
 
-        using RandomVariable_T   = typename Base_T::RandomVariable_T;
+        using typename Base_T::Weights_T;
+        using typename Base_T::Setting_T;
+        
+        
+        using typename Base_T::RandomVariable_T;
         using RandomVariable_Ptr = std::shared_ptr<RandomVariable_T>;
 
-        using Weights_T          = typename Base_T::Weights_T;
-        using Setting_T          = typename Base_T::Setting_T;
-
-        using VectorList_T       = Tiny::VectorList<AmbDim,Real,Int>;
-        using Matrix_T           = Tensor2<Real,Int>;
+        using VectorList_T = Tiny::VectorList<AmbDim,Real,Int>;
+        using Matrix_T     = Tensor2<Real,Int>;
     
     public:
         
@@ -49,13 +67,13 @@ namespace CoBarS
         ~Sampler() = default;
         
         explicit Sampler(
-            const Int edge_count_,
-            const Setting_T settings_ = Setting_T()
+            const Int edge_count,
+            const Setting_T settings = Setting_T()
         )
-        :   Base_T( settings_ )
-        ,   edge_count(edge_count_)
-        ,   r   ( edge_count, one / edge_count )
-        ,   rho ( edge_count, one )
+        :   Base_T( settings )
+        ,   edge_count_(edge_count)
+        ,   r_   ( edge_count_, one / edge_count_ )
+        ,   rho_ ( edge_count_, one )
         ,   total_r_inv ( one )
         {
             ComputeEdgeSpaceSamplingHelper();
@@ -63,72 +81,75 @@ namespace CoBarS
             
             if constexpr ( vectorizeQ )
             {
-                x = VectorList_T( edge_count     );
-                y = VectorList_T( edge_count     );
-                p = VectorList_T( edge_count + 1 );
+                x_ = VectorList_T( edge_count_     );
+                y_ = VectorList_T( edge_count_     );
+                p_ = VectorList_T( edge_count_ + 1 );
             }
             else
             {
-                x = Matrix_T( edge_count    , AmbDim );
-                y = Matrix_T( edge_count    , AmbDim );
-                p = Matrix_T( edge_count + 1, AmbDim );
+                x_ = Matrix_T( edge_count_    , AmbDim );
+                y_ = Matrix_T( edge_count_    , AmbDim );
+                p_ = Matrix_T( edge_count_ + 1, AmbDim );
             }
         }
         
         explicit Sampler(
-            cptr<Real> r_in,
-            cptr<Real> rho_in,
-            const Int edge_count_,
-            const Setting_T settings_ = Setting_T()
+            const Real * restrict const r,
+            const Real * restrict const rho,
+            const Int edge_count,
+            const Setting_T settings = Setting_T()
         )
-        :   Base_T( settings_ )
-        ,   edge_count(edge_count_)
-        ,   r   ( edge_count )
-        ,   rho ( rho_in, edge_count )
+        :   Base_T      ( settings )
+        ,   edge_count_ (edge_count)
+        ,   r_          ( edge_count_ )
+        ,   rho_        ( rho, edge_count_ )
         {
             ComputeEdgeSpaceSamplingHelper();
             ComputeEdgeQuotientSpaceSamplingHelper();
             
             if constexpr ( vectorizeQ )
             {
-                x = VectorList_T( edge_count     );
-                y = VectorList_T( edge_count     );
-                p = VectorList_T( edge_count + 1 );
+                x_ = VectorList_T( edge_count_     );
+                y_ = VectorList_T( edge_count_     );
+                p_ = VectorList_T( edge_count_ + 1 );
             }
             else
             {
-                x = Matrix_T( edge_count    , AmbDim );
-                y = Matrix_T( edge_count    , AmbDim );
-                p = Matrix_T( edge_count + 1, AmbDim );
+                x_ = Matrix_T( edge_count_    , AmbDim );
+                y_ = Matrix_T( edge_count_    , AmbDim );
+                p_ = Matrix_T( edge_count_ + 1, AmbDim );
             }
             
-            ReadEdgeLengths(r_in);
+            ReadEdgeLengths(r);
         }
         
+        /*!
+         * @brief Copy constructor.
+         */
         
-        // Copy constructor
         Sampler( const Sampler & other )
         :   Base_T( other )
-        ,   edge_count( other.edge_count )
-        ,   x(other.x)
-        ,   y(other.y)
-        ,   p(other.p)
-        ,   r(other.r)
-        ,   rho(other.rho)
+        ,   edge_count_( other.edge_count_ )
+        ,   x_(other.x_)
+        ,   y_(other.y_)
+        ,   p_(other.p_)
+        ,   p_initializedQ(other.p_initializedQ)
+        ,   r_(other.r_)
+        ,   rho_(other.rho_)
         ,   total_r_inv(other.total_r_inv)
-        ,   w(other.w)
-        ,   F(other.F)
-        ,   DF(other.DF)
+        ,   w_(other.w_)
+        ,   F_(other.F_)
+        ,   DF_(other.DF_)
         ,   L(other.L)
-        ,   u(other.u)
-        ,   z(other.z)
+        ,   u_(other.u_)
+        ,   z_(other.z_)
         ,   iter(other.iter)
         ,   squared_residual(other.squared_residual)
         ,   residual(other.residual)
         ,   edge_space_sampling_helper              ( other.edge_space_sampling_helper              )
         ,   edge_quotient_space_sampling_helper     ( other.edge_quotient_space_sampling_helper     )
         ,   edge_space_sampling_weight              ( other.edge_space_sampling_weight              )
-        ,   edge_quotient_space_sampling_correction ( other.edge_quotient_space_sampling_correction )
+        ,   edge_quotient_space_sampling_weight     ( other.edge_quotient_space_sampling_weight )
         ,   lambda_min(other.lambda_min)
         ,   q(other.q)
         ,   errorestimator(other.errorestimator)
@@ -136,40 +157,42 @@ namespace CoBarS
         ,   succeededQ(other.succeededQ)
         ,   continueQ(other.continueQ)
         ,   ArmijoQ(other.ArmijoQ)
-        ,   moments(other.moments)
+        ,   moments_(other.moments_)
         {
-            LoadRandomVariables( other.F_list );
+            LoadRandomVariables( other.F_list_ );
         }
         
+        /*!
+         * @brief Swap routine; see [stackoverflow.com](https://stackoverflow.com/questions/5695548/public-friend-swap-member-function) for details.
+         */
+
         friend void swap( Sampler & A, Sampler & B ) noexcept
         {
-            // see https://stackoverflow.com/questions/5695548/public-friend-swap-member-function for details
             using std::swap;
-
-//            swap( static_cast<Base_T&>(A), static_cast<Base_T&>(B) );
-            
-            swap(A.edge_count,B.edge_count);
-            swap(A.x,B.x);
-            swap(A.y,B.y);
-            swap(A.p,B.p);
-            swap(A.r,B.r);
-            swap(A.rho,B.rho);
+   
+            swap(A.edge_count_,B.edge_count_);
+            swap(A.x_,B.x_);
+            swap(A.y_,B.y_);
+            swap(A.p_,B.p_);
+            swap(A.p_initializedQ,B.p_initializedQ);
+            swap(A.r_,B.r_);
+            swap(A.rho_,B.rho_);
             swap(A.total_r_inv,B.total_r_inv);
-            swap(A.w,B.w);
-            swap(A.F,B.F);
-            swap(A.DF,B.DF);
+            swap(A.w_,B.w_);
+            swap(A.F_,B.F_);
+            swap(A.DF_,B.DF_);
             swap(A.L,B.L);
-            swap(A.u,B.u);
-            swap(A.z,B.z);
+            swap(A.u_,B.u_);
+            swap(A.z_,B.z_);
 
             swap(A.iter,             B.iter             );
             swap(A.squared_residual, B.squared_residual );
             swap(A.residual,         B.residual         );
             
-            swap(A.edge_space_sampling_helper,              B.edge_space_sampling_helper              );
-            swap(A.edge_quotient_space_sampling_helper,     B.edge_quotient_space_sampling_helper     );
-            swap(A.edge_space_sampling_weight,              B.edge_space_sampling_weight              );
-            swap(A.edge_quotient_space_sampling_correction, B.edge_quotient_space_sampling_correction );
+            swap(A.edge_space_sampling_helper,          B.edge_space_sampling_helper          );
+            swap(A.edge_quotient_space_sampling_helper, B.edge_quotient_space_sampling_helper );
+            swap(A.edge_space_sampling_weight,          B.edge_space_sampling_weight          );
+            swap(A.edge_quotient_space_sampling_weight, B.edge_quotient_space_sampling_weight );
             
             swap(A.lambda_min,B.lambda_min);
             swap(A.q,B.q);
@@ -179,20 +202,25 @@ namespace CoBarS
             swap(A.continueQ,B.continueQ);
             swap(A.ArmijoQ,B.ArmijoQ);
             
-            swap(A.moments,B.moments);
-            swap(A.F_list,B.F_list);
+            swap(A.moments_,B.moments_);
+            swap(A.F_list_,B.F_list_);
         }
         
-        // Copy assignment operator
+        /*!
+         * @brief Copy assignment operator, using [copy-and-swap idiom](https://stackoverflow.com/a/3279550/8248900).
+         */
+        
         Sampler & operator=(Sampler other)
         {
-            // copy-and-swap idiom
-            // see https://stackoverflow.com/a/3279550/8248900 for details
             swap(*this, other);
 
             return *this;
         }
 
+        /*!
+         * @brief Move constructor, using [copy-and-swap idiom](https://stackoverflow.com/a/3279550/8248900).
+         */
+        
         /* Move constructor */
         Sampler( Sampler && other ) noexcept
         :   Base_T()
@@ -200,9 +228,17 @@ namespace CoBarS
             swap(*this, other);
         }
         
-    protected:
+    private:
         
-        Int edge_count = 0;
+        /*!
+         * @brief Number of edges in the represented polygon.
+         */
+        
+        Int edge_count_ = 0;
+        
+        /*!
+         * @brief The instance's own pseudorandom number generator.
+         */
         
         mutable PRNG_T random_engine;
         
@@ -210,36 +246,97 @@ namespace CoBarS
         
         mutable std::uniform_real_distribution<Real> phi_dist {0,Scalar::TwoPi<Real>};
         
-        Setting_T settings;
+        using Base_T::settings_;
 
-        std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> x;
-        std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> y;
-        std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> p;
+        /*!
+         * @brief The open polyline's unit edge vectors.
+         */
+        
+        std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> x_;
+        
+        /*!
+         * @brief The shifted polyline's unit edge vectors. (After the optimization has succeeded: the closed polygon's unit edge vectors.)
+         */
+        
+        std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> y_;
+        
+        /*!
+         * @brief The closed polyline's vertex coordinates.
+         */
+        mutable std::conditional_t<vectorizeQ, VectorList_T, Matrix_T> p_;
+        
+        /*!
+         * @brief Boolean that indicates whether `p_initializedQ` has been recomputed already.
+         */
+        mutable bool p_initializedQ = false;
         
         
-        Weights_T      r {0};
-        Weights_T    rho {0};
+        /*!
+         * @brief The edge lengths of the represented polygon.
+         */
+        
+        Weights_T r_ {0};
+        
+        /*!
+         * @brief The weights of the Riemannian metric used on the Cartesian product of unit spheres.
+         */
+        
+        Weights_T rho_ {0};
+        
+        /*!
+         * @brief Inverse of the total arc length of the represented polygon.
+         */
         
         Real total_r_inv = one;
         
-        Vector_T w;           // current point in hyperbolic space.
-        Vector_T F;           // right hand side of Newton iteration.
-        SymmetricMatrix_T DF; // nabla F(0) with respect to measure ys
-        SymmetricMatrix_T L;  // storing Cholesky factor.
-        Vector_T u;           // update direction
+        /*!
+         * @brief The current shift vector in hyperbolic space. (After the optimization has succeeded: the conformal barycenter.)
+         */
         
-        Vector_T z;           // Multiple purpose buffer.
+        Vector_T w_;
+        
+        /*!
+         * @brief Right hand side of Newton iteration.
+         */
+        
+        Vector_T F_;
+        
+        /*!
+         * @brief Nabla F(0) with respect to probability measure defined by point cloud `y_` and weights `r_`.
+         */
+        
+        SymmetricMatrix_T DF_;
+        
+        /*!
+         * @brief An auxiliary buffer to store Cholesky factors.
+         */
+        SymmetricMatrix_T L;
+        
+        /*!
+         * @brief Update direction.
+         */
+        Vector_T u_;
+        
+        
+        /*!
+         * @brief Multiple purpose buffer.
+         */
+        Vector_T z_;
+        
+        /*!
+         * @brief Number of optimization iterations used so far.
+         */
         
         Int iter = 0;
         
         Real squared_residual = 1;
         Real         residual = 1;
 
-        Real edge_space_sampling_helper              = 1;
-        Real edge_quotient_space_sampling_helper     = 1;
+        Real edge_space_sampling_helper                  = 1;
+        Real edge_quotient_space_sampling_helper         = 1;
         
-        Real edge_space_sampling_weight              = 0;
-        Real edge_quotient_space_sampling_correction = 0;
+        mutable Real edge_space_sampling_weight          = -1;
+        mutable Real edge_quotient_space_sampling_weight = -1;
         
         Real lambda_min = eps;
         Real q = one;
@@ -249,6 +346,8 @@ namespace CoBarS
         bool succeededQ  = false;   // Whether algorithm has succeded.
         bool continueQ   = true;    // Whether to continue with the main loop.
         bool ArmijoQ     = false;   // Whether Armijo condition was met last time we checked.
+        
+    private:
         
         static constexpr Real zero              = 0;
         static constexpr Real half              = 0.5;
@@ -266,12 +365,10 @@ namespace CoBarS
         static constexpr Real two_pi            = Scalar::TwoPi<Real>;
 
         
-    private:
+        // TODO: Add copy behavior to these?
         
-        // TODO: Add copy behavior to theses?
-        
-        mutable Tensor2<Real,Int> moments;
-        mutable std::vector<std::shared_ptr<RandomVariable_T>> F_list;
+        mutable Tensor2<Real,Int> moments_;
+        mutable std::vector<std::shared_ptr<RandomVariable_T>> F_list_;
         
     protected:
         
@@ -295,82 +392,79 @@ namespace CoBarS
         
     public:
         
-        // This routine seems to be somewhat slow; better not use it if you can avoid it.
-        virtual Real InitialEdgeCoordinates( const Int k, const Int i ) const override
+//        virtual Real InitialEdgeCoordinate( const Int k, const Int i ) const override
+//        {
+//            return (vectorizeQ ? x_[i][k] : x_[k][i]);
+//        }
+        
+        virtual Vector_T InitialEdgeVector( const Int k ) const override
         {
-            return (vectorizeQ ? x[i][k] : x[k][i]);
+            return Vector_T (x_,k);
         }
         
-        virtual Vector_T InitialEdgeCoordinates( const Int k ) const override
+//        virtual void ReadInitialEdgeVector(
+//            const Vector_T & x, const Int k, bool normalizeQ = true
+//        ) override
+//        {
+//            Vector_T x_k (x);
+//            
+//            if( normalizeQ )
+//            {
+//                x_k.Normalize();
+//            }
+//            
+//            x_k.Write(x_,k);
+//        }
+
+        virtual void ReadInitialEdgeVectors(
+            const Real * restrict const x, const Int offset = 0 , bool normalizeQ = true
+        ) override
         {
-            return Vector_T ( x, k );
-        }
-        
-        virtual void ReadInitialEdgeCoordinates( cptr<Real> x_in, bool normalize = true ) override
-        {
-            if( normalize )
+            cptr<Real> X = &x[AmbDim * edge_count_ * offset];
+            
+            if( normalizeQ )
             {
-                for( Int k = 0; k < edge_count; ++k )
+                for( Int k = 0; k < edge_count_; ++k )
                 {
-                    Vector_T x_k ( x_in, k );
+                    Vector_T x_k (X,k);
                     
                     x_k.Normalize();
                     
-                    x_k.Write( x, k );
+                    x_k.Write(x_,k);
                 }
             }
             else
             {
-                x.Read( x_in );
+                x_.Read(X);
             }
         }
-
-        void ReadInitialEdgeCoordinates( const Vector_T & x_in, const Int k, bool normalize = true )
-        {
-            Vector_T x_k ( x_in );
-            
-            if( normalize )
-            {
-                x_k.Normalize();
-            }
-            
-            x_k.Write( x, k );
-        }
         
-        virtual void ReadInitialEdgeCoordinates( cptr<Real> x_in, const Int k, bool normalize = true ) override
+        virtual void WriteInitialEdgeVectors( 
+            Real * restrict const x, const Int offset = 0
+        ) const override
         {
-            ReadInitialEdgeCoordinates( &x_in[ AmbDim * edge_count * k], normalize );
-        }
-        
-        virtual void WriteInitialEdgeCoordinates( mptr<Real> x_out ) const override
-        {
-            x.Write( x_out );
-        }
-        
-        virtual void WriteInitialEdgeCoordinates( mptr<Real> x_out, const Int k ) const override
-        {
-            WriteInitialEdgeCoordinates( &x_out[ AmbDim * edge_count * k ]);
+            x_.Write( &x[ AmbDim * edge_count_ * offset ]);
         }
 
-        void DumpInitialEdgeCoordinates() const
+        void DumpInitialEdgeVectors() const
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                valprint( "x["+ToString(i)+"]", x[i] );
+                valprint( "x_["+ToString(i)+"]", x_[i] );
             }
         }
         
-        void DumpEdgeCoordinates() const
+        void DumpEdgeVectors() const
         {
             for( Int i = 0; i < AmbDim; ++i )
             {
-                valprint( "y["+ToString(i)+"]", y[i] );
+                valprint( "y_["+ToString(i)+"]", y_[i] );
             }
         }
         
-        virtual void RandomizeInitialEdgeCoordinates() override
+        virtual void RandomizeInitialEdgeVectors() override
         {
-            for( Int k = 0; k < edge_count; ++k )
+            for( Int k = 0; k < edge_count_; ++k )
             {
                 Vector_T x_k;
                 
@@ -381,77 +475,62 @@ namespace CoBarS
                 
                 x_k.Normalize();
                 
-                x_k.Write( x, k );
+                x_k.Write(x_,k);
             }
         }
         
-        
         virtual void ComputeConformalClosure() override
         {
-            ComputeShiftVector();
+            ResetResults();
+            
+            ComputeInitialShiftVector();
 
             Optimize();
         }
         
-        // This routine seems to be somewhat slow; better not use it if you can avoid it.
-        virtual Real EdgeCoordinates( const Int k, const Int i ) const override
+
+        
+        virtual Vector_T EdgeVector( const Int k ) const override
         {
-            return COND( vectorizeQ, y[i][k], y[k][i] );
+            return Vector_T (y_,k);
         }
         
-        virtual Vector_T EdgeCoordinates( const Int k ) const override
+        virtual void ReadEdgeVectors( const Real * restrict const y, const Int offset = 0 ) override
         {
-            return Vector_T ( y, k );
+            ResetResults();
+            
+            y_.Read( &y[ AmbDim * edge_count_ * offset ]);
         }
         
-        virtual void ReadEdgeCoordinates( cptr<Real> y_in ) override
+        virtual void WriteEdgeVectors( Real * restrict const y, const Int offset = 0 ) const override
         {
-            y.Read( y_in );
-        }
-        
-        virtual void ReadEdgeCoordinates( cptr<Real> y_in, const Int k ) override
-        {
-            ReadEdgeCoordinates( &y_in[ AmbDim * edge_count * k ]);
-        }
-        
-        virtual void WriteEdgeCoordinates( mptr<Real> y_out ) const override
-        {
-            y.Write( y_out );
-        }
-        
-        virtual void WriteEdgeCoordinates( mptr<Real> y_out, const Int k ) const override
-        {
-            WriteEdgeCoordinates( &y_out[ AmbDim * edge_count * k ]);
-        }
-        
-        void WriteEdgeCoordinates( Vector_T & y_out, const Int k ) const
-        {
-            y_out.Read( y, k );
+            y_.Write( &y[ AmbDim * edge_count_ * offset ]);
         }
         
 
-        // This routine seems to be somewhat slow; better not use it if you can avoid it.
-        virtual Real SpaceCoordinates( const Int k, const Int i ) const override
+//        // This routine seems to be somewhat slow; better not use it if you can avoid it.
+//        virtual Real VertexCoordinate( const Int k, const Int i ) const override
+//        {
+//            RequireVertexPositions();
+//
+//            return COND(vectorizeQ, p_[i][k], p_[k][i] );
+//        }
+        
+        virtual Vector_T VertexPosition( const Int k ) const override
         {
-            return COND(vectorizeQ, p[i][k], p[k][i] );
+            RequireVertexPositions();
+
+            return Vector_T (p_,k);
         }
         
-        virtual Vector_T SpaceCoordinates( const Int k ) const override
+        virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const override
         {
-            return Vector_T ( p, k );
+            RequireVertexPositions();
+            
+            p_.Write( &p[ (edge_count_+1) * AmbDim * offset ] );
         }
         
-        virtual void WriteSpaceCoordinates( mptr<Real> p_out ) const override
-        {
-            p.Write( p_out );
-        }
-        
-        virtual void WriteSpaceCoordinates( mptr<Real> p_out, const Int k ) const override
-        {
-            WriteSpaceCoordinates( &p_out[ (edge_count+1) * AmbDim * k ]);
-        }
-        
-        virtual void ComputeSpaceCoordinates() override
+        virtual void RequireVertexPositions() const override
         {
             //Caution: This gives only half the weight to the end vertices of the chain.
             //Thus this is only really the barycenter, if the chain is closed!
@@ -459,76 +538,79 @@ namespace CoBarS
             // We treat the edges as massless.
             // All mass is concentrated in the vertices, and each vertex carries the same mass.
             
-            Vector_T barycenter        (zero);
-            Vector_T point_accumulator (zero);
-            
-            for( Int k = 0; k < edge_count; ++k )
+            if( !p_initializedQ )
             {
-                const Vector_T y_k ( y, k );
+                Vector_T barycenter        (zero);
+                Vector_T point_accumulator (zero);
                 
-                const Real r_k = r[k];
-                
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int k = 0; k < edge_count_; ++k )
                 {
-                    const Real offset = r_k * y_k[i];
+                    const Vector_T y_k ( y_, k );
                     
-                    barycenter[i] += (point_accumulator[i] + half * offset);
+                    const Real r_k = r_[k];
                     
-                    point_accumulator[i] += offset;
-                }
-            }
-            
-            barycenter *= Inv<Real>( edge_count );
-            
-            point_accumulator = barycenter;
-            
-            point_accumulator *= -one;
-            
-            point_accumulator.Write( p, 0 );
-  
-            for( Int k = 0; k < edge_count; ++k )
-            {
-                const Vector_T y_k ( y, k );
-                
-                const Real r_k = r[k];
-                
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    point_accumulator[i] += r_k * y_k[i];
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        const Real offset = r_k * y_k[i];
+                        
+                        barycenter[i] += (point_accumulator[i] + half * offset);
+                        
+                        point_accumulator[i] += offset;
+                    }
                 }
                 
-                point_accumulator.Write( p, k + 1 );
+                barycenter *= Inv<Real>( edge_count_ );
+                
+                point_accumulator = barycenter;
+                
+                point_accumulator *= -one;
+                
+                point_accumulator.Write( p_, 0 );
+                
+                for( Int k = 0; k < edge_count_; ++k )
+                {
+                    const Vector_T y_k ( y_, k );
+                    
+                    const Real r_k = r_[k];
+                    
+                    for( Int i = 0; i < AmbDim; ++i )
+                    {
+                        point_accumulator[i] += r_k * y_k[i];
+                    }
+                    
+                    point_accumulator.Write( p_, k + 1 );
+                }
             }
         }
         
         virtual const std::vector<std::shared_ptr<RandomVariable_T>> & RandomVariables() const override
         {
-            return F_list;
+            return F_list_;
         }
         
         virtual Int RandomVariablesCount() const override
         {
-            return static_cast<Int>(F_list.size());
+            return static_cast<Int>(F_list_.size());
         }
         
-        virtual void LoadRandomVariables( const std::vector<std::shared_ptr<RandomVariable_T>> & F_list_ ) const override
+        virtual void LoadRandomVariables( const std::vector<std::shared_ptr<RandomVariable_T>> & F_list ) const override
         {
-            F_list.clear();
+            F_list_.clear();
             
-            for( RandomVariable_Ptr f : F_list_ )
+            for( RandomVariable_Ptr F : F_list )
             {
-                F_list.push_back( f->Clone() );
+                F_list_.push_back( F->Clone() );
             }
         }
         
         virtual void ClearRandomVariables() const override
         {
-            F_list.clear();
+            F_list_.clear();
         }
 
         virtual Real EvaluateRandomVariable( Int i ) const override
         {
-            return (*F_list[i])( *this );
+            return (*F_list_[i])( *this );
         }
 
         
@@ -537,7 +619,6 @@ namespace CoBarS
         
         std::string PRNG_Name() const override
         {
-//            return random_engine[0].ClassName();
             return random_engine.ClassName();
         }
         

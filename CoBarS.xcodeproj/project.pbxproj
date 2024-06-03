@@ -57,6 +57,7 @@
 		AFB2F4122C0CC76600459E94 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AFB2F41B2C0CCB0D00459E94 /* Test_RandomClosedPolygon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test_RandomClosedPolygon; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFB2F41D2C0CCB0D00459E94 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		AFB2F4222C0CF3AE00459E94 /* Doxyfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		AFB96DE12A804D6500EE678B /* submodules */ = {isa = PBXFileReference; lastKnownFileType = folder; path = submodules; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -126,6 +127,7 @@
 				AFB96DE12A804D6500EE678B /* submodules */,
 				AF19FEA828EC51A900593F55 /* src */,
 				AF19FEA628EC51A900593F55 /* CoBarS.hpp */,
+				AFB2F4222C0CF3AE00459E94 /* Doxyfile */,
 				AF19FEA428EC51A900593F55 /* LICENSE */,
 				AF19FEA728EC51A900593F55 /* README.md */,
 				AFB2F4062C0CC6F300459E94 /* Example_RandomClosedPolygon */,

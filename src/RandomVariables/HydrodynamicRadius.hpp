@@ -4,6 +4,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class HydrodynamicRadius;
     
+    /*!
+     * @brief Returns the hygrodynamic radius of of an instance of `CoBarS::SamplerBase<AmbDim,Real,Int>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class HydrodynamicRadius<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
@@ -54,7 +64,7 @@ namespace CoBarS
             
             for( Int k = 0; k < n; ++k )
             {
-                Vector_T u = C.SpaceCoordinates(k);
+                Vector_T u = C.VertexPosition(k);
                 
                 for( Int l = k+1; l < n; ++l )
                 {
@@ -62,7 +72,7 @@ namespace CoBarS
                     
                     Vector_T v = u;
                     
-                    v -= C.SpaceCoordinates(l);
+                    v -= C.VertexPosition(l);
                                         
                     sum+= Inv<Real>(v.Norm() + eps);
                 }

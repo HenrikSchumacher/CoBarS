@@ -26,7 +26,7 @@ using CoBarS::Xoshiro256Plus;
 
 int main()
 {
-    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Actio Angle Method (PAMM). Moreover, I use it to detect compile errors in all code paths.");
+    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Action Angle Method (PAMM). Moreover, I use it to detect compile errors in all code paths.");
     
     using Real = double;
     using Int  = int_fast32_t;

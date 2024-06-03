@@ -5,6 +5,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class EdgeQuotientSpaceSamplingWeight;
     
+    /*!
+     * @brief A wrapper for the class method `EdgeQuotientSpaceSamplingWeight` of `CoBarS::SamplerBase<AmbDim,Real,Int>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class EdgeQuotientSpaceSamplingWeight<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>

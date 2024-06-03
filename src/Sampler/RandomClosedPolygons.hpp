@@ -1,11 +1,11 @@
 public:
 
     virtual void RandomClosedPolygons(
-        mptr<Real> x_out,
-        mptr<Real> w_out,
-        mptr<Real> y_out,
-        mptr<Real> K_edge_space,
-        mptr<Real> K_edge_quotient_space,
+        Real * restrict const x,
+        Real * restrict const w,
+        Real * restrict const y,
+        Real * restrict const K_edge_space,
+        Real * restrict const K_quot_space,
         const Int sample_count,
         const Int thread_count = 1
     ) const override
@@ -20,27 +20,23 @@ public:
                 const Int k_begin = JobPointer( sample_count, thread_count, thread     );
                 const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
 
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
+                Sampler S ( EdgeLengths().data(), Rho().data(), EdgeCount(), Settings() );
 
                 for( Int k = k_begin; k < k_end; ++k )
                 {
-                    S.RandomizeInitialEdgeCoordinates();
+                    S.RandomizeInitialEdgeVectors();
                     
-                    S.WriteInitialEdgeCoordinates(x_out, k);
+                    S.WriteInitialEdgeVectors(x,k);
                     
                     S.ComputeConformalClosure();
                     
-                    S.WriteShiftVector(w_out,k);
+                    S.WriteShiftVector(w,k);
                     
-                    S.WriteEdgeCoordinates(y_out,k);
-                    
-                    S.ComputeEdgeSpaceSamplingWeight();
-                    
-                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    S.WriteEdgeVectors(y,k);
                     
                     K_edge_space[k] = S.EdgeSpaceSamplingWeight();
                     
-                    K_edge_quotient_space[k] = S.EdgeQuotientSpaceSamplingWeight();
+                    K_quot_space[k] = S.EdgeQuotientSpaceSamplingWeight();
                 }
                 
                 Time stop = Clock::now();

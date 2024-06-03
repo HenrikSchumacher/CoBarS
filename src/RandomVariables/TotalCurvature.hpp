@@ -4,6 +4,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class TotalCurvature;
     
+    /*!
+     * @brief Computes the total curvature of an instance of `CoBarS::SamplerBase<AmbDim,Real,Int>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class TotalCurvature<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
@@ -51,8 +61,8 @@ namespace CoBarS
             
             // Handle wrap-around.
             {
-                Vector_T u = C.EdgeCoordinates( n-1 );
-                Vector_T v = C.EdgeCoordinates( 0   );
+                Vector_T u = C.EdgeVector( n-1 );
+                Vector_T v = C.EdgeVector( 0   );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
@@ -61,8 +71,8 @@ namespace CoBarS
             
             for( Int k = 0; k < n-1; ++k )
             {
-                Vector_T u = C.EdgeCoordinates( k   );
-                Vector_T v = C.EdgeCoordinates( k+1 );
+                Vector_T u = C.EdgeVector( k   );
+                Vector_T v = C.EdgeVector( k+1 );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 

@@ -7,6 +7,16 @@ namespace CoBarS
     // Just fill in the name of your new class in the next line; it will be automatically filled in below by the preprocessor.
     template<typename SamplerBase_T> class ExampleFunction;
     
+    /*!
+     * @brief This is an example class to be used as template for your own descendants of `CoBarS::RandomVariable<CoBarS::SamplerBase<AmbDim,Real,Int>>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class ExampleFunction<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>

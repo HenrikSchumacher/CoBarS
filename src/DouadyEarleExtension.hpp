@@ -53,13 +53,13 @@ namespace CoBarS
     private:
         
 
-        const Int edge_count;
+        const Int edge_count_;
         
-        mutable Sampler2D_T S2D;
-        mutable Sampler_T   S;
+        mutable Sampler2D_T S2D_;
+        mutable Sampler_T   S_;
         
-        mutable Int vertex_count;
-        mutable VectorList_T curve;
+        mutable Int vertex_count_;
+        mutable VectorList_T curve_;
         
     public:
         
@@ -68,90 +68,91 @@ namespace CoBarS
         ~DouadyEarleExtension() = default;
         
         explicit DouadyEarleExtension(
-            const Int edge_count_
+            const Int edge_count
         )
-        :   edge_count ( edge_count_  )
-        ,   S2D        ( edge_count )
-        ,   S          ( edge_count )
+        :   edge_count_ ( edge_count  )
+        ,   S2D_        ( edge_count_ )
+        ,   S_          ( edge_count_ )
         {
-            const Real step  = Scalar::TwoPi<Real> / edge_count;
+            const Real step  = Scalar::TwoPi<Real> / edge_count_;
             
-            for( Int k = 0; k < edge_count; ++k )
+            for( Int k = 0; k < edge_count_; ++k )
             {
                 const Real angle = step * k;
                 
                 Vector2D_T z = {std::cos(angle), std::sin(angle) };
                 
-                S2D.ReadInitialEdgeCoordinates( z, k, false );
+                S2D_.ReadInitialEdgeVectors(z,k,false);
             }
         }
         
         
         // Copy constructor
         DouadyEarleExtension( const DouadyEarleExtension & other )
-        :   edge_count   ( other.edge_count   )
-        ,   S2D          ( other.S2D          )
-        ,   S            ( other.S            )
-        ,   vertex_count ( other.vertex_count )
-        ,   curve        ( other.curve        )
+        :   edge_count_   ( other.edge_count_   )
+        ,   S2D_          ( other.S2D_          )
+        ,   S_            ( other.S_            )
+        ,   vertex_count_ ( other.vertex_count_ )
+        ,   curve_        ( other.curve_        )
         {}
         
-        void LoadCurve( cptr<Real> curve_, const Int vertex_count_,
+        void LoadCurve( 
+            cptr<Real> curve,
+            const Int vertex_count,
             const bool normalizeQ = false
         )
         {
-            vertex_count = vertex_count_;
+            vertex_count_ = vertex_count;
             
-            if( curve.Dimension(1) != vertex_count )
+            if( curve_.Dimension(1) != vertex_count_ )
             {
-                curve = VectorList_T( vertex_count );
+                curve_ = VectorList_T( vertex_count_ );
             }
             
             if( normalizeQ )
             {
-                for( Int k = 0; k < vertex_count; ++k )
+                for( Int k = 0; k < vertex_count_; ++k )
                 {
                     Vector_T u;
-                    u.Read( &curve_[AmbDim * k] );
+                    u.Read( &curve[AmbDim * k] );
                     u.Normalize();
-                    u.Write( curve, k );
+                    u.Write(curve_,k);
                 }
             }
             else
             {
-                for( Int k = 0; k < vertex_count; ++k )
+                for( Int k = 0; k < vertex_count_; ++k )
                 {
                     Vector_T u;
-                    u.Read( &curve_[AmbDim * k] );
-                    u.Write( curve, k );
+                    u.Read( &curve[AmbDim * k] );
+                    u.Write(curve_,k);
                 }
             }
         }
         
-        void operator()( cptr<Real> w_in, mptr<Real> w_out, bool UseOldResultQ = false )
+        void operator()( cptr<Real> w_in, mptr<Real> w_out )
         {
             // Take 2D input vector and shift it to 0 so that
             Vector2D_T w;
             
-            w.Read( w_in );
+            w.Read(w_in);
             
             if( Abs( w.Norm() - static_cast<Real>(1)) <= 128 * Scalar::eps<Real> )
             {
-                
                 // phi in [0, 1).
                 const Real t = std::fmod(
                     std::atan2( w[1], w[0] ) * Scalar::TwoPiInv<Real> + static_cast<Real>(1),
                     static_cast<Real>(1)
                 );
                 
-                // T in [0, edge_count).
-                const Real T = t * vertex_count;
+                // T in [0, edge_count_).
+                const Real T = t * vertex_count_;
                 const Real lambda = std::fmod(T,static_cast<Real>(1));
                 const Int  j      = static_cast<Int>(std::floor(T));
-                const Int  j_next = (j+1 < vertex_count) ? j + 1 : 0;
+                const Int  j_next = (j+1 < vertex_count_) ? j + 1 : 0;
                 
-                Vector_T a ( curve, j      );
-                Vector_T b ( curve, j_next );
+                Vector_T a ( curve_, j      );
+                Vector_T b ( curve_, j_next );
                 
                 Vector_T x; // Point on the unit sphere;
                 
@@ -159,24 +160,24 @@ namespace CoBarS
                 
                 x.Normalize();
                 
-                x.Write( w_out );
+                x.Write(w_out);
                 
                 return;
             }
             
             w *= -static_cast<Real>(1);
             
-            S2D.ReadShiftVector( w.data() );
+            S2D_.ReadShiftVector( w.data() );
             
-            S2D.Shift();
+            S2D_.Shift();
             
-            for( Int k = 0; k < edge_count; ++k)
+            for( Int k = 0; k < edge_count_; ++k)
             {
                 // Compute corresponding point on S^AmbDim by piecewise-linear interpolation.
                 
                 Vector2D_T y2D_k; // Point on the unit circle
                 
-                S2D.WriteEdgeCoordinates( y2D_k, k );
+                S2D_.WriteEdgeVectors(y2D_k,k);
                 
                 // phi in [0, 1).
                 const Real t = std::fmod(
@@ -184,47 +185,32 @@ namespace CoBarS
                     static_cast<Real>(1)
                 );
                 
-                // T in [0, edge_count).
-                const Real T = t * vertex_count;
+                // T in [0, edge_count_).
+                const Real T = t * vertex_count_;
                 const Real lambda = std::fmod(T,static_cast<Real>(1));
                 const Int  j      = static_cast<Int>(std::floor(T));
-                const Int  j_next = (j+1 < vertex_count) ? j + 1 : 0;
+                const Int  j_next = (j+1 < vertex_count_) ? j + 1 : 0;
                 
-                Vector_T a ( curve, j      );
-                Vector_T b ( curve, j_next );
+                Vector_T a ( curve_, j      );
+                Vector_T b ( curve_, j_next );
                 
                 Vector_T x_k; // Point on the unit sphere;
                 
                 LinearCombine( static_cast<Real>(1) - lambda, a, lambda, b, x_k );
                 
-                S.ReadInitialEdgeCoordinates( x_k, k, true );
+                S_.ReadInitialEdgeVectors(x_k,k,true);
             }
             
-//            S.DumpInitialEdgeCoordinates();
+            S_.ComputeConformalClosure();
             
-            if( UseOldResultQ )
-            {
-                // We use the shift vector that is still stored in S.
-                // Should work well if w_in is close to the previous w_in.
-            }
-            else
-            {
-                S.ComputeShiftVector();
-            }
-            
-
-            
-            S.Optimize();
-            
-            S.WriteShiftVector( w_out );
+            S_.WriteShiftVector( w_out );
         }
         
         void operator()( 
             cptr<Real> w_in,
             const Int point_count,
             mptr<Real> w_out,
-            const Int thread_count,
-            bool UseOldResultQ = false
+            const Int thread_count
         )
         {
             ParallelDo(
@@ -237,7 +223,7 @@ namespace CoBarS
                     
                     for( Int i = i_begin; i < i_end; ++i )
                     {
-                        E( &w_in[2*i], &w_out[AmbDim*i], UseOldResultQ);
+                        E( &w_in[2*i], &w_out[AmbDim*i] );
                     }
                 },
                 thread_count

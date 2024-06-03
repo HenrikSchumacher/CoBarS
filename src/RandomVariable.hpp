@@ -2,6 +2,16 @@
 
 namespace CoBarS
 {
+    /*!
+     * @brief The base class for all random variables of `CoBarS::SamplerBase<AmbDim,Real,Int>`. This enables runtime polymorphism, so that template parameters  of `CoBarS::Sampler` like the pseudorandom number generator do not matter.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {

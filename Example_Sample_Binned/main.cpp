@@ -1,12 +1,11 @@
 #include "CoBarS.hpp"
 
 using namespace Tools;
-//using namespace Tensors;
 using namespace CoBarS;
 
 int main()
 {
-    // Some type aliases to make out lives a bit easier.
+    // Some type aliases to make our lives a bit easier.
     using Real = double;
     using Int  = int_fast32_t;
     
@@ -108,9 +107,9 @@ int main()
     
     // So we have to normalize explicitly.
     S.NormalizeBinnedSamples(
-       &bins[0],    bin_count,
-       &moments[0], moment_count,
-       fun_count
+        &bins[0],    bin_count,
+        &moments[0], moment_count,
+        F_list
     );
     
     

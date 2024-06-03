@@ -5,11 +5,20 @@ namespace CoBarS
         
     template<typename SamplerBase_T> class BarycenterNorm;
     
+    /*!
+     * @brief Computes the Euclidean norm of the Euclidean barycenter of an instance of `CoBarS::SamplerBase<AmbDim,Real,Int>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class BarycenterNorm<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
     {
-            
     public:
         
         using SamplerBase_T     = SamplerBase<AmbDim,Real,Int>;
@@ -58,10 +67,7 @@ namespace CoBarS
             
             for( Int k = 0; k < n; ++ k )
             {
-                for( Int i = 0; i < AmbDim; ++i )
-                {
-                    b[i] += r[i] * ( C.SpaceCoordinates(k,i) + C.SpaceCoordinates(k+1,i) );
-                }
+                b += LinearCombine( r[k], C.VertexPosition(k), r[k], C.VertexPosition(k+1) );
             }
             
             const Real factor = Scalar::Half<Real> / n;

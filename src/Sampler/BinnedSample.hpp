@@ -1,12 +1,10 @@
 public:
 
     virtual void BinnedSample(
-        mptr<Real> bins_inout,
-        const Int bin_count_,
-        mptr<Real> moments_inout,
-        const Int moment_count_,
-        cptr<Real> ranges,
-        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+              Real * restrict const bins,   const Int bin_count,
+              Real * restrict const moms,   const Int mom_count,
+        const Real * restrict const ranges,
+        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list,
         const Int sample_count,
         const Int thread_count = 1
     ) const override
@@ -19,32 +17,30 @@ public:
         
         ptic(ClassName()+"::BinnedSample");
         
-        const Int fun_count = static_cast<Int>(F_list_.size());
+        const Int f_count = static_cast<Int>(F_list.size());
         
-        const Int moment_count = std::max( static_cast<Int>(3), moment_count_ );
+        const Int m_count = std::max( static_cast<Int>(3), mom_count );
         
-        const Int bin_count = std::max( bin_count_, static_cast<Int>(1) );
+        const Int b_count = std::max( bin_count, static_cast<Int>(1) );
         
         valprint( "dimension   ", AmbDim       );
-        valprint( "edge_count  ", edge_count   );
+        valprint( "edge_count  ", edge_count_  );
         valprint( "sample_count", sample_count );
-        valprint( "fun_count   ", fun_count    );
-        valprint( "bin_count   ", bin_count    );
-        valprint( "moment_count", moment_count );
+        valprint( "fun_count   ", f_count      );
+        valprint( "bin_count   ", b_count      );
+        valprint( "moment_count", m_count      );
         valprint( "thread_count", thread_count );
         
         
-//        Tensor3<Real,Int> bins_global   ( bins_out,    3, fun_count, bin_count    );
-//        Tensor3<Real,Int> moments_global( moments_out, 3, fun_count, moment_count );
-        Tensor1<Real,Int> factor        (                 fun_count               );
+        Tensor1<Real,Int> factor ( f_count );
         
         print("Sampling (binned) the following random variables:");
-        for( Int i = 0; i < fun_count; ++ i )
+        for( Int i = 0; i < f_count; ++ i )
         {
             const Size_T i_ = static_cast<Size_T>(i);
             factor(i) = static_cast<Real>(bin_count) / ( ranges[2*i+1] - ranges[2*i+0] );
 
-            print("    " + F_list_[i_]->Tag());
+            print("    " + F_list[i_]->Tag());
         }
 
         const Int lower = static_cast<Int>(0);
@@ -63,30 +59,26 @@ public:
                 
                 const Int repetitions = k_end - k_begin;
                 
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
+                Sampler S ( EdgeLengths().data(), Rho().data(), EdgeCount(), Settings() );
                 
-                S.LoadRandomVariables( F_list_ );
-                
-                Tensor3<Real,Int> bins_local   ( 3, fun_count, bin_count,    zero );
-                Tensor3<Real,Int> moments_local( 3, fun_count, moment_count, zero );
-                
+                S.LoadRandomVariables( F_list );
+
+                Tensor3<Real,Int> bins_local( 3, f_count, b_count, zero );
+                Tensor3<Real,Int> moms_local( 3, f_count, m_count, zero );
+
                 for( Int k = 0; k < repetitions; ++k )
                 {
-                    S.RandomizeInitialEdgeCoordinates();
+                    S.RandomizeInitialEdgeVectors();
 
                     S.ComputeConformalClosure();
 
-                    S.ComputeSpaceCoordinates();
-                    
-                    S.ComputeEdgeSpaceSamplingWeight();
-                    
-                    S.ComputeEdgeQuotientSpaceSamplingCorrection();
+                    S.RequireVertexPositions();
                     
                     const Real K = S.EdgeSpaceSamplingWeight();
 
                     const Real K_quot = S.EdgeQuotientSpaceSamplingWeight();
 
-                    for( Int i = 0; i < fun_count; ++i )
+                    for( Int i = 0; i < f_count; ++i )
                     {
                         const Real val = S.EvaluateRandomVariable(i);
 
@@ -103,18 +95,18 @@ public:
                             bins_local(2,i,bin_idx) += K_quot;
                         }
 
-                        moments_local(0,i,0) += values[0];
-                        moments_local(1,i,0) += values[1];
-                        moments_local(2,i,0) += values[2];
+                        moms_local(0,i,0) += values[0];
+                        moms_local(1,i,0) += values[1];
+                        moms_local(2,i,0) += values[2];
 
-                        for( Int j = 1; j < moment_count; ++j )
+                        for( Int j = 1; j < m_count; ++j )
                         {
                             values[0] *= val;
                             values[1] *= val;
                             values[2] *= val;
-                            moments_local(0,i,j) += values[0];
-                            moments_local(1,i,j) += values[1];
-                            moments_local(2,i,j) += values[2];
+                            moms_local(0,i,j) += values[0];
+                            moms_local(1,i,j) += values[1];
+                            moms_local(2,i,j) += values[2];
                         }
                     }
                 }
@@ -123,11 +115,11 @@ public:
                     const std::lock_guard<std::mutex> lock ( mutex );
                     
                     add_to_buffer<VarSize,Sequential>(
-                        bins_local.data(), bins_inout, 3 * fun_count * bin_count
+                        bins_local.data(), bins, 3 * f_count * b_count
                     );
                     
                     add_to_buffer<VarSize,Sequential>(
-                        moments_local.data(), moments_inout, 3 * fun_count * moment_count
+                        moms_local.data(), moms, 3 * f_count * m_count
                     );
                 }
                 

@@ -9,6 +9,10 @@
 
 namespace CoBarS
 {
+    /*!
+     * @brief A wrapper for `wy::rand`, implemented by [Alain Espinosa](https://github.com/alainesp/wy).
+     */
+    
     class WyRand
     {
     public:

@@ -1,7 +1,9 @@
 public:
    
+
+
     virtual Int ConfidenceSample(
-        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list,
         mptr<Real> sample_means,
         mptr<Real> sample_variances,
         mptr<Real> errors,
@@ -15,12 +17,12 @@ public:
         const bool verboseQ = true
     ) const override
     {
-        // means, errors and radii are expected to be allocated arrays sufficiently large to hold at least F_list_.size() numbers.
+        // means, errors and radii are expected to be allocated arrays sufficiently large to hold at least F_list.size() numbers.
         
         if ( quotient_space_Q )
         {
             return confidenceSample<true>(
-                F_list_,
+                F_list,
                 sample_means, sample_variances, errors, radii,
                 max_sample_count, thread_count, confidence, chunk_size, relativeQ, verboseQ
             );
@@ -28,7 +30,7 @@ public:
         else
         {
             return confidenceSample<false>(
-                F_list_,
+                F_list,
                 sample_means, sample_variances, errors, radii,
                 max_sample_count, thread_count, confidence, chunk_size, relativeQ, verboseQ
             );
@@ -41,7 +43,7 @@ private:
 
     template<bool quotient_space_Q>
     Int confidenceSample(
-        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list_,
+        const std::vector< std::shared_ptr<RandomVariable_T> > & F_list,
         mptr<Real> sample_means,
         mptr<Real> sample_variances,
         mptr<Real> errors,
@@ -54,7 +56,7 @@ private:
         const bool verboseQ
     ) const
     {
-        // Samples the random variables in F_list_ until the radii of the confidence intervals of each function are lower or equal to the prescribed radii (or until max_sample_count samples have been drawn, whatever happens first).
+        // Samples the random variables in F_list until the radii of the confidence intervals of each function are lower or equal to the prescribed radii (or until max_sample_count samples have been drawn, whatever happens first).
         
         ptic(ClassName()+"::ConfidenceSample");
         
@@ -81,13 +83,13 @@ private:
         
         ptic("Preparation");
         
-        const Int fun_count = static_cast<Int>(F_list_.size());
+        const Int fun_count = static_cast<Int>(F_list.size());
                 
               
         if( verboseQ )
         {
             valprint( "dimension       ", AmbDim            );
-            valprint( "edge_count      ", edge_count        );
+            valprint( "edge_count      ", edge_count_       );
             valprint( "fun_count       ", fun_count         );
             valprint( "thread_count    ", thread_count      );
             valprint( "confidence level", confidence        );
@@ -103,9 +105,9 @@ private:
             
             print("ConfidenceSample works on the following random variables:");
             
-            for( RandomVariable_Ptr f : F_list_ )
+            for( RandomVariable_Ptr F : F_list )
             {
-                print("    " + f->Tag());
+                print("    " + F->Tag());
             }
         }
         
@@ -113,8 +115,8 @@ private:
         
         Real total_time = 0;
         
-        moments.Resize( 4, fun_count + 1 );
-        moments.SetZero();
+        moments_.Resize( 4, fun_count + 1 );
+        moments_.SetZero();
         
         // moments[0] - 1-st moments
         // moments[1] - 2-nd moments
@@ -128,11 +130,11 @@ private:
         ParallelDo(
             [&,this]( const Int thread )
             {
-                Sampler S ( EdgeLengths().data(), Rho().data(), edge_count, Settings() );
+                Sampler S ( EdgeLengths().data(), Rho().data(), EdgeCount(), Settings() );
                                 
-                S.LoadRandomVariables( F_list_ );
+                S.LoadRandomVariables( F_list );
                 
-                S.moments.Resize( 4, fun_count + 1 );
+                S.moments_.Resize( 4, fun_count + 1 );
                 
                 samplers[thread] = std::move(S);
                 
@@ -165,23 +167,14 @@ private:
                     
                     Sampler & S = samplers[thread];
                     
-                    S.moments.SetZero();
+                    S.moments_.SetZero();
                     
                     for( Int k = 0; k < repetitions; ++k )
                     {
-                        S.RandomizeInitialEdgeCoordinates();
+                        S.RandomizeInitialEdgeVectors();
 
                         S.ComputeConformalClosure();
 
-                        S.ComputeSpaceCoordinates();
-                        
-                        S.ComputeEdgeSpaceSamplingWeight();
-                        
-                        if constexpr ( quotient_space_Q )
-                        {
-                            S.ComputeEdgeQuotientSpaceSamplingCorrection();
-                        }
-                        
                         Real K = 0;
                         
                         if constexpr ( quotient_space_Q )
@@ -195,25 +188,25 @@ private:
                         
                         for( Int i = 0; i < fun_count; ++i )
                         {
-                            const Real F_ = S.EvaluateRandomVariable(i);
-                            const Real KF = K * F_;
+                            const Real F = S.EvaluateRandomVariable(i);
+                            const Real KF = K * F;
                             
-                            S.moments[0][i] += KF;
-                            S.moments[1][i] += KF * KF;
-                            S.moments[2][i] += KF * K ;
-                            S.moments[3][i] += KF * F_;
+                            S.moments_[0][i] += KF;
+                            S.moments_[1][i] += KF * KF;
+                            S.moments_[2][i] += KF * K ;
+                            S.moments_[3][i] += KF * F;
 
                         }
                         
-                        S.moments[0][fun_count] += K;
-                        S.moments[1][fun_count] += K * K;
+                        S.moments_[0][fun_count] += K;
+                        S.moments_[1][fun_count] += K * K;
                     }
                     
                     {
                         const std::lock_guard<std::mutex> lock ( moment_mutex );
                         
                         add_to_buffer(
-                            S.moments.data(), moments.data(), 4 * (fun_count+1)
+                            S.moments_.data(), moments_.data(), 4 * (fun_count+1)
                         );
                     }
                     
@@ -241,9 +234,9 @@ private:
             
             const Real Bessel_corr = Frac<Real>( N, N-1 );
             
-            const Real mean_K = Frac<Real>( moments[0][fun_count], N );
+            const Real mean_K = Frac<Real>( moments_[0][fun_count], N );
             
-            const Real var_K  = Bessel_corr * ( Frac<Real>( moments[1][fun_count], N ) - mean_K * mean_K );
+            const Real var_K  = Bessel_corr * ( Frac<Real>( moments_[1][fun_count], N ) - mean_K * mean_K );
             
             const Real mean_Y = mean_K;
             
@@ -267,11 +260,11 @@ private:
                                 
                 for( Int i = 0; i < fun_count; ++i )
                 {
-                    const Real mean_KF  = Frac<Real>( moments[0][i], N );
+                    const Real mean_KF  = Frac<Real>( moments_[0][i], N );
                     
-                    const Real var_KF   = Bessel_corr * ( Frac<Real>( moments[1][i], N ) - mean_KF * mean_KF );
+                    const Real var_KF   = Bessel_corr * ( Frac<Real>( moments_[1][i], N ) - mean_KF * mean_KF );
                     
-                    const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments[2][i], N ) - mean_KF * mean_K  );
+                    const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments_[2][i], N ) - mean_KF * mean_K  );
                     
                     const Real mean_X = mean_KF;
                     
@@ -302,7 +295,7 @@ private:
                     {
                         valprint("  total_time ", total_time );
                         
-                        print( "  Current estimate of " + F_list_[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );
+                        print( "  Current estimate of " + F_list[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );
                     }
                     
                     completed = completed && ( current_confidence > confidence );
@@ -317,9 +310,9 @@ private:
         
         const Real Bessel_corr = Frac<Real>( N, N-1 );
         
-        const Real mean_K = Frac( moments[0][fun_count], N );
+        const Real mean_K = Frac( moments_[0][fun_count], N );
         
-        const Real var_K  = Bessel_corr * ( Frac( moments[1][fun_count], N ) - mean_K * mean_K );
+        const Real var_K  = Bessel_corr * ( Frac( moments_[1][fun_count], N ) - mean_K * mean_K );
         
         const Real mean_Y = mean_K;
         
@@ -328,11 +321,11 @@ private:
         
         for( Int i = 0; i < fun_count; ++i )
         {
-            const Real mean_KF  = Frac<Real>( moments[0][i], N );
+            const Real mean_KF  = Frac<Real>( moments_[0][i], N );
             
-            const Real var_KF   = Bessel_corr * ( Frac<Real>( moments[1][i], N ) - mean_KF * mean_KF );
+            const Real var_KF   = Bessel_corr * ( Frac<Real>( moments_[1][i], N ) - mean_KF * mean_KF );
             
-            const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments[2][i], N ) - mean_KF * mean_K  );
+            const Real cov_KF_K = Bessel_corr * ( Frac<Real>( moments_[2][i], N ) - mean_KF * mean_K  );
             
             const Real mean_X = mean_KF;
 
@@ -367,14 +360,14 @@ private:
             const Real error = BisectionSearch<1>( std::move(P), a, b, confidence, 0.001 );
             
             sample_means[i]     = T;
-            sample_variances[i] = Bessel_corr * ( Frac( moments[3][i], moments[0][fun_count] ) - T * T );
+            sample_variances[i] = Bessel_corr * ( Frac( moments_[3][i], moments_[0][fun_count] ) - T * T );
             errors[i]           = error;
         }
         
         
         ptoc("Postprocessing");
         
-        moments.Resize(0,0);
+        moments_.Resize(0,0);
         
         ptoc(ClassName()+"::ConfidenceSample");
         

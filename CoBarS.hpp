@@ -18,30 +18,41 @@
         using namespace Tools;
         using namespace Tensors;
         
+/*!
+ * Commulative distribution function (CDF) of normal distribution.
+ *
+ * @tparam Real A real floating point type.
+ *
+ * @param z The argument.
+ */
         
         template<typename Real>
-        inline Real N_CDF( const Real z_ )
+        inline Real N_CDF( const Real z )
         {
-            // CDF of normal distribution
-
+            static_assert(FloatQ<Real>, "");
             
             constexpr Real threshold = static_cast<Real>(8);
             
             constexpr Real factor = Inv( cSqrt( Scalar::Two<Real> ) );
             
-            return ( z_ < -threshold ) ? Scalar::Zero<Real> :  ( z_ > threshold ) ? Scalar::One<Real> : (Scalar::Half<Real> + Scalar::Half<Real> * std::erf( factor * z_ ));
-            
-    //        return Scalar::Half<Real> * std::erf( factor * z_ );
+            return ( z < -threshold ) ? Scalar::Zero<Real> :  ( z > threshold ) ? Scalar::One<Real> : (Scalar::Half<Real> + Scalar::Half<Real> * std::erf( factor * z ));
         }
         
+/*!
+ * Probability distribution function (PDF) of normal distribution.
+ *
+ * @tparam Real A real floating point type.
+ *
+ * @param z The argument.
+ */
         template<typename Real>
-        inline Real N_PDF( const Real z_ )
+        inline Real N_PDF( const Real z )
         {
-            // PDF of normal distribution
+            static_assert(FloatQ<Real>, "");
             
             constexpr Real factor = Inv( cSqrt( Scalar::TwoPi<Real> ) );
 
-            return factor * std::exp( - Scalar::Half<Real> * z_ * z_ );
+            return factor * std::exp( - Scalar::Half<Real> * z * z );
         }
         
     } // namespace CoBarS
@@ -72,7 +83,6 @@
     #include "src/RandomVariables/MaxAngle.hpp"
     #include "src/RandomVariables/EdgeSpaceSamplingWeight.hpp"
     #include "src/RandomVariables/EdgeQuotientSpaceSamplingWeight.hpp"
-    #include "src/RandomVariables/EdgeQuotientSpaceSamplingCorrection.hpp"
 
     #include "src/RandomVariables/IterationCount.hpp"
         

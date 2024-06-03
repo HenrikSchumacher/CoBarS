@@ -8,6 +8,10 @@
 
 namespace CoBarS
 {
+    /*!
+     * @brief A wrapper for the Mersenne Twister `std::mt19937_64` from the standard library.
+     */
+    
     class MT64
     {
     private:

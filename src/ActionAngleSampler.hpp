@@ -5,9 +5,23 @@ namespace AAM
     using namespace Tools;
     using namespace Tensors;
     
+    /*!
+     * @brief Implements the _(Progressive) Action-Angle Method_.
+     *
+     * @tparam Real_ A real floating point type.
+     *
+     * @tparam Int_  An integer type.
+     *
+     * @tparam PRNG_T_ A class of a pseudorandom number generator.
+     * Possible values are
+     *  - CoBarS::MT64
+     *  - CoBarS::PCG64
+     *  - CoBarS::WyRand
+     *  - CoBarS::Xoshiro256Plus
+     *
+     *  @tparam ProgressiveQ If set to `false`, it uses the _Action-Angle Method_ by (Cantarella, Duplantier, Shonkwiler, and Uehara)[https://iopscience.iop.org/article/10.1088/1751-8113/49/27/275202]. Otherwise, it uses the the _Progressive Action-Angle Method_ sampler by Cantarella, Schumacher, and Shonkwiler.
+     */
     
-    // Namespace for the Action-Angle Method and the Progressive Action Angle Method
-
     template<
         typename Real_    = double,
         typename Int_     = std::int_fast32_t,
@@ -36,8 +50,8 @@ namespace AAM
         
         ~Sampler(){}
         
-        explicit Sampler( const Int edge_count_ )
-        :   edge_count ( edge_count_)
+        explicit Sampler( const Int edge_count )
+        :   edge_count_ ( edge_count )
         {}
 
     protected:
@@ -54,7 +68,7 @@ namespace AAM
         static constexpr Real big_one           = one + 16 * eps;
 //        static constexpr Real two_pi            = Scalar::TwoPi<Real>;
         
-        const Int edge_count;
+        const Int edge_count_;
         
         mutable PRNG_T random_engine;
                     
@@ -75,15 +89,15 @@ namespace AAM
             // Port of the routine "plc_random_equilateral_closed_polygon" from the C library "plCurve" by Ted Ashton, Jason Cantarella, Harrison Chapman, and Tom Eddy.
             // https://jasoncantarella.com/wordpress/software/plcurve/
             
-            // We assume that user-supplied buffer p has size edge_count * AmbDim;
+            // We assume that user-supplied buffer p has size edge_count_ * AmbDim;
             
             // Storing the coordinates in interleaved form, i.e.
             // p = { x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2], ... }
             
-            const Int n = edge_count;
+            const Int n = edge_count_;
             
             // We use the user-supplied buffer as scratch space for the diagonal lengths.
-            mptr<Real> d = &p[2*edge_count+1];
+            mptr<Real> d = &p[2*edge_count_+1];
             
             bool rejectedQ = true;
             
@@ -278,11 +292,11 @@ namespace AAM
                     const Int k_end   = JobPointer( sample_count, thread_count, thread + 1 );
                     
                     // Create a new instance of the class with its own random number generator.
-                    Sampler C ( edge_count );
+                    Sampler C ( edge_count_ );
                 
                     Int trials = 0;
                     
-                    const Int step = AmbDim * edge_count;
+                    const Int step = AmbDim * edge_count_;
                     
                     for( Int k = k_begin; k < k_end; ++k )
                     {

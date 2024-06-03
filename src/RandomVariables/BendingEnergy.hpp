@@ -5,6 +5,16 @@ namespace CoBarS
 {
     template<typename SamplerBase_T> class BendingEnergy;
     
+    /*!
+     * @brief Computes the bending energy of an instance of `CoBarS::SamplerBase<AmbDim,Real,Int>`.
+     *
+     * @tparam AmbDim The dimension of the ambient space.
+     *
+     * @tparam Real A real floating point type.
+     *
+     * @tparam Int  An integer type.
+     */
+    
     template<int AmbDim, typename Real, typename Int>
     class BendingEnergy<SamplerBase<AmbDim,Real,Int>>
     :   public RandomVariable<SamplerBase<AmbDim,Real,Int>>
@@ -67,8 +77,8 @@ namespace CoBarS
             {
                 const Real len = Scalar::Half<Real> * (r[n-1]+r[0]);
                 
-                Vector_T u = C.EdgeCoordinates( n - 1 );
-                Vector_T v = C.EdgeCoordinates( 0     );
+                Vector_T u = C.EdgeVector( n - 1 );
+                Vector_T v = C.EdgeVector( 0     );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
@@ -79,8 +89,8 @@ namespace CoBarS
             {
                 const Real len = Scalar::Half<Real> * (r[k]+r[k+1]);
                 
-                Vector_T u = C.EdgeCoordinates( k     );
-                Vector_T v = C.EdgeCoordinates( k + 1 );
+                Vector_T u = C.EdgeVector( k     );
+                Vector_T v = C.EdgeVector( k + 1 );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
