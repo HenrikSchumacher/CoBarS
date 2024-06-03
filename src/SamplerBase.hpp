@@ -5,30 +5,33 @@ namespace CoBarS
     /*!
      * @brief Serves as base class to provide runtime polymorphism for the template classes CoBarS::Sampler
      *
-     * @tparam AmbDim_ The dimension of the ambient space.
+     * CoBarS is specifically optimized and tested for ambient dimensions `2` and `3`.
+     * Higher ambient dimensions are implemented, but the symmetric eigensolver might become inaccuarate for ambient dimensions > 12.
      *
-     * @tparam Real_ A real floating point type.
+     * @tparam AMB_DIM The dimension of the ambient space.
      *
-     * @tparam Int_  An integer type.
+     * @tparam REAL A real floating point type.
+     *
+     * @tparam INT  An integer type.
      */
     
     template<
-        int AmbDim_,
-        typename Real_ = double,
-        typename Int_  = int_fast32_t
+        int AMB_DIM,
+        typename REAL = double,
+        typename INT  = int_fast32_t
     >
     class SamplerBase
     {
-        static_assert(FloatQ<Real_>,"");
-        static_assert(Scalar::RealQ<Real_>,"");
-        static_assert(IntQ<Int_>,"");
+        static_assert(FloatQ<REAL>,"");
+        static_assert(Scalar::RealQ<REAL>,"");
+        static_assert(IntQ<INT>,"");
         
     public:
         
-        using Real = Real_;
-        using Int  = Int_;
+        using Real = REAL;
+        using Int  = INT;
         
-        static constexpr Int AmbDim = int_cast<Int>(AmbDim_);
+        static constexpr Int AmbDim = int_cast<Int>(AMB_DIM);
         
         using Vector_T          = Tiny::Vector           <AmbDim,Real,Int>;
         using SquareMatrix_T    = Tiny::Matrix           <AmbDim,AmbDim,Real,Int>;
@@ -200,11 +203,15 @@ namespace CoBarS
          * @brief Compute an initial guess for the conformal barycenter to be used in the optimization routine `Optimize`.
          */
         
+    private:
+        
         virtual void ComputeInitialShiftVector() = 0;
         
         /*!
          * @brief Reads an initial guess for the conformal barycenter (to be used in the optimization routine `Optimize`) from the position `AmbientDimension() * offset` in the buffer `w`.
          */
+        
+    public:
         
         virtual void ReadShiftVector( const Real * const w, const Int offset = 0 ) = 0;
         
@@ -254,7 +261,7 @@ namespace CoBarS
         
 
         /*!
-         * @brief Generates `sample_count` random open polygons and writes them to the buffer `x`.
+         * @brief Generates `sample_count` random open polygons and writes their edge vectors to the buffer `x`.
          *
          * @param x The output array for the open polygons; it is assumed to have size at least `sample_count * EdgeCount() * AmbientDimension()`.
          *
@@ -263,7 +270,7 @@ namespace CoBarS
          * @param thread_count Number of threads to use.
          */
         
-        virtual void RandomOpenPolygons(
+        virtual void CreateRandomOpenPolygons(
             Real * restrict const x,
             const Int sample_count,
             const Int thread_count = 1
@@ -287,7 +294,7 @@ namespace CoBarS
          * @param thread_count Number of threads to use.
          */
         
-        virtual void RandomClosedPolygons(
+        virtual void CreateRandomClosedPolygons(
             Real * restrict const x,
             Real * restrict const w,
             Real * restrict const y,
@@ -315,7 +322,7 @@ namespace CoBarS
          * @param thread_count Number of threads to use.
          */
         
-        virtual void ConformalClosures(
+        virtual void ComputeConformalClosures(
             const Real * restrict const x,
                   Real * restrict const w,
                   Real * restrict const y,

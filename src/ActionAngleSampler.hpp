@@ -8,11 +8,11 @@ namespace AAM
     /*!
      * @brief Implements the _(Progressive) Action-Angle Method_.
      *
-     * @tparam Real_ A real floating point type.
+     * @tparam REAL A real floating point type.
      *
-     * @tparam Int_  An integer type.
+     * @tparam INT  An integer type.
      *
-     * @tparam PRNG_T_ A class of a pseudorandom number generator.
+     * @tparam PRNG_T A class of a pseudorandom number generator.
      * Possible values are
      *  - CoBarS::MT64
      *  - CoBarS::PCG64
@@ -23,21 +23,21 @@ namespace AAM
      */
     
     template<
-        typename Real_    = double,
-        typename Int_     = std::int_fast32_t,
-        typename PRNG_T_  = CoBarS::Xoshiro256Plus,
+        typename REAL    = double,
+        typename INT     = std::int_fast32_t,
+        typename PRNG_T  = CoBarS::Xoshiro256Plus,
         bool ProgressiveQ = true
     >
     class Sampler
     {
-        static_assert(FloatQ<Real_>,"");
-        static_assert(IntQ<Int_>,"");
+        static_assert(FloatQ<REAL>,"");
+        static_assert(IntQ<INT>,"");
         
     public:
         
-        using Real   = Real_;
-        using Int    = Int_;
-        using PRNG_T = PRNG_T_;
+        using Real   = REAL;
+        using Int    = INT;
+        using Prng_T = PRNG_T;
         
         using SpherePoints_T = Tensor2<Real,Int>;
         using SpacePoints_T  = Tensor2<Real,Int>;
@@ -70,7 +70,7 @@ namespace AAM
         
         const Int edge_count_;
         
-        mutable PRNG_T random_engine;
+        mutable Prng_T random_engine;
                     
         std::uniform_real_distribution<Real> dist_1 { -one, one };
         
@@ -92,7 +92,7 @@ namespace AAM
          * @param p Buffer for vertex positions; assumed to be of size `EdgeCount() * AmbientDimension()`. Coordinates are stored in interleaved form, i.e. the coordinates of each vertex lie contiguously in memory.
          */
         
-        Int RandomClosedPolygon( Real * restrict const p )
+        Int CreateRandomClosedPolygon( Real * restrict const p )
         {
             const Int n = edge_count_;
             
@@ -291,9 +291,9 @@ namespace AAM
          * @param thread_count Number of threads to use. 
          */
         
-        Int RandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
+        Int CreateRandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
         {
-            ptic(ClassName()+"::RandomClosedPolygons");
+            ptic(ClassName()+"::CreateRandomClosedPolygons");
             
             const Int trials = ParallelDoReduce(
                 [=]( const Int thread) -> Int
@@ -311,7 +311,7 @@ namespace AAM
                     
                     for( Int k = k_begin; k < k_end; ++k )
                     {
-                        trials += C.RandomClosedPolygon( &p[ step * k ] );
+                        trials += C.CreateRandomClosedPolygon( &p[ step * k ] );
                     }
                     
                     return trials;
@@ -321,7 +321,7 @@ namespace AAM
                 thread_count
             );
             
-            ptoc(ClassName()+"::RandomClosedPolygons");
+            ptoc(ClassName()+"::CreateRandomClosedPolygons");
             return trials;
         }
         

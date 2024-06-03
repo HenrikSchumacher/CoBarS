@@ -1,6 +1,6 @@
 public:
 
-    virtual void RandomClosedPolygons(
+    virtual void CreateRandomClosedPolygons(
         Real * restrict const x,
         Real * restrict const w,
         Real * restrict const y,
@@ -10,7 +10,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::RandomClosedPolygons");
+        ptic(ClassName()+"::CreateRandomClosedPolygons");
         
         ParallelDo(
             [&,this]( const Int thread )
@@ -47,5 +47,5 @@ public:
             thread_count
         );
         
-        ptoc(ClassName()+"::RandomClosedPolygons");
+        ptoc(ClassName()+"::CreateRandomClosedPolygons");
     }

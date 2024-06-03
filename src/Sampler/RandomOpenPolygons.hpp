@@ -1,12 +1,12 @@
 public:
 
-    virtual void RandomOpenPolygons(
+    virtual void CreateRandomOpenPolygons(
         Real * restrict const x,
         const Int sample_count,
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::RandomOpenPolygons");
+        ptic(ClassName()+"::CreateRandomOpenPolygons");
         
         ParallelDo(
             [&,this]( const Int thread )
@@ -33,5 +33,5 @@ public:
             thread_count
         );
         
-        ptoc(ClassName()+"::RandomOpenPolygons");
+        ptoc(ClassName()+"::CreateRandomOpenPolygons");
     }

@@ -6,13 +6,13 @@ namespace CoBarS
 /*!
  * @brief The main class of CoBarS. It does the actual sampling.
  *
- * @tparam AmbDim_ The dimension of the ambient space.
+ * @tparam AMB_DIM The dimension of the ambient space.
  *
- * @tparam Real_ A real floating point type.
+ * @tparam REAL A real floating point type.
  *
- * @tparam Int_  An integer type.
+ * @tparam INT  An integer type.
  *
- * @tparam PRNG_T_ A class of a pseudorandom number generator.
+ * @tparam PRNG_T A class of a pseudorandom number generator.
  * Possible values are
  *  - CoBarS::MT64
  *  - CoBarS::PCG64
@@ -21,28 +21,28 @@ namespace CoBarS
  */
     
     template<
-        int AmbDim_,
-        typename Real_    = double,
-        typename Int_     = int_fast32_t,
-        typename PRNG_T_  = Xoshiro256Plus,
+        int AMB_DIM,
+        typename REAL    = double,
+        typename INT     = int_fast32_t,
+        typename PRNG_T  = Xoshiro256Plus,
         bool vectorizeQ   = true,
         bool zerofyfirstQ = false
     >
-    class Sampler : public SamplerBase<AmbDim_,Real_,Int_>
+    class Sampler : public SamplerBase<AMB_DIM,REAL,INT>
     {
-        static_assert(FloatQ<Real_>,"");
-        static_assert(Scalar::RealQ<Real_>,"");
-        static_assert(IntQ<Int_>,"");
+        static_assert(FloatQ<REAL>,"");
+        static_assert(Scalar::RealQ<REAL>,"");
+        static_assert(IntQ<INT>,"");
 
     private:
         
-        using Base_T = SamplerBase<AmbDim_,Real_,Int_>;
+        using Base_T = SamplerBase<AMB_DIM,REAL,INT>;
 
     public:
         
         using typename Base_T::Real;
         using typename Base_T::Int;
-        using PRNG_T = PRNG_T_;
+        using Prng_T = PRNG_T;
         
         using Base_T::AmbDim;
         
@@ -240,7 +240,7 @@ namespace CoBarS
          * @brief The instance's own pseudorandom number generator.
          */
         
-        mutable PRNG_T random_engine;
+        mutable Prng_T random_engine;
         
         mutable std::normal_distribution<Real> normal_dist {zero,one};
         
@@ -481,8 +481,6 @@ namespace CoBarS
         
         virtual void ComputeConformalClosure() override
         {
-//            ResetResults();
-            
             ComputeInitialShiftVector();
 
             Optimize();

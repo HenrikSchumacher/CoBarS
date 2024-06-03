@@ -50,12 +50,12 @@ int main()
     
     std::cout << "Sampling " << sample_count <<" equilateral " << edge_count << "-gons, using " << thread_count << " threads." << std::endl;
     
-    // The worker routine is `RandomClosedPolygons`.
+    // The worker routine is `CreateRandomClosedPolygons`.
     // It writes to raw pointers, so you are free to use whatever container you like,
     // as long as it stores its entries contiguously.
     
     // This call is automatically parallelized over `thread_count` threads.
-    S.RandomClosedPolygons(
+    S.CreateRandomClosedPolygons(
         &x[0], &w[0], &y[0], &K[0], &K_quot[0], sample_count, thread_count
     );
     
@@ -86,12 +86,12 @@ int main()
     
     std::cout << "Sampling " << sample_count <<" nonequilateral " << edge_count << "-gons, using " << thread_count << " threads." << std::endl;
     
-    // The worker routine is `RandomClosedPolygons`.
+    // The worker routine is `CreateRandomClosedPolygons`.
     // It writes to raw pointers, so you are free to use whatever container you like,
     // as long as it stores its entries contiguously.
     
     // This call is automatically parallelized over `thread_count` threads.
-    T.RandomClosedPolygons(
+    T.CreateRandomClosedPolygons(
         &x[0], &w[0], &y[0], &K[0], &K_quot[0], sample_count, thread_count
     );
     

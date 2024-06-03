@@ -25,10 +25,10 @@ namespace CoBarS
         
         // It does not matter which pseudorandom number generator we use.
         // Nothing is random here.
-        using PRNG_T  = Xoshiro256Plus;
+        using Prng_T  = Xoshiro256Plus;
         
-        using Sampler2D_T        = Sampler<2     ,Real,Int,PRNG_T,true,true>;
-        using Sampler_T          = Sampler<AmbDim,Real,Int,PRNG_T,true,true>;
+        using Sampler2D_T        = Sampler<2     ,Real,Int,Prng_T,true,true>;
+        using Sampler_T          = Sampler<AmbDim,Real,Int,Prng_T,true,true>;
 
         using Vector2D_T         = typename Sampler2D_T::Vector_T;
         using Vector_T           = typename   Sampler_T::Vector_T;

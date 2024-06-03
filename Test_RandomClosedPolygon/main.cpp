@@ -95,100 +95,100 @@ int main()
     
     
     tic(S_MT_0.ClassName());
-        S_MT_0.RandomClosedPolygons(
+        S_MT_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_MT_0.ClassName());
 
     tic(S_MT_1.ClassName());
-        S_MT_1.RandomClosedPolygons(
+        S_MT_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_MT_1.ClassName());
 
     tic(S_MT_vec_0.ClassName());
-        S_MT_vec_0.RandomClosedPolygons(
+        S_MT_vec_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_MT_vec_0.ClassName());
 
     tic(S_MT_vec_1.ClassName());
-        S_MT_vec_1.RandomClosedPolygons(
+        S_MT_vec_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_MT_vec_1.ClassName());
 
 
     tic(S_PCG64_0.ClassName());
-        S_PCG64_0.RandomClosedPolygons(
+        S_PCG64_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_PCG64_0.ClassName());
 
     tic(S_PCG64_1.ClassName());
-        S_PCG64_1.RandomClosedPolygons(
+        S_PCG64_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_PCG64_1.ClassName());
 
     tic(S_PCG64_vec_0.ClassName());
-        S_PCG64_vec_0.RandomClosedPolygons(
+        S_PCG64_vec_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_PCG64_vec_0.ClassName());
 
     tic(S_PCG64_vec_1.ClassName());
-        S_PCG64_vec_1.RandomClosedPolygons(
+        S_PCG64_vec_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_PCG64_vec_1.ClassName());
 
     
     tic(S_WyRand_0.ClassName());
-        S_WyRand_0.RandomClosedPolygons(
+        S_WyRand_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_WyRand_0.ClassName());
 
     tic(S_WyRand_1.ClassName());
-        S_WyRand_1.RandomClosedPolygons(
+        S_WyRand_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_WyRand_1.ClassName());
 
     tic(S_WyRand_vec_0.ClassName());
-        S_WyRand_vec_0.RandomClosedPolygons(
+        S_WyRand_vec_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_WyRand_vec_0.ClassName());
 
     tic(S_WyRand_vec_1.ClassName());
-        S_WyRand_vec_1.RandomClosedPolygons(
+        S_WyRand_vec_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_WyRand_vec_1.ClassName());
     
     
     tic(S_Xoshiro_0.ClassName());
-        S_Xoshiro_0.RandomClosedPolygons(
+        S_Xoshiro_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_Xoshiro_0.ClassName());
 
     tic(S_Xoshiro_1.ClassName());
-        S_Xoshiro_1.RandomClosedPolygons(
+        S_Xoshiro_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_Xoshiro_1.ClassName());
 
     tic(S_Xoshiro_vec_0.ClassName());
-        S_Xoshiro_vec_0.RandomClosedPolygons(
+        S_Xoshiro_vec_0.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_Xoshiro_vec_0.ClassName());
 
     tic(S_Xoshiro_vec_1.ClassName());
-        S_Xoshiro_vec_1.RandomClosedPolygons(
+        S_Xoshiro_vec_1.CreateRandomClosedPolygons(
             x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
         );
     toc(S_Xoshiro_vec_1.ClassName());
@@ -201,38 +201,38 @@ int main()
     Tensor3<Real,Int> p ( sample_count, edge_count+1, d ); // vertex positions of polygon
 
     tic(M_MT64_0.ClassName());
-        M_MT64_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_MT64_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_MT64_0.ClassName());
 
     tic(M_MT64_1.ClassName());
-        M_MT64_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_MT64_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_MT64_1.ClassName());
     
     
     tic(M_PCG64_0.ClassName());
-        M_PCG64_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_PCG64_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_PCG64_0.ClassName());
     
     tic(M_PCG64_1.ClassName());
-        M_PCG64_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_PCG64_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_PCG64_1.ClassName());
     
     
     tic(M_WyRand_0.ClassName());
-        M_WyRand_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_WyRand_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_WyRand_0.ClassName());
     
     tic(M_WyRand_1.ClassName());
-        M_WyRand_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_WyRand_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_WyRand_1.ClassName());
     
     
     tic(M_Xoshiro_0.ClassName());
-        M_Xoshiro_0.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_Xoshiro_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_Xoshiro_0.ClassName());
     
     tic(M_Xoshiro_1.ClassName());
-        M_Xoshiro_1.RandomClosedPolygons( p.data(), sample_count, thread_count );
+        M_Xoshiro_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
     toc(M_Xoshiro_1.ClassName());
 
     

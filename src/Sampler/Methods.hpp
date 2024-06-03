@@ -14,8 +14,6 @@ public:
     
     virtual void ReadEdgeLengths( const Real * const r_in ) override
     {
-//        ResetResults();
-        
         r_.Read(r_in);
         
         total_r_inv = Inv( r_.Total() );
@@ -29,8 +27,6 @@ public:
     
     virtual void ReadRho( const Real * const rho_in ) override
     {
-//        ResetResults();
-        
         rho_.Read(rho_in);
     }
     
@@ -192,14 +188,3 @@ public:
         }
         ptoc(ClassName()+"::NormalizeCompressedSamples");
     }
-
-//
-//private:
-//
-//    void ResetResults() const
-//    {
-//        p_initializedQ = false;
-//        edge_space_sampling_weight = -1;
-//        edge_quotient_space_sampling_weight = -1;
-//    }
-
