@@ -19,14 +19,14 @@ namespace AAM
      *  - CoBarS::WyRand
      *  - CoBarS::Xoshiro256Plus
      *
-     *  @tparam ProgressiveQ If set to `false`, it uses the _Action-Angle Method_ by (Cantarella, Duplantier, Shonkwiler, and Uehara)[https://iopscience.iop.org/article/10.1088/1751-8113/49/27/275202]. Otherwise, it uses the the _Progressive Action-Angle Method_ sampler by Cantarella, Schumacher, and Shonkwiler.
+     *  @tparam PROGRESSIVE_Q If set to `false`, it uses the _Action-Angle Method_ by (Cantarella, Duplantier, Shonkwiler, and Uehara)[https://iopscience.iop.org/article/10.1088/1751-8113/49/27/275202]. Otherwise, it uses the the _Progressive Action-Angle Method_ sampler by Cantarella, Schumacher, and Shonkwiler.
      */
     
     template<
         typename REAL    = double,
         typename INT     = std::int_fast32_t,
         typename PRNG_T  = CoBarS::Xoshiro256Plus,
-        bool ProgressiveQ = true
+        bool PROGRESSIVE_Q = true
     >
     class Sampler
     {
@@ -43,6 +43,7 @@ namespace AAM
         using SpacePoints_T  = Tensor2<Real,Int>;
         
         static constexpr Int AmbDim = 3;
+        static constexpr bool ProgressiveQ = PROGRESSIVE_Q;
         
         using Vector_T = Tensors::Tiny::Vector<AmbDim,Real,Int>;
         
