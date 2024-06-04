@@ -39,7 +39,7 @@ public:
                 
                 Time stop = Clock::now();
                 
-                logprint("Thread " + ToString(thread) + " done. Time elapsed = " + ToString( Duration(start, stop) ) + "." );
+                logprint("Thread " + ToString(thread) + " done. Time elapsed = " + ToString( Tools::Duration(start, stop) ) + "." );
                 
             },
             thread_count

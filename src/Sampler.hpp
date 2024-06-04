@@ -75,7 +75,8 @@ namespace CoBarS
         ,   r_   ( edge_count_, one / edge_count_ )
         ,   rho_ ( edge_count_, one )
         ,   total_r_inv ( one )
-        {
+        {            
+            PrintWarnings();
             ComputeEdgeSpaceSamplingHelper();
             ComputeEdgeQuotientSpaceSamplingHelper();
             
@@ -104,6 +105,7 @@ namespace CoBarS
         ,   r_          ( edge_count_ )
         ,   rho_        ( rho, edge_count_ )
         {
+            PrintWarnings();
             ComputeEdgeSpaceSamplingHelper();
             ComputeEdgeQuotientSpaceSamplingHelper();
             
@@ -604,6 +606,23 @@ namespace CoBarS
             return (*F_list_[i])( *this );
         }
 
+    private:
+        
+        
+        void PrintWarnings()
+        {
+            static_assert( AMB_DIM > 1, "Polygons in ambient dimension AMB_DIM < 2 do not make sense.");
+            
+            if constexpr ( AMB_DIM > 12 )
+            {
+                wprint(this->ClassName()+": The eigensolver employed by this class has been developped specifically for small ambient dimensions AMB_DIM <= 12. If you use this with higher dimensions be aware that the sampling weights for the quotient space may contain significant errors.");
+            }
+            
+            if ( edge_count_ <= AmbDim )
+            {
+                wprint(this->ClassName()+": Closed polygons with " + ToString(edge_count_) + " edges span an affine subspace of dimension at most " + ToString(edge_count_ - 1) + " < ambient dimension = " + ToString(AmbDim)+ ". The current implementation of the sampling weights for the quotient space leads to wrong results. Better reduce the template parameter AMB_DIM to " + ToString(edge_count_ - 1) + "; that will lead to correct weights, also for greater ambient dimensions.");
+            }
+        }
         
     public:
         
