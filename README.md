@@ -24,7 +24,7 @@ The documentation is then available in `doc/index.html`.
 
 Just include the header `CoBarS.hpp` into your C++ program via
 
-    #import "CoBarS.hpp"    
+    #include "CoBarS.hpp"    
     
 First create a `CoBarS::Sampler` object. 
     
