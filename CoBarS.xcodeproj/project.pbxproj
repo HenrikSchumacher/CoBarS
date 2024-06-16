@@ -67,8 +67,10 @@
 		AF626A6D2C1DF2230052DA44 /* Compile_clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_clang.sh; sourceTree = "<group>"; };
 		AF626A722C1F1CA40052DA44 /* Example_ConfidenceSample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_ConfidenceSample; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF626A742C1F1CA40052DA44 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		AF8EEFDA2C0E197F00A3C466 /* Compile_Clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_Clang.sh; sourceTree = "<group>"; };
-		AF8EEFDB2C0E198800A3C466 /* Compile_Clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_Clang.sh; sourceTree = "<group>"; };
+		AF626A792C1F37A80052DA44 /* Compile_clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_clang.sh; sourceTree = "<group>"; };
+		AF626A7A2C1F37A80052DA44 /* Compile_gcc.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_gcc.sh; sourceTree = "<group>"; };
+		AF8EEFDA2C0E197F00A3C466 /* Compile_clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_clang.sh; sourceTree = "<group>"; };
+		AF8EEFDB2C0E198800A3C466 /* Compile_clang.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Compile_clang.sh; sourceTree = "<group>"; };
 		AFB2F4052C0CC6F300459E94 /* Example_RandomClosedPolygon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_RandomClosedPolygon; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFB2F4072C0CC6F300459E94 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		AFB2F4102C0CC76600459E94 /* Example_Sample_Binned */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Example_Sample_Binned; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,6 +127,8 @@
 			isa = PBXGroup;
 			children = (
 				AF626A742C1F1CA40052DA44 /* main.cpp */,
+				AF626A792C1F37A80052DA44 /* Compile_clang.sh */,
+				AF626A7A2C1F37A80052DA44 /* Compile_gcc.sh */,
 			);
 			path = Example_ConfidenceSample;
 			sourceTree = "<group>";
@@ -133,7 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				AFB2F4072C0CC6F300459E94 /* main.cpp */,
-				AF8EEFDB2C0E198800A3C466 /* Compile_Clang.sh */,
+				AF8EEFDB2C0E198800A3C466 /* Compile_clang.sh */,
 				AF626A6A2C1DEE7B0052DA44 /* Compile_gcc.sh */,
 			);
 			path = Example_RandomClosedPolygon;
@@ -143,7 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				AFB2F4122C0CC76600459E94 /* main.cpp */,
-				AF8EEFDA2C0E197F00A3C466 /* Compile_Clang.sh */,
+				AF8EEFDA2C0E197F00A3C466 /* Compile_clang.sh */,
 				AF626A6B2C1DEE830052DA44 /* Compile_gcc.sh */,
 			);
 			path = Example_Sample_Binned;

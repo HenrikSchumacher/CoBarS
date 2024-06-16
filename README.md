@@ -40,7 +40,7 @@ We first create a `CoBarS::Sampler` object; this is the main class of the packag
     
 Next we need some buffers to store the random polygons and the sampling weights. You can allocated them yourself, but we use the container `std::vector` from the _STL_.
     
-    const std::size_t sample_count      = 10000000;
+    const std::size_t sample_count = 10000000;
 
     // Create containers for the polygons `p` and sampling weights `K`.
     std::vector<double> p ( sample_count * (edge_count + 1) * d );
