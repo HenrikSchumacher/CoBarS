@@ -6,22 +6,29 @@ A header-only C++ library for Monte-Carlo sampling of cylic polygons with prescr
 
 # Installation
 
-TO make sure that all submodules are cloned, too, please clone by running the following in the command line:
+To make sure that all submodules are cloned, too, please clone by running the following in the command line:
 
     git clone --depth 1 --recurse-submodules --shallow-submodules git@github.com:HenrikSchumacher/CoBarS.git
         
-    
 To build the documentation, please install doxygen and then run
 
     doxygen Doxyfile
     
 The documentation is then available in `doc/index.html`.
+
+_CoBarS_ is a header-only library with no dependencies other than the _C++ Standard Library_ and the _Standard Template Library_. 
+
+_CoBarS_ uses some external pseudorandom number generators. Thanks to their permissive licenses, their code can be inline their code into this repository, so that the user does not have to install anything. These are the pseudorandom number generators:
+
+- [PCG](https://github.com/imneme/pcg-cpp), _Permuted Congruential Generator_ `pcg64` by Melissa O'Neill.  
+
+- [wy](https://github.com/alainesp/wy), an implementation of _wyrand_ by Alain Espinosa.
+
+- [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp))by [Ryo Suzuki](https://github.com/Reputeless/Xoshiro-cpp). It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
     
 # Usage
 
-_CoBarS_ is a header-only library with no dependencies other than the _C++ Standard Library_ and the _Standard Template Library_, and those that are already inlined to the repository (namely the pseudorandom number generators [PCG](https://github.com/imneme/pcg-cpp), [wy](https://github.com/alainesp/wy), and [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp)).
-
-Just include the header `CoBarS.hpp` into your C++ program via
+_CoBarS_ is a header-only library. Just include the header `CoBarS.hpp` into your C++ program via
 
     #include "CoBarS.hpp"    
         
@@ -58,12 +65,19 @@ Finally submit the buffers to the member function `CreateRandomClosedPolygons`:
         &p[0], &K[0], sample_count, quot_space_Q, thread_count
     );
     
+Further useful routines are the following member functions of the class `CoBarS::Sampler`:
 
+- `Sample` - Sample the values of various random functions without wasting memory for the storing all polygons at once.
+
+- `BinnedSample` - Sample into bins and sample moments of various random functions without wasting memory for the storing samples.
+
+- `ConfidenceSample` - Sample mean and variance of various random functions until the confidence intervals of prescibed radius become confidence intervals of desired confidence level.
+    
 
 # Compilation
 
 
-We developped and tested _CoBarS_ most thoroughly with the _Apple clang_ compiler on macos Sonoma. It should also work with other _clang_ distributions and with _gcc_. However, _clang_ will produce faster executables as we have not optimized our code for _gcc_.
+We developped and tested _CoBarS_ most thoroughly with the _Apple clang_ compiler on macos Sonoma. It should also work with other _clang_ distributions and with _gcc_. However, _clang_ will produce faster executables as we have not optimized our code for _gcc_. (Pull requests with optimizations for _gcc_ and for architectures are welcome.) 
 
 _CoBarS_ uses several C++ 20 features, so make sure to use a compatible C++ implementation by issueing the compiler option -std=c++20 (or higher).
 
@@ -72,6 +86,8 @@ Parallelization is facilitated by `std::thread` from the _C++ Standard Library_.
 Optimization flags like `-O3` or even `-Ofast` are certainly a good idea. I also found that using `-flto` can make a measurable difference (but it ramps up compile time).
 
 With _clang_ as compiler you also have to issue `-fenable-matrix` to enable the clang matrix extension.
+
+As already said, _CoBarS_ is a header-only library. So no external libraries have to be linked.
 
 See also the example programs in the directories `Example_RandomClosedPolygon`, `Example_Sample_Binned`, and `Example_ConfidenceSample` for usage examples and more detailed compilation instructions.
 
