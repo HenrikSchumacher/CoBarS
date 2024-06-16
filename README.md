@@ -20,11 +20,11 @@ _CoBarS_ is a header-only library with no dependencies other than the _C++ Stand
 
 _CoBarS_ uses some external pseudorandom number generators. Thanks to their permissive licenses, their code can be inline their code into this repository, so that the user does not have to install anything. These are the pseudorandom number generators:
 
-- [PCG](https://github.com/imneme/pcg-cpp), _Permuted Congruential Generator_ `pcg64` by Melissa O'Neill.  
+- [PCG](https://github.com/imneme/pcg-cpp) - _Permuted Congruential Generator_ `pcg64` by Melissa O'Neill.  
 
-- [wy](https://github.com/alainesp/wy), an implementation of _wyrand_ by Alain Espinosa.
+- [wy](https://github.com/alainesp/wy) - an implementation of _wyrand_ by Alain Espinosa.
 
-- [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp)) by Ryo Suzuki. It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
+- [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp) by Ryo Suzuki. It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
     
 # Usage
 
