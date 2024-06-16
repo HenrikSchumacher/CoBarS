@@ -24,7 +24,7 @@ _CoBarS_ uses some external pseudorandom number generators. Thanks to their perm
 
 - [wy](https://github.com/alainesp/wy), an implementation of _wyrand_ by Alain Espinosa.
 
-- [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp))by [Ryo Suzuki](https://github.com/Reputeless/Xoshiro-cpp). It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
+- [Xoshiro256+](https://github.com/Reputeless/Xoshiro-cpp)) by Ryo Suzuki. It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
     
 # Usage
 
