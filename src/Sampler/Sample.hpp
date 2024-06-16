@@ -31,9 +31,9 @@ public:
 
 
     virtual void Sample(
-        mptr<Real> sampled_values,
-        mptr<Real> K_edge_space,
-        mptr<Real> K_quot_space,
+        Real * restrict const sampled_values,
+        Real * restrict const K_edge_space,
+        Real * restrict const K_quot_space,
         std::shared_ptr<RandomVariable_T> & F,
         const Int sample_count,
         const Int thread_count = 1

@@ -72,31 +72,31 @@ namespace CoBarS
         const Int first_vertex = 0;
         const Int last_vertex  = 0;
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
-            if( last_vertex > C.EdgeCount() )
+            if( last_vertex > S.EdgeCount() )
             {
                 return 0;
             }
             
-            Vector_T u = C.VertexPosition( last_vertex  );
-            Vector_T v = C.VertexPosition( first_vertex );
+            Vector_T u = S.VertexPosition( last_vertex  );
+            Vector_T v = S.VertexPosition( first_vertex );
             
             u -= v;
             
             return u.Norm();
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            const Weights_T & r = C.EdgeLengths();
+            const Weights_T & r = S.EdgeLengths();
             
             Real L = 0;
             

@@ -1,6 +1,6 @@
 public:
 
-    virtual void ComputeConformalClosures(
+    virtual void ComputeConformalCentralizations(
         const Real * restrict const x,
               Real * restrict const w,
               Real * restrict const y,
@@ -10,7 +10,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::ComputeConformalClosures");
+        ptic(ClassName()+"::ComputeConformalCentralizations");
         
         ParallelDo(
             [&,this]( const Int thread )
@@ -45,5 +45,5 @@ public:
             thread_count
         );
         
-        ptoc(ClassName()+"::ComputeConformalClosures");
+        ptoc(ClassName()+"::ComputeConformalCentralizations");
     }

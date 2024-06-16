@@ -1,4 +1,8 @@
 #include <iostream>
+
+#define TOOLS_AGGRESSIVE_INLINING
+#define TOOLS_AGGRESSIVE_UNROLLING
+
 #include "CoBarS.hpp"
 
 using namespace Tools;
@@ -26,19 +30,23 @@ using CoBarS::Xoshiro256Plus;
 
 int main()
 {
-    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Action Angle Method (PAMM). Moreover, I use it to detect compile errors in all code paths.");
+    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Action Angle Method (PAMM). Moreover, I use it to detect compilation errors in all code paths.");
     
     using Real = double;
-    using Int  = int_fast32_t;
+    using Int  = std::size_t;
 
-    constexpr Int d            = 3; // Dimensions of the ambient space has to be a compile-time constant.
-    const     Int edge_count   = 28;
-//    const     Int edge_count   = 64;
+    // Dimensions of the ambient space has to be a compile-time constant.
+    constexpr Int d            = 3;
+    const     Int edge_count   = 32;
+
     const     Int sample_count = 10000000;
     const     Int thread_count = 8;
-
     
-    // Create an instance of the cycle sampler.
+    // Whether we want the sampling weights for the quotient space of polygons 
+    // modulo SO(d) (`quot_space_Q = true`) or not (`quot_space_Q = false`).
+    const     bool quot_space_Q = true;
+    
+//     Create an instance of the cycle sampler.
     CoBarS::Sampler<d,Real,Int,MT64,false,false>            S_MT_0          (edge_count);
     CoBarS::Sampler<d,Real,Int,MT64,false,true >            S_MT_1          (edge_count);
     CoBarS::Sampler<d,Real,Int,MT64,true ,false>            S_MT_vec_0      (edge_count);
@@ -49,15 +57,16 @@ int main()
     CoBarS::Sampler<d,Real,Int,PCG64,true ,false>           S_PCG64_vec_0   (edge_count);
     CoBarS::Sampler<d,Real,Int,PCG64,true ,true >           S_PCG64_vec_1   (edge_count);
     
+    CoBarS::Sampler<d,Real,Int,WyRand,false,false>          S_WyRand_0      (edge_count);
+    CoBarS::Sampler<d,Real,Int,WyRand,false,true >          S_WyRand_1      (edge_count);
+    CoBarS::Sampler<d,Real,Int,WyRand,true ,false>          S_WyRand_vec_0  (edge_count);
+    CoBarS::Sampler<d,Real,Int,WyRand,true ,true >          S_WyRand_vec_1  (edge_count);
+    
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,false>  S_Xoshiro_0     (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,false,true >  S_Xoshiro_1     (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,false>  S_Xoshiro_vec_0 (edge_count);
     CoBarS::Sampler<d,Real,Int,Xoshiro256Plus,true ,true >  S_Xoshiro_vec_1 (edge_count);
-    
-    CoBarS::Sampler<d,Real,Int,WyRand,false,false>  S_WyRand_0     (edge_count);
-    CoBarS::Sampler<d,Real,Int,WyRand,false,true >  S_WyRand_1     (edge_count);
-    CoBarS::Sampler<d,Real,Int,WyRand,true ,false>  S_WyRand_vec_0 (edge_count);
-    CoBarS::Sampler<d,Real,Int,WyRand,true ,true >  S_WyRand_vec_1 (edge_count);
+
 
     
     // The boolean in the AAM::Sampler template stands for progressive (PAAM) or not (AAM).
@@ -67,19 +76,17 @@ int main()
     
     AAM::Sampler<Real,Int,PCG64,false>          M_PCG64_0   (edge_count);
     AAM::Sampler<Real,Int,PCG64,true >          M_PCG64_1   (edge_count);
+
+    AAM::Sampler<Real,Int,WyRand,false>         M_WyRand_0  (edge_count);
+    AAM::Sampler<Real,Int,WyRand,true >         M_WyRand_1  (edge_count);
     
     AAM::Sampler<Real,Int,Xoshiro256Plus,false> M_Xoshiro_0 (edge_count);
     AAM::Sampler<Real,Int,Xoshiro256Plus,true > M_Xoshiro_1 (edge_count);
     
-    AAM::Sampler<Real,Int,WyRand,false> M_WyRand_0 (edge_count);
-    AAM::Sampler<Real,Int,WyRand,true > M_WyRand_1 (edge_count);
-
+    
     // Create containers for the data samples.
-    Tensor3<Real,Int> x      ( sample_count, edge_count, d ); // unit edge vectors of open polygons
-    Tensor2<Real,Int> w      ( sample_count, d             ); // conformal barycenters
-    Tensor3<Real,Int> y      ( sample_count, edge_count, d ); // unit edge vectors of closed polygons
-    Tensor1<Real,Int> K      ( sample_count                ); // sample weights for the Pol space
-    Tensor1<Real,Int> K_quot ( sample_count                ); // sample weights for the quotient space
+    Tensor3<Real,Int> p ( sample_count, edge_count + 1, d ); // vertex positions of polygons.
+    Tensor1<Real,Int> K ( sample_count                    ); // sampling weights
 
     print("");
     print("Settings:");
@@ -92,158 +99,74 @@ int main()
     valprint("thread_count",thread_count);
     print("");
     
+    auto run_CoBarS = [&p,&K,sample_count,quot_space_Q,thread_count]( auto & S )
+    {
+        tic(S.ClassName());
+        
+        S.CreateRandomClosedPolygons(
+            p.data(), K.data(), sample_count, quot_space_Q, thread_count
+        );
+        
+        toc(S.ClassName());
+    };
+    
+    auto run_AMM = [&p,sample_count,thread_count]( auto & S )
+    {
+        tic(S.ClassName());
+        
+        S.CreateRandomClosedPolygons(
+            p.data(), sample_count, thread_count
+        );
+        
+        toc(S.ClassName());
+    };
     
     
-    tic(S_MT_0.ClassName());
-        S_MT_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_0.ClassName());
-
-    tic(S_MT_1.ClassName());
-        S_MT_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_1.ClassName());
-
-    tic(S_MT_vec_0.ClassName());
-        S_MT_vec_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_vec_0.ClassName());
-
-    tic(S_MT_vec_1.ClassName());
-        S_MT_vec_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_MT_vec_1.ClassName());
-
-
-    tic(S_PCG64_0.ClassName());
-        S_PCG64_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_0.ClassName());
-
-    tic(S_PCG64_1.ClassName());
-        S_PCG64_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_1.ClassName());
-
-    tic(S_PCG64_vec_0.ClassName());
-        S_PCG64_vec_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_vec_0.ClassName());
-
-    tic(S_PCG64_vec_1.ClassName());
-        S_PCG64_vec_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_PCG64_vec_1.ClassName());
-
-    
-    tic(S_WyRand_0.ClassName());
-        S_WyRand_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_WyRand_0.ClassName());
-
-    tic(S_WyRand_1.ClassName());
-        S_WyRand_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_WyRand_1.ClassName());
-
-    tic(S_WyRand_vec_0.ClassName());
-        S_WyRand_vec_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_WyRand_vec_0.ClassName());
-
-    tic(S_WyRand_vec_1.ClassName());
-        S_WyRand_vec_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_WyRand_vec_1.ClassName());
-    
-    
-    tic(S_Xoshiro_0.ClassName());
-        S_Xoshiro_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_0.ClassName());
-
-    tic(S_Xoshiro_1.ClassName());
-        S_Xoshiro_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_1.ClassName());
-
-    tic(S_Xoshiro_vec_0.ClassName());
-        S_Xoshiro_vec_0.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_vec_0.ClassName());
-
-    tic(S_Xoshiro_vec_1.ClassName());
-        S_Xoshiro_vec_1.CreateRandomClosedPolygons(
-            x.data(), w.data(), y.data(), K.data(), K_quot.data(), sample_count, thread_count
-        );
-    toc(S_Xoshiro_vec_1.ClassName());
-    
-
-
+    run_CoBarS(S_MT_1);
+    run_CoBarS(S_MT_0);
+    run_CoBarS(S_MT_vec_1);
+    run_CoBarS(S_MT_vec_0);
     
     print("");
     
-    Tensor3<Real,Int> p ( sample_count, edge_count+1, d ); // vertex positions of polygon
-
-    tic(M_MT64_0.ClassName());
-        M_MT64_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_MT64_0.ClassName());
-
-    tic(M_MT64_1.ClassName());
-        M_MT64_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_MT64_1.ClassName());
+    run_CoBarS(S_PCG64_1);
+    run_CoBarS(S_PCG64_0);
+    run_CoBarS(S_PCG64_vec_1);
+    run_CoBarS(S_PCG64_vec_0);
     
+    print("");
     
-    tic(M_PCG64_0.ClassName());
-        M_PCG64_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_PCG64_0.ClassName());
-    
-    tic(M_PCG64_1.ClassName());
-        M_PCG64_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_PCG64_1.ClassName());
-    
-    
-    tic(M_WyRand_0.ClassName());
-        M_WyRand_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_WyRand_0.ClassName());
-    
-    tic(M_WyRand_1.ClassName());
-        M_WyRand_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_WyRand_1.ClassName());
-    
-    
-    tic(M_Xoshiro_0.ClassName());
-        M_Xoshiro_0.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_Xoshiro_0.ClassName());
-    
-    tic(M_Xoshiro_1.ClassName());
-        M_Xoshiro_1.CreateRandomClosedPolygons( p.data(), sample_count, thread_count );
-    toc(M_Xoshiro_1.ClassName());
-
-    
+    run_CoBarS(S_WyRand_1);
+    run_CoBarS(S_WyRand_0);
+    run_CoBarS(S_WyRand_vec_1);
+    run_CoBarS(S_WyRand_vec_0);
     
     print("");
 
-    valprint("last K     ", K     [sample_count-1], 16 );
-    valprint("last K_quot", K_quot[sample_count-1], 16 );
+    run_CoBarS(S_Xoshiro_1);
+    run_CoBarS(S_Xoshiro_0);
+    run_CoBarS(S_Xoshiro_vec_1);
+    run_CoBarS(S_Xoshiro_vec_0);
 
     print("");
+    
+//    run_AMM(M_MT64_0);
+//    run_AMM(M_MT64_1);
+//    
+//    print("");
+//
+//    run_AMM(M_PCG64_0);
+//    run_AMM(M_PCG64_1);
+//    
+//    print("");
+//
+//    run_AMM(M_WyRand_0);
+//    run_AMM(M_WyRand_1);
+//  
+//    print("");
 
+    run_AMM(M_Xoshiro_0);
+    run_AMM(M_Xoshiro_1);
 
     return 0;
 }

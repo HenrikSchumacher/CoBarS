@@ -53,32 +53,32 @@ namespace CoBarS
         
     protected:
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
-            const Int last_vertex = C.EdgeCount()/2;
+            const Int last_vertex = S.EdgeCount()/2;
             
-            Vector_T u = C.VertexPosition( last_vertex );
-            Vector_T v = C.VertexPosition( 0           );
+            Vector_T u = S.VertexPosition( last_vertex );
+            Vector_T v = S.VertexPosition( 0           );
             
             u -= v;
             
             return u.Norm();
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            const Weights_T & r = C.EdgeLengths();
+            const Weights_T & r = S.EdgeLengths();
             
             Real L = 0;
             
-            const Int last_vertex = C.EdgeCount()/2;
+            const Int last_vertex = S.EdgeCount()/2;
             
             for( Int k = 0; k < last_vertex; ++k )
             {

@@ -7,7 +7,7 @@
 namespace CoBarS
 {
     /*!
-     * @brief A wrapper for `XoshiroCpp::Xoshiro256Plus`, implemented by [Ryo Suzuki](https://github.com/imneme/pcg-cpp). It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
+     * @brief A wrapper for `XoshiroCpp::Xoshiro256Plus`, implemented by [Ryo Suzuki](https://github.com/Reputeless/Xoshiro-cpp). It implements _xoshiro256+_, a pseudorandom number generator by David Blackman and Sebastiano Vigna.
      */
     
     class Xoshiro256Plus

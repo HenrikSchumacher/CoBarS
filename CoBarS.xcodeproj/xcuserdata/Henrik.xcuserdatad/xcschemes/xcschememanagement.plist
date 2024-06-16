@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>Example_ConfidenceSample.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 		<key>Example_RandomClosedPolygon.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
@@ -55,6 +60,11 @@
 			<true/>
 		</dict>
 		<key>AF597E2029C51B0400ABD4A0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>AF626A712C1F1CA40052DA44</key>
 		<dict>
 			<key>primary</key>
 			<true/>

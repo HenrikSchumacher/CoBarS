@@ -6,7 +6,7 @@ namespace CoBarS
     template<
         int AmbDim_,
         typename Real_    = double,
-        typename Int_     = int_fast32_t
+        typename Int_     = std::size_t
     >
     class DouadyEarleExtension
     {
@@ -133,9 +133,7 @@ namespace CoBarS
         void operator()( cptr<Real> w_in, mptr<Real> w_out )
         {
             // Take 2D input vector and shift it to 0 so that
-            Vector2D_T w;
-            
-            w.Read(w_in);
+            Vector2D_T w (w_in);
             
             if( Abs( w.Norm() - static_cast<Real>(1)) <= 128 * Scalar::eps<Real> )
             {
@@ -171,17 +169,17 @@ namespace CoBarS
             
             S2D_.Shift();
             
-            for( Int k = 0; k < edge_count_; ++k)
+            for( Int i = 0; i < edge_count_; ++i )
             {
                 // Compute corresponding point on S^AmbDim by piecewise-linear interpolation.
                 
-                Vector2D_T y2D_k; // Point on the unit circle
+                Vector2D_T y2D_i; // Point on the unit circle
                 
-                S2D_.WriteEdgeVectors(y2D_k,k);
+                S2D_.WriteEdgeVectors(y2D_i,i);
                 
                 // phi in [0, 1).
                 const Real t = std::fmod(
-                    std::atan2( y2D_k[1], y2D_k[0] ) * Scalar::TwoPiInv<Real> + static_cast<Real>(1),
+                    std::atan2( y2D_i[1], y2D_i[0] ) * Scalar::TwoPiInv<Real> + static_cast<Real>(1),
                     static_cast<Real>(1)
                 );
                 
@@ -194,11 +192,11 @@ namespace CoBarS
                 Vector_T a ( curve_, j      );
                 Vector_T b ( curve_, j_next );
                 
-                Vector_T x_k; // Point on the unit sphere;
+                Vector_T x_i; // Point on the unit sphere;
                 
-                LinearCombine( static_cast<Real>(1) - lambda, a, lambda, b, x_k );
+                LinearCombine( static_cast<Real>(1) - lambda, a, lambda, b, x_i );
                 
-                S_.ReadInitialEdgeVectors(x_k,k,true);
+                S_.ReadInitialEdgeVectors(x_i,i,true);
             }
             
             S_.ComputeConformalClosure();

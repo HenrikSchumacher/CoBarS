@@ -22,56 +22,58 @@ protected:
         {
             Sigma.SetZero();
             
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                Vector_T y_k ( y_, k );
+                Vector_T y_i ( y_, i );
                 
-                const Real rho_squared = rho_[k] * rho_[k];
+                const Real rho_squared = rho_[i] * rho_[i];
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = rho_squared * y_k[i];
+                    const Real factor = rho_squared * y_i[j];
                     
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        Sigma[i][j] += factor * y_k[j];
+                        Sigma[j][k] += factor * y_i[k];
                     }
                 }
             }
         }
         else
         {
-            // Overwrite for k = 0.
+            // Overwrite for i = 0.
             {
-                constexpr Int k = 0;
+                constexpr Int i = 0;
                 
-                Vector_T y_k ( y_, k );
+                Vector_T y_i ( y_, i );
                 
-                const Real rho_squared = rho_[0] * rho_[0];
-                for( Int i = 0; i < AmbDim; ++i )
+                const Real rho_squared = rho_[i] * rho_[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = rho_squared * y_k[i];
+                    const Real factor = rho_squared * y_i[j];
 
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        Sigma[i][j] = factor * y_k[j];
+                        Sigma[j][k] = factor * y_i[k];
                     }
                 }
             }
 
             // Now we add-in the other entries.
-            for( Int k = 1; k < edge_count_; ++k )
+            for( Int i = 1; i < edge_count_; ++i )
             {
-                Vector_T y_k ( y_, k );
+                Vector_T y_i ( y_, i );
                 
-                const Real rho_squared = rho_[k] * rho_[k];
-                for( Int i = 0; i < AmbDim; ++i )
+                const Real rho_squared = rho_[i] * rho_[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = rho_squared * y_k[i];
+                    const Real factor = rho_squared * y_i[j];
 
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        Sigma[i][j] += factor * y_k[j];
+                        Sigma[j][k] += factor * y_i[k];
                     }
                 }
             }
@@ -116,11 +118,11 @@ protected:
             
             det = one;
             
-            for( Int i = 0; i < AmbDim; ++i )
+            for( Int j = 0; j < AmbDim; ++j )
             {
-                for( Int j = i+1; j < AmbDim; ++j )
+                for( Int k = j+1; k < AmbDim; ++k )
                 {
-                    det *= (lambda(i)+lambda(j));
+                    det *= (lambda(j)+lambda(k));
                 }
             }
         }
@@ -168,30 +170,30 @@ private:
         
         const Real one_plus_ww = big_one + ww;
         
-        for( Int k = 0; k < edge_count_; ++k )
+        for( Int i = 0; i < edge_count_; ++i )
         {
-            Vector_T y_k ( y_, k );
+            Vector_T y_i ( y_, i );
             
-            const Real wy = Dot(w_,y_k);
+            const Real wy = Dot(w_,y_i);
             
             const Real factor = one_plus_ww + two * wy;
             
             // Multiplying by one_plus_ww_inv so that prod does not grow so quickly.
             prod *= factor;
             
-            const Real r_k = r_[k];
-            const Real r_over_rho_k = r_k / rho_[k];
-            const Real r_over_rho_k_squared = r_over_rho_k * r_over_rho_k;
+            const Real r_i = r_[i];
+            const Real r_over_rho_i = r_i / rho_[i];
+            const Real r_over_rho_i_squared = r_over_rho_i * r_over_rho_i;
             
-            for( Int i = 0; i < AmbDim; ++i )
+            for( Int j = 0; j < AmbDim; ++j )
             {
-                for( Int j = 0; j < AmbDim; ++j )
+                for( Int k = 0; k < AmbDim; ++k )
                 {
-                    const Real scratch = static_cast<Real>(i==j) - y_k[i] * y_k[j];
+                    const Real scratch = static_cast<Real>(j==k) - y_i[j] * y_i[k];
                     
-                    gamma[i][j] += r_over_rho_k_squared * scratch;
+                    gamma[j][k] += r_over_rho_i_squared * scratch;
                     
-                    cbar [i][j] += r_k * scratch;
+                    cbar [j][k] += r_i * scratch;
                 }
             }
         }

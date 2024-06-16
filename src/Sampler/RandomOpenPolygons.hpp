@@ -1,7 +1,7 @@
 public:
 
     virtual void CreateRandomOpenPolygons(
-        Real * restrict const x,
+        Real * restrict const p,
         const Int sample_count,
         const Int thread_count = 1
     ) const override
@@ -22,7 +22,7 @@ public:
                 {
                     S.RandomizeInitialEdgeVectors();
                     
-                    S.WriteInitialEdgeVectors(x,k);
+                    S.WriteInitialVertexPositions(p,k);
                 }
                 
                 Time stop = Clock::now();

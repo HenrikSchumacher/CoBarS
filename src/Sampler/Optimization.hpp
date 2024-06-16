@@ -41,11 +41,11 @@ private:
         
         Real value = 0;
         
-        for( Int k = 0; k < edge_count_; ++k )
+        for( Int i = 0; i < edge_count_; ++i )
         {
-            Vector_T y_k (y_,k);
+            Vector_T y_i (y_,i);
             
-            value += r_[k] * std::log( std::abs( (a - two * Dot(y_k,z_) ) * b ) );
+            value += r_[i] * std::log( std::abs( (a - two * Dot(y_i,z_) ) * b ) );
         }
         
         return value * total_r_inv;
@@ -170,26 +170,28 @@ private:
         // CAUTION: We use a different sign convention as in the paper!
         // Assemble  F = -1/2 y * r.
         // Assemble DF_ = nabla F + regulatization:
-        // DF_{ij} = \delta_{ij} - \sum_k x_{k,i} x_{k,j} \r_k.
+        // DF_{jk} = \delta_{jk} - \sum_i x_{i,j} x_{i,k} r_i.
         
         if constexpr ( zerofyfirstQ )
         {
             F_.SetZero();
             DF_.SetZero();
 
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                Vector_T y_k ( y_, k );
+                Vector_T y_i ( y_, i );
+                
+                const Real r_i = r_[i];
 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = r_[k] * y_k[i];
+                    const Real factor = r_i * y_i[j];
 
-                    F_[i] -= factor;
+                    F_[j] -= factor;
 
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        DF_[i][j] -= factor * y_k[j];
+                        DF_[j][k] -= factor * y_i[k];
                     }
                 }
             }
@@ -199,35 +201,39 @@ private:
         {
             // Filling F_ and DF_ with first summand...
             {
-                Vector_T y_k ( y_, 0 );
+                Vector_T y_i ( y_, 0 );
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                const Real r_i = r_[0];
+                
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = r_[0] * y_k[i];
+                    const Real factor = r_i * y_i[j];
                     
-                    F_[i] = - factor;
+                    F_[j] = - factor;
                     
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        DF_[i][j] = - factor * y_k[j];
+                        DF_[j][k] = - factor * y_i[k];
                     }
                 }
             }
             
             // ... and adding-in the other summands.
-            for( Int k = 1; k < edge_count_; ++k )
+            for( Int i = 1; i < edge_count_; ++i )
             {
-                Vector_T y_k ( y_, k );
+                Vector_T y_i ( y_, i );
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                const Real r_i = r_[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real factor = r_[k] * y_k[i];
+                    const Real factor = r_i * y_i[j];
                     
-                    F_[i] -= factor;
+                    F_[j] -= factor;
                     
-                    for( Int j = i; j < AmbDim; ++j )
+                    for( Int k = j; k < AmbDim; ++k )
                     {
-                        DF_[i][j] -= factor * y_k[j];
+                        DF_[j][k] -= factor * y_i[k];
                     }
                 }
             }
@@ -245,9 +251,9 @@ private:
         F_ *= half;
         
         // Better add the identity afterwards for precision reasons.
-        for( Int i = 0; i < AmbDim; ++i )
+        for( Int j = 0; j < AmbDim; ++j )
         {
-            DF_[i][i] += one;
+            DF_[j][j] += one;
         }
     }
     
@@ -290,11 +296,11 @@ private:
         
         const Real c = Settings().regularization * squared_residual;
         
-        for( Int i = 0; i < AmbDim; ++i )
+        for( Int j = 0; j < AmbDim; ++j )
         {
-            for( Int j = i; j < AmbDim; ++j )
+            for( Int k = j; k < AmbDim; ++k )
             {
-                L[i][j] = DF_[i][j] + static_cast<Real>(i==j) * c;
+                L[j][k] = DF_[j][k] + static_cast<Real>(j==k) * c;
             }
         }
         
@@ -323,15 +329,15 @@ private:
         const Real ww  = Dot(w_,w_);
         const Real wz2 = Dot(w_,z_) * two;
         const Real zz  = Dot(z_,z_);
+    
+        const Real d = one / (big_one + wz2 + ww * zz);
         
-        const Real a = one - ww;
-        const Real b = one + zz + wz2;
-        const Real c = big_one + wz2 + ww * zz;
-        const Real d = one / c;
+        const Real a = (one - ww) * d;
+        const Real b = (one + zz + wz2) * d;
         
-        for( Int i = 0; i < AmbDim; ++i )
+        for( Int j = 0; j < AmbDim; ++j )
         {
-            w_[i] = ( a * z_[i] + b * w_[i] ) * d;
+            w_[j] = a * z_[j] + b * w_[j];
         }
     }
     
@@ -366,26 +372,53 @@ private:
         const Real one_minus_ww = big_one - ww;
         const Real one_plus_ww  = big_one + ww;
         
-        for( Int k = 0; k < edge_count_; ++k )
+        for( Int i = 0; i < edge_count_; ++i )
         {
-            Vector_T x_k ( x_, k );
+            Vector_T z ( x_, i );
             
-            const Real wx2 = two * Dot(w_,x_k);
+            const Real wx2 = two * Dot(w_,z);
             
-            const Real denom = one / ( one_plus_ww - wx2 );
+            const Real d = one / ( one_plus_ww - wx2 );
+
+            const Real a = one_minus_ww * d;
             
-            const Real wx2_minus_2 = wx2 - two;
+            const Real b = (wx2 - two) * d;
             
-            for( Int i = 0; i < AmbDim; ++i )
+            for( Int j = 0; j < AmbDim; ++j )
             {
-                x_k[i] = (one_minus_ww * x_k[i] + wx2_minus_2 * w_[i]) * denom;
+                z[j] = a * z[j] + b* w_[j];
             }
             
             if constexpr ( normalizeQ )
             {
-                x_k.Normalize();
+                z.Normalize();
             }
             
-            x_k.Write( y_, k );
+            z.Write( y_, i );
         }
+        
+//        for( Int i = 0; i < edge_count_; ++i )
+//        {
+//            Vector_T x_i ( x_, i );
+//            
+//            const Real wx2 = two * Dot(w_,x_i);
+//            
+//            const Real d = one / ( one_plus_ww - wx2 );
+//
+//            const Real a = one_minus_ww * d;
+//            
+//            const Real b = (wx2 - two) * d;
+//            
+//            for( Int j = 0; j < AmbDim; ++j )
+//            {
+//                x_i[j] = a * x_i[j] + b* w_[j];
+//            }
+//            
+//            if constexpr ( normalizeQ )
+//            {
+//                x_i.Normalize();
+//            }
+//            
+//            x_i.Write( y_, i );
+//        }
     }

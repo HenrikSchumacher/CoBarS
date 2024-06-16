@@ -6,11 +6,14 @@ namespace CoBarS
 /*!
  * @brief The main class of CoBarS. It does the actual sampling.
  *
+ * CoBarS is specifically optimized and tested for ambient dimensions `2` and `3`.
+ * Higher ambient dimensions are implemented, but the symmetric eigensolver might become inaccurate for ambient dimensions > 12.
+ *
  * @tparam AMB_DIM The dimension of the ambient space.
  *
- * @tparam REAL A real floating point type.
+ * @tparam REAL A real floating point type. Best use `REAL = double`; `float` is often not precise enough.
  *
- * @tparam INT  An integer type.
+ * @tparam INT  An integer type. We recommend to use `std::size_t`.
  *
  * @tparam PRNG_T A class of a pseudorandom number generator.
  * Possible values are
@@ -23,10 +26,10 @@ namespace CoBarS
     template<
         int AMB_DIM,
         typename REAL    = double,
-        typename INT     = int_fast32_t,
+        typename INT     = std::size_t,
         typename PRNG_T  = Xoshiro256Plus,
-        bool vectorizeQ   = true,
-        bool zerofyfirstQ = false
+        bool VECTORIZE_Q   = true,
+        bool ZEROFY_FIRST_Q = false
     >
     class Sampler : public SamplerBase<AMB_DIM,REAL,INT>
     {
@@ -36,12 +39,13 @@ namespace CoBarS
 
     private:
         
-        using Base_T = SamplerBase<AMB_DIM,REAL,INT>;
+        using Class_T = Sampler<AMB_DIM,REAL,INT,PRNG_T,VECTORIZE_Q,ZEROFY_FIRST_Q>;
+        using Base_T  = SamplerBase<AMB_DIM,REAL,INT>;
 
     public:
         
-        using typename Base_T::Real;
-        using typename Base_T::Int;
+        using Real = typename Base_T::Real;
+        using Int  = typename Base_T::Int;
         using Prng_T = PRNG_T;
         
         using Base_T::AmbDim;
@@ -59,6 +63,9 @@ namespace CoBarS
 
         using VectorList_T = Tiny::VectorList<AmbDim,Real,Int>;
         using Matrix_T     = Tensor2<Real,Int>;
+        
+        static constexpr bool vectorizeQ   = VECTORIZE_Q   ;
+        static constexpr bool zerofyfirstQ = ZEROFY_FIRST_Q;
     
     public:
         
@@ -72,7 +79,7 @@ namespace CoBarS
         )
         :   Base_T( settings )
         ,   edge_count_(edge_count)
-        ,   r_   ( edge_count_, one / edge_count_ )
+        ,   r_   ( edge_count_, one )
         ,   rho_ ( edge_count_, one )
         ,   total_r_inv ( one )
         {            
@@ -392,31 +399,19 @@ namespace CoBarS
         
 #include "Sampler/ConfidenceSample.hpp"
         
+#include "Sampler/ComputeConformalClosure.hpp"
+        
     public:
         
-//        virtual Real InitialEdgeCoordinate( const Int k, const Int i ) const override
+//        virtual Real InitialEdgeCoordinate( const Int i, const Int j ) const override
 //        {
-//            return (vectorizeQ ? x_[i][k] : x_[k][i]);
+//            return (vectorizeQ ? x_[j][i] : x_[i][j]);
 //        }
         
-        virtual Vector_T InitialEdgeVector( const Int k ) const override
+        virtual Vector_T InitialEdgeVector( const Int i ) const override
         {
-            return Vector_T (x_,k);
+            return Vector_T (x_,i);
         }
-        
-//        virtual void ReadInitialEdgeVector(
-//            const Vector_T & x, const Int k, bool normalizeQ = true
-//        ) override
-//        {
-//            Vector_T x_k (x);
-//            
-//            if( normalizeQ )
-//            {
-//                x_k.Normalize();
-//            }
-//            
-//            x_k.Write(x_,k);
-//        }
 
         virtual void ReadInitialEdgeVectors(
             const Real * restrict const x, const Int offset = 0 , bool normalizeQ = true
@@ -426,13 +421,13 @@ namespace CoBarS
             
             if( normalizeQ )
             {
-                for( Int k = 0; k < edge_count_; ++k )
+                for( Int i = 0; i < edge_count_; ++i )
                 {
-                    Vector_T x_k (X,k);
+                    Vector_T x_i (X,i);
                     
-                    x_k.Normalize();
+                    x_i.Normalize();
                     
-                    x_k.Write(x_,k);
+                    x_i.Write(x_,i);
                 }
             }
             else
@@ -448,57 +443,94 @@ namespace CoBarS
             x_.Write( &x[ AmbDim * edge_count_ * offset ]);
         }
 
+        virtual void WriteInitialVertexPositions( 
+            Real * restrict const p, const Int offset = 0
+        ) const override
+        {
+            // We treat the edges as massless.
+            // All mass is concentrated in the vertices, and each vertex carries the same mass.
+            Vector_T barycenter        (zero);
+            Vector_T point_accumulator (zero);
+            
+            for( Int i = 0; i < edge_count_; ++i )
+            {
+                const Vector_T x_i ( x_, i );
+                
+                const Real r_i = r_[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    const Real delta = r_i * x_i[j];
+                    
+                    barycenter[j] += (point_accumulator[j] + delta);
+                    
+                    point_accumulator[j] += delta;
+                }
+            }
+            
+            barycenter *= Inv<Real>( edge_count_ + Int(1) );
+            
+            point_accumulator = barycenter;
+            
+            point_accumulator *= -one;
+            
+        
+            mptr<Real> p_out = &p[(edge_count_ + Int(1)) * AmbDim * offset];
+        
+            point_accumulator.Write( &p_out[0] );
+            
+            for( Int i = 0; i < edge_count_; ++i )
+            {
+                const Vector_T x_i ( x_, i );
+                
+                const Real r_i = r_[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    point_accumulator[j] += r_i * x_i[j];
+                }
+                
+                point_accumulator.Write( &p_out[AmbDim * (i+1)] );
+            }
+        }
+        
         void DumpInitialEdgeVectors() const
         {
-            for( Int i = 0; i < AmbDim; ++i )
+            for( Int j = 0; j < AmbDim; ++j )
             {
-                valprint( "x_["+ToString(i)+"]", x_[i] );
+                valprint( "x_["+ToString(j)+"]", x_[j] );
             }
         }
         
         void DumpEdgeVectors() const
         {
-            for( Int i = 0; i < AmbDim; ++i )
+            for( Int j = 0; j < AmbDim; ++j )
             {
-                valprint( "y_["+ToString(i)+"]", y_[i] );
+                valprint( "y_["+ToString(j)+"]", y_[j] );
             }
         }
         
         virtual void RandomizeInitialEdgeVectors() override
         {
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                Vector_T x_k;
-                
-                for( Int i = 0; i < AmbDim; ++i )
+                Vector_T x_i;
+
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    x_k[i] = normal_dist( random_engine );
+                    x_i[j] = normal_dist( random_engine );
                 }
                 
-                x_k.Normalize();
+                x_i.Normalize();
                 
-                x_k.Write(x_,k);
+                x_i.Write(x_,i);
             }
         }
-        
-        virtual void ComputeConformalClosure() override
-        {
-            ComputeInitialShiftVector();
-
-            Optimize();
-            
-            ComputeVertexPositions();
-            
-            ComputeEdgeSpaceSamplingWeight();
-            
-            ComputeEdgeQuotientSpaceSamplingWeight();
-        }
-        
 
         
-        virtual Vector_T EdgeVector( const Int k ) const override
+        virtual Vector_T EdgeVector( const Int i ) const override
         {
-            return Vector_T (y_,k);
+            return Vector_T (y_,i);
         }
         
         virtual void WriteEdgeVectors( Real * restrict const y, const Int offset = 0 ) const override
@@ -508,14 +540,14 @@ namespace CoBarS
         
 
 //        // This routine seems to be somewhat slow; better not use it if you can avoid it.
-//        virtual Real VertexCoordinate( const Int k, const Int i ) const override
+//        virtual Real VertexCoordinate( const Int i, const Int j ) const override
 //        {
-//            return COND(vectorizeQ, p_[i][k], p_[k][i] );
+//            return COND(vectorizeQ, p_[j][i], p_[i][j] );
 //        }
         
-        virtual Vector_T VertexPosition( const Int k ) const override
+        virtual Vector_T VertexPosition( const Int i ) const override
         {
-            return Vector_T (p_,k);
+            return Vector_T (p_,i);
         }
         
         virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const override
@@ -535,19 +567,19 @@ namespace CoBarS
             Vector_T barycenter        (zero);
             Vector_T point_accumulator (zero);
             
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                const Vector_T y_k ( y_, k );
+                const Vector_T y_i ( y_, i );
                 
-                const Real r_k = r_[k];
+                const Real r_i = r_[i];
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    const Real offset = r_k * y_k[i];
+                    const Real delta = r_i * y_i[j];
                     
-                    barycenter[i] += (point_accumulator[i] + half * offset);
+                    barycenter[j] += (point_accumulator[j] + half * delta);
                     
-                    point_accumulator[i] += offset;
+                    point_accumulator[j] += delta;
                 }
             }
             
@@ -559,18 +591,18 @@ namespace CoBarS
             
             point_accumulator.Write( p_, 0 );
             
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                const Vector_T y_k ( y_, k );
+                const Vector_T y_i ( y_, i );
                 
-                const Real r_k = r_[k];
+                const Real r_i = r_[i];
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    point_accumulator[i] += r_k * y_k[i];
+                    point_accumulator[j] += r_i * y_i[j];
                 }
                 
-                point_accumulator.Write( p_, k + 1 );
+                point_accumulator.Write( p_, i + 1 );
             }
         }
         
@@ -620,7 +652,7 @@ namespace CoBarS
             
             if ( edge_count_ <= AmbDim )
             {
-                wprint(this->ClassName()+": Closed polygons with " + ToString(edge_count_) + " edges span an affine subspace of dimension at most " + ToString(edge_count_ - 1) + " < ambient dimension = " + ToString(AmbDim)+ ". The current implementation of the sampling weights for the quotient space leads to wrong results. Better reduce the template parameter AMB_DIM to " + ToString(edge_count_ - 1) + "; that will lead to correct weights, also for greater ambient dimensions.");
+                wprint(this->ClassName()+": Closed polygons with " + ToString(edge_count_) + " edges span an affine subspace of dimension at most " + ToString(edge_count_) + "-1 < ambient dimension = " + ToString(AmbDim)+ ". The current implementation of the sampling weights for the quotient space leads to wrong results. Better reduce the template parameter AMB_DIM to " + ToString(edge_count_ - 1) + "; that will lead to correct weights, also for greater ambient dimensions.");
             }
         }
         

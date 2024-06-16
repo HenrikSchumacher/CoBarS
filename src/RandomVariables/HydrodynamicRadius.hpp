@@ -55,24 +55,21 @@ namespace CoBarS
     protected:
         
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             Real sum = 0;
-            Real r2  = 0;
             
-            const Int n = C.EdgeCount();
+            const Int n = S.EdgeCount();
             
             for( Int k = 0; k < n; ++k )
             {
-                Vector_T u = C.VertexPosition(k);
+                Vector_T u = S.VertexPosition(k);
                 
                 for( Int l = k+1; l < n; ++l )
                 {
-                    r2 = 0;
-                    
                     Vector_T v = u;
                     
-                    v -= C.VertexPosition(l);
+                    v -= S.VertexPosition(l);
                                         
                     sum+= Inv<Real>(v.Norm() + eps);
                 }
@@ -81,16 +78,16 @@ namespace CoBarS
             return (n * n)/sum;
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return C.EdgeLengths().Total();
+            return S.EdgeLengths().Total();
         }
         
     public:

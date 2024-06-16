@@ -67,18 +67,23 @@ namespace CoBarS
         
         const Real p;
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
-            const Int n              = C.EdgeCount();
-            const Weights_T & r      = C.EdgeLengths();
+            const Int n              = S.EdgeCount();
+            const Weights_T & r      = S.EdgeLengths();
             
             Real sum;
+            
+            if( n <= 1 )
+            {
+                return 0;
+            }
             
             {
                 const Real len = Scalar::Half<Real> * (r[n-1]+r[0]);
                 
-                Vector_T u = C.EdgeVector( n - 1 );
-                Vector_T v = C.EdgeVector( 0     );
+                Vector_T u = S.EdgeVector( n - 1 );
+                Vector_T v = S.EdgeVector( 0     );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
@@ -89,8 +94,8 @@ namespace CoBarS
             {
                 const Real len = Scalar::Half<Real> * (r[k]+r[k+1]);
                 
-                Vector_T u = C.EdgeVector( k     );
-                Vector_T v = C.EdgeVector( k + 1 );
+                Vector_T u = S.EdgeVector( k     );
+                Vector_T v = S.EdgeVector( k + 1 );
                 
                 const Real phi = AngleBetweenUnitVectors( u, v );
                 
@@ -100,17 +105,17 @@ namespace CoBarS
             return sum/p;
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            const Int n         = C.EdgeCount();
-            const Weights_T & r = C.EdgeLengths();
+            const Int n         = S.EdgeCount();
+            const Weights_T & r = S.EdgeLengths();
             
             Real sum;
             

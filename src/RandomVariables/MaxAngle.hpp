@@ -52,41 +52,42 @@ namespace CoBarS
         
     protected:
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             
-            const Int n    = C.EdgeCount();
+            const Int n    = S.EdgeCount();
             
             Real max_angle = 0;
-            
+
+            // Handle wrap-around
             {
-                Vector_T u = C.EdgeVector( n-1 );
-                Vector_T v = C.EdgeVector( 0   );
-                
-                max_angle = std::max(max_angle, AngleBetweenUnitVectors( u, v ) );
+                max_angle = std::max(
+                    max_angle,
+                    AngleBetweenUnitVectors( S.EdgeVector(n-1), S.EdgeVector(0) )
+                );
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                Vector_T u = C.EdgeVector( k   );
-                Vector_T v = C.EdgeVector( k+1 );
-                
-                max_angle = std::max(max_angle, AngleBetweenUnitVectors( u, v ) );
+                max_angle = std::max(
+                    max_angle,
+                    AngleBetweenUnitVectors( S.EdgeVector(k), S.EdgeVector(k+1) )
+                );
             }
             
             return max_angle;
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return Scalar::Pi<Real>;
         }

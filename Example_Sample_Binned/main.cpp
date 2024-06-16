@@ -7,13 +7,13 @@ int main()
 {
     // Some type aliases to make our lives a bit easier.
     using Real = double;
-    using Int  = int_fast32_t;
+    using Int  = std::int64_t;
     
     // Dimensions of the ambient space has to be a compile-time constant.
     constexpr Int d            = 3;
     
     const     Int edge_count   = 4;
-    const     Int sample_count = 10000000;
+    const     Int sample_count = 20000000;
     const     Int thread_count = 8;
 
     // Everything is templated on (i) the dimension of the ambient space, (ii) the floating point type, and (iii) the integer type used, e.g., for indexing.
@@ -25,8 +25,8 @@ int main()
     
     SamplerSettings<Real,Int> opts;
     
-    std::vector<Real> r   ( edge_count, Scalar::One<Real> );
-    std::vector<Real> rho ( edge_count, Scalar::One<Real> );
+    std::vector<Real> r   ( edge_count, 1 );
+    std::vector<Real> rho ( edge_count, 1 );
     
     Sampler<d,Real,Int,Xoshiro256Plus> S ( &r[0], &rho[0], edge_count, opts );
     

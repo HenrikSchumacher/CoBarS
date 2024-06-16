@@ -1,6 +1,4 @@
 public:
-   
-
 
     virtual Int ConfidenceSample(
         const std::vector< std::shared_ptr<RandomVariable_T> > & F_list,
@@ -254,6 +252,13 @@ private:
             else
             {
                 
+                if( verboseQ )
+                {
+                    dump(N)
+                    
+                    valprint("  total_time ", total_time );
+                }
+                
                 completed = true;
                 
                 // Check stopping criterion for each random variable.
@@ -293,9 +298,9 @@ private:
 
                     if( verboseQ )
                     {
-                        dump(N)
-                        
-                        valprint("  total_time ", total_time );
+//                        dump(N)
+//                        
+//                        valprint("  total_time ", total_time );
                         
                         print( "  Current estimate of " + F_list[i]->Tag() + " = " +  ToString(T) + " +/- " + ToString(absolute_radius) + " with confidence = " + ToString(current_confidence) + "." );
                     }
@@ -359,7 +364,7 @@ private:
                 b *= static_cast<Real>(2);
             }
             
-            const Real error = BisectionSearch<1>( std::move(P), a, b, confidence, 0.001 );
+            const Real error = BisectionSearch<1>( std::move(P), a, b, confidence, 0.0001 );
             
             sample_means[i]     = T;
             sample_variances[i] = Bessel_corr * ( Frac( moments_[3][i], moments_[0][fun_count] ) - T * T );

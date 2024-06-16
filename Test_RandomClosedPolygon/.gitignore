@@ -1,3 +1,4 @@
 Tools_Profile.tsv
 Tools_Log.txt
-Test_RandomClosedPolygon
+Test_RandomClosedPolygon_clang
+Test_RandomClosedPolygon_gcc

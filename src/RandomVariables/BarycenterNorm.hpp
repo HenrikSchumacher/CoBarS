@@ -52,27 +52,29 @@ namespace CoBarS
         
     protected:
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             // We treat the edges as massless.
             // All mass is concentrated in the vertices, and each vertex carries the same mass.
             
-            const Weights_T & r = C.EdgeLengths();
+            const Weights_T & r = S.EdgeLengths();
             
-            const Int n = C.EdgeCount();
+            const Int n = S.EdgeCount();
             
             Vector_T b;
             
             b.SetZero();
             
-            for( Int k = 0; k < n; ++ k )
+            for( Int i = 0; i < n; ++ i )
             {
-                Vector_T u = C.VertexPosition(k  );
-                Vector_T v = C.VertexPosition(k+1);
+                Vector_T u = S.VertexPosition(i  );
+                Vector_T v = S.VertexPosition(i+1);
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                const Real r_i = r[i];
+                
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    b[i] += r[k] * ( u[i] + v[i] );
+                    b[j] += r_i * ( u[j] + v[j] );
                 }
             }
             
@@ -81,16 +83,16 @@ namespace CoBarS
             return b.Norm() * factor;
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return Total(C.EdgeLengths());
+            return Total(S.EdgeLengths());
         }
         
     public:

@@ -24,7 +24,7 @@ namespace AAM
     
     template<
         typename REAL    = double,
-        typename INT     = std::int_fast32_t,
+        typename INT     = std::size_t,
         typename PRNG_T  = CoBarS::Xoshiro256Plus,
         bool PROGRESSIVE_Q = true
     >
@@ -287,9 +287,9 @@ namespace AAM
          *
          * @param p Buffer for vertex positions; assumed to be of size `sample_count * EdgeCount() * AmbientDimension()`. Coordinates are stored in interleaved form, i.e. the coordinates of each vertex lie contiguously in memory.
          *
-         * @param sample_count Number of sampels to generate.
+         * @param sample_count Number of samples to generate.
          *
-         * @param thread_count Number of threads to use. 
+         * @param thread_count Number of threads to use. Best practice is to set this to the number of performance cores on your system.
          */
         
         Int CreateRandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
@@ -297,7 +297,7 @@ namespace AAM
             ptic(ClassName()+"::CreateRandomClosedPolygons");
             
             const Int trials = ParallelDoReduce(
-                [=]( const Int thread) -> Int
+                [=,this]( const Int thread) -> Int
                 {
                     
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );

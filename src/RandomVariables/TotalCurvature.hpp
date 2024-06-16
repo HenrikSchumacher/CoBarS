@@ -52,29 +52,27 @@ namespace CoBarS
         
     protected:
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             
-            const Int n              = C.EdgeCount();
+            const Int n = S.EdgeCount();
             
             Real sum;
             
             // Handle wrap-around.
             {
-                Vector_T u = C.EdgeVector( n-1 );
-                Vector_T v = C.EdgeVector( 0   );
-                
-                const Real phi = AngleBetweenUnitVectors( u, v );
+                const Real phi = AngleBetweenUnitVectors(
+                    S.EdgeVector(n-1), S.EdgeVector(0)
+                );
                 
                 sum = phi;
             }
             
             for( Int k = 0; k < n-1; ++k )
             {
-                Vector_T u = C.EdgeVector( k   );
-                Vector_T v = C.EdgeVector( k+1 );
-                
-                const Real phi = AngleBetweenUnitVectors( u, v );
+                const Real phi = AngleBetweenUnitVectors(
+                    S.EdgeVector(k), S.EdgeVector(k+1)
+                );
                 
                 sum += phi;
             }
@@ -82,16 +80,16 @@ namespace CoBarS
             return sum;
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return C.EdgeCount() * Scalar::Pi<Real>;
+            return S.EdgeCount() * Scalar::Pi<Real>;
         }
         
         

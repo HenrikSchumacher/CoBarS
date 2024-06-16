@@ -67,24 +67,24 @@ namespace CoBarS
         
         const Real exponent = 2;
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             Real sum = 0;
             Real r2  = 0;
             
             const Real power = Frac<Real>(exponent,2);
             
-            const Int n      = C.EdgeCount();
+            const Int n      = S.EdgeCount();
             
             for( Int k = 0; k < n; ++k )
             {
-                Vector_T u = C.VertexPosition(k);
+                Vector_T u = S.VertexPosition(k);
                 
                 for( Int l = k+1; l < n; ++l )
                 {
                     Vector_T v = u;
                     
-                    v -= C.VertexPosition(l);
+                    v -= S.VertexPosition(l);
                     
                     sum+= std::pow(v.SquaredNorm(),power);
                 }
@@ -93,16 +93,16 @@ namespace CoBarS
             return std::pow( sum / (n * n), Inv<Real>(exponent) );
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return Total(C.EdgeLengths()) * std::pow( C.EdgeCount(), -Inv<Real>(exponent) );
+            return Total(S.EdgeLengths()) * std::pow( S.EdgeCount(), -Inv<Real>(exponent) );
         }
         
     public:

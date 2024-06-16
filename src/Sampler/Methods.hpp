@@ -12,9 +12,9 @@ public:
         return r_;
     }
     
-    virtual void ReadEdgeLengths( const Real * const r_in ) override
+    virtual void ReadEdgeLengths( const Real * const r ) override
     {
-        r_.Read(r_in);
+        r_.Read(r);
         
         total_r_inv = Inv( r_.Total() );
     }
@@ -25,9 +25,9 @@ public:
         return rho_;
     }
     
-    virtual void ReadRho( const Real * const rho_in ) override
+    virtual void ReadRho( const Real * const rho ) override
     {
-        rho_.Read(rho_in);
+        rho_.Read(rho);
     }
     
 private:
@@ -38,15 +38,15 @@ private:
         {
             w_.SetZero();
             
-            for( Int k = 0; k < edge_count_; ++k )
+            for( Int i = 0; i < edge_count_; ++i )
             {
-                Vector_T x_k ( x_, k );
+                Vector_T x_i ( x_, i );
                 
-                const Real r_k = r_[k];
+                const Real r_i = r_[i];
                 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    w_[i] += x_k[i] * r_k;
+                    w_[j] += x_i[j] * r_i;
                 }
             }
         }
@@ -54,26 +54,26 @@ private:
         {
             // Overwrite by first summand.
             {
-                Vector_T x_k ( x_, 0 );
+                Vector_T x_i ( x_, 0 );
                 
-                const Real r_k = r_[0];
+                const Real r_i = r_[0];
 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    w_[i] = x_k[i] * r_k;
+                    w_[j] = x_i[j] * r_i;
                 }
             }
 
             // Add-in the others.
-            for( Int k = 1; k < edge_count_; ++k )
+            for( Int i = 1; i < edge_count_; ++i )
             {
-                Vector_T x_k ( x_, k );
+                Vector_T x_i ( x_, i );
                 
-                const Real r_k = r_[k];
+                const Real r_i = r_[i];
 
-                for( Int i = 0; i < AmbDim; ++i )
+                for( Int j = 0; j < AmbDim; ++j )
                 {
-                    w_[i] += x_k[i] * r_k;
+                    w_[j] += x_i[j] * r_i;
                 }
             }
         }

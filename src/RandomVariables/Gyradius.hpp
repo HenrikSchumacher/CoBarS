@@ -37,7 +37,7 @@ namespace CoBarS
         
     public:
         
-        [[nodiscard]] std::shared_ptr<Gyradius> Clone () const
+        [[nodiscard]] std::shared_ptr<Gyradius> Clone() const
         {
             return std::shared_ptr<Gyradius>(CloneImplementation());
         }
@@ -52,30 +52,30 @@ namespace CoBarS
     protected:
         
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
             Real r2 = 0;
             
-            const Int n = C.EdgeCount();
+            const Int n = S.EdgeCount();
 
             for( Int k = 0; k < n; ++k )
             {
-                r2 += C.VertexPosition(k).SquaredNorm();
+                r2 += S.VertexPosition(k).SquaredNorm();
             }
             
             return std::sqrt( r2/n );
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return Total( C.EdgeLengths() ) / std::sqrt( static_cast<Real>(C.EdgeCount()) );
+            return Total( S.EdgeLengths() ) / std::sqrt( static_cast<Real>(S.EdgeCount()) );
         }
         
     public:

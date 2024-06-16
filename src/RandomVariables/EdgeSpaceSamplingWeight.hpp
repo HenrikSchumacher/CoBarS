@@ -51,21 +51,21 @@ namespace CoBarS
     protected:
         
         
-        virtual Real operator()( const SamplerBase_T & C ) const override
+        virtual Real operator()( const SamplerBase_T & S ) const override
         {
-            return C.EdgeSpaceSamplingWeight();
+            return S.EdgeSpaceSamplingWeight();
         }
         
-        virtual Real MinValue( const SamplerBase_T & C ) const override
+        virtual Real MinValue( const SamplerBase_T & S ) const override
         {
-            (void)C;
+            (void)S;
             
             return 0;
         }
         
-        virtual Real MaxValue( const SamplerBase_T & C ) const override
+        virtual Real MaxValue( const SamplerBase_T & S ) const override
         {
-            return Inv<Real>( C.EdgeCount() );
+            return Inv<Real>( S.EdgeCount() );
         }
         
     public:
