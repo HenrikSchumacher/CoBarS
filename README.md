@@ -77,7 +77,7 @@ Further useful routines are the following member functions of the class `CoBarS:
 # Compilation
 
 
-We developped and tested _CoBarS_ most thoroughly with the _Apple clang_ compiler on macos Sonoma. It should also work with other _clang_ distributions and with _gcc_. However, _clang_ will produce faster executables as we have not optimized our code for _gcc_. (Pull requests with optimizations for _gcc_ and for architectures are welcome.) 
+We developped and tested _CoBarS_ most thoroughly with the _Apple clang_ compiler on macos Sonoma. It should also work with other _clang_ distributions and with _gcc_. However, _clang_ will produce faster executables as we have not optimized our code for _gcc_. (Pull requests with optimizations for _gcc_ and for other architectures are welcome.) 
 
 _CoBarS_ uses several C++ 20 features, so make sure to use a compatible C++ implementation by issueing the compiler option `-std=c++20` (or higher).
 
