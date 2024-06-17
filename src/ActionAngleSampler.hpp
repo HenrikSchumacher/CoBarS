@@ -24,7 +24,7 @@ namespace AAM
     
     template<
         typename REAL    = double,
-        typename INT     = std::size_t,
+        typename INT     = std::int_fast32_t,
         typename PRNG_T  = CoBarS::Xoshiro256Plus,
         bool PROGRESSIVE_Q = true
     >
@@ -277,6 +277,11 @@ namespace AAM
             p[3 * (n-1) + 1] = d[n-2] * e[1];
             p[3 * (n-1) + 2] = d[n-2] * e[2];
             
+            // Fill the last (redundant) vertex with 0.
+            p[3 * n + 0] = Real(0);
+            p[3 * n + 1] = Real(0);
+            p[3 * n + 2] = Real(0);
+            
             return trials;
         }
         
@@ -297,7 +302,7 @@ namespace AAM
             ptic(ClassName()+"::CreateRandomClosedPolygons");
             
             const Int trials = ParallelDoReduce(
-                [=,this]( const Int thread) -> Int
+                [=]( const Int thread) -> Int
                 {
                     
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
@@ -308,7 +313,7 @@ namespace AAM
                 
                     Int trials = 0;
                     
-                    const Int step = AmbDim * edge_count_;
+                    const Int step = AmbDim * (edge_count_ + 1);
                     
                     for( Int k = k_begin; k < k_end; ++k )
                     {
