@@ -266,12 +266,12 @@ private:
             
             lambda_min = DF_.SmallestEigenvalue();
             
-            q = four * residual / (lambda_min * lambda_min);
+            q_Newton = four * residual / (lambda_min * lambda_min);
             
-            if( q < one )
+            if( q_Newton < one )
             {
                 //Kantorovich condition satisfied; this allows to compute an error estimator.
-                errorestimator = half * lambda_min * q;
+                errorestimator = half * lambda_min * q_Newton;
                 //And we should deactivate line search. Otherwise, we may run into precision issues.
                 linesearchQ = false;
                 continueQ = (errorestimator > Settings().tolerance);
@@ -287,7 +287,7 @@ private:
         }
         else
         {
-            q = big_one;
+            q_Newton = big_one;
             lambda_min = eps;
             errorestimator = infty;
             linesearchQ = Settings().Armijo_slope_factor > zero;

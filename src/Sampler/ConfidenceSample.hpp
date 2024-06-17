@@ -171,7 +171,7 @@ private:
                     {
                         S.RandomizeInitialEdgeVectors();
 
-                        S.ComputeConformalClosure();
+                        S.computeConformalClosure<true,quotient_space_Q>();
                         
                         Real K = 0;
                         

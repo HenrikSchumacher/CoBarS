@@ -96,7 +96,7 @@ public:
         }
     }
     
-    virtual void WriteShiftVector( Real * restrict w, const Int offset ) const override
+    virtual void WriteShiftVector( Real * restrict w, const Int offset = 0 ) const override
     {
         w_.Write( &w[ AmbDim * offset] );
     }

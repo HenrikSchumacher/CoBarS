@@ -92,6 +92,7 @@ namespace CoBarS
         
         virtual Vector_T InitialEdgeVector( const Int i ) const = 0;
         
+        
         /*!
          * @brief Read the edge vectors of the open polygon from buffer `x`.
          *
@@ -114,10 +115,23 @@ namespace CoBarS
          * @param x Target array; assumed to be of size of at least `n * d * (offset + 1)`. The coordinates are stored in interleaved form so that the `n * d` coordinates of a single polygon are stored consecutively, i.e., the `j`-th coordinate of the `i`-th unit edge vector of polygon number `offset` is stored in `x[n * d * offset + d * i + j].
          *
          * @param offset Indicates that the polygon starts at `&x[n * d * offset]`.
-         *
          */
         
         virtual void WriteInitialEdgeVectors( Real * restrict const x, const Int offset = 0 ) const = 0;
+        
+        
+        /*!
+         * @brief Reads the vertex positions of the open polygon from buffer `p`.
+         *
+         * Suppose that `n = this->EdgeCount()` is the number of edges and `d = this->AmbientDimension()` is the dimension of the ambient space.
+         *
+         * @param p Source array; assumed to be of size of at least `(n + 1) * d * (offset + 1)`. The coordinates are stored in interleaved form so that the `(n + 1) * d` coordinates of a single polygon are stored consecutively, i.e., the `j`-th coordinate of the `i`-th edge of polygon number `offset` is stored in `p[(n + 1) * d * offset + d * i + j]`.
+         *
+         * @param offset Indicates that the polygon starts at `&p[(n + 1) * d * offset]`.*
+         */
+        
+        virtual void ReadInitialVertexPositions( const Real * restrict const p, const Int offset = 0 ) = 0;
+        
         
         /*!
          * @brief Writes the vertex positions of the open polygon to buffer `p`.
@@ -173,14 +187,14 @@ namespace CoBarS
 //        virtual Real VertexCoordinate( const Int k, const Int i ) const = 0;
         
         /*!
-         * @brief Writes the vertex positions of the closed polygon to buffer `p`.
+         * @brief Writes the vertex positions of the closed polygon to buffer `q`.
          *
-         * @param p Target array; assumed to be of size of at least `(n + 1) * d * (offset + 1)`, where `n = this->EdgeCount()` is the number of edges and `d = AmbientDimension()` is the dimension of the ambient space. The `j`-th coordinate of the `i`-th vertex of the polygon number `offset` is stored in `p[(n + 1) * d * offset + d * i + j]`.
+         * @param q Target array; assumed to be of size of at least `(n + 1) * d * (offset + 1)`, where `n = this->EdgeCount()` is the number of edges and `d = AmbientDimension()` is the dimension of the ambient space. The `j`-th coordinate of the `i`-th vertex of the polygon number `offset` is stored in `q[(n + 1) * d * offset + d * i + j]`.
          *
-         * @param offset Indicates that the polygon starts at `&p[(n + 1) * d * offset]`.
+         * @param offset Indicates that the polygon starts at `&q[(n + 1) * d * offset]`.
          */
         
-        virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const = 0;
+        virtual void WriteVertexPositions( Real * restrict const q, const Int offset = 0 ) const = 0;
         
     private:
         
@@ -307,7 +321,7 @@ namespace CoBarS
          *
          * Let `n = this->EdgeCount()` and `d = this->AmbientDimension()`.
          *
-         * @param p The output array for the _closed_ polygons; it is assumed to have size at least `sample_count * (n + 1) * d`. The first vertex position is duplicated and appended to at the end of each polygon. The `j`-th coordinate of the `i`-vertex in the `k`-th polygon is stored in `p[(n + 1) * d * k + d * i + j]`.
+         * @param q The output array for the _closed_ polygons; it is assumed to have size at least `sample_count * (n + 1) * d`. The first vertex position is duplicated and appended to at the end of each polygon. The `j`-th coordinate of the `i`-vertex in the `k`-th polygon is stored in `q[(n + 1) * d * k + d * i + j]`.
          *
          * @param K The output array for the sampling weights; it is assumed to have size at least `sample_count`. The type of sampling weights is determined by the value of `quotient_space_Q` (see below).
          *
@@ -319,14 +333,12 @@ namespace CoBarS
          */
         
         virtual void CreateRandomClosedPolygons(
-            Real * restrict const p,
+            Real * restrict const q,
             Real * restrict const K,
             const Int sample_count,
             const bool quotient_space_Q = true,
             const Int thread_count = 1
         ) const = 0;
-        
-        
         
         
         /*!
@@ -393,7 +405,7 @@ namespace CoBarS
          *
          * @param x The input array for the unit vectors of the uncentered point cloud; it is assumed to have size at least `sample_count * n * d`. The `j`-coordinate of the `i`-th unit vector of the `k`-th polygon is stored in `x[n * d * k + d * i + j].`
          *
-         * @param w The output array for the conformal barycenters of the unput point clouds; it is assumed to have size at least `sample_count * d`.
+         * @param w The output array for the conformal barycenters of the input point clouds; it is assumed to have size at least `sample_count * d`.
          *
          * @param y The output array for the unit vectors of the centered point cloud; it is assumed to have size at least `sample_count * n * d`. The `j`-coordinate of the `i`-th unit vector of the `k`-th point cloud is stored in `y[n * d * k + d * i + j].`
          *
@@ -416,6 +428,38 @@ namespace CoBarS
             const Int thread_count = 1
         ) const = 0;
         
+        
+        /*!
+         * @brief Reads `sample_count` (open) polygons from buffer `p`, computes their conformal closures, and writes the relevant information to the supplied buffers.
+         *
+         * Let `n = this->EdgeCount()` and `d = this->AmbientDimension()`.
+         *
+         * This routine interprets `n` as the number of unit vectors per point cloud.
+         *
+         * @param p Source array; assumed to be of size of at least ` sample_count *(n + 1) * d`. The coordinates are stored in interleaved form so that the `(n + 1) * d` coordinates of a single polygon are stored consecutively, i.e., the `j`-th coordinate of the `i`-th edge of `k`-th polygon is stored in `p[(n + 1) * d * k + d * i + j]`.
+         *
+         * @param w The output array for the conformal barycenters of the input unit edge vectors of the input polygons; it is assumed to have size at least `sample_count * d`.
+         *
+         * @param q Target array; assumed to be of size of at least `sample_count * (n + 1) * d`. The `j`-th coordinate of the `i`-th vertex of the `k`-th polygon is stored in `q[(n + 1) * d * k + d * i + j]`.
+         *
+         * @param K_edge_space The output array for the reweighting factors of the point space (rotation group not modded out); it is assumed to have size at least `sample_count`.
+         *
+         * @param K_quot_space The output array for the reweighting factors of the point space modulo rotation group; it is assumed to have size at least `sample_count`.
+         *
+         * @param sample_count Number of point clouds to generated.
+         *
+         * @param thread_count Number of threads to use. Best practice is to set this to the number of performance cores on your system.
+         */
+        
+        virtual void ComputeConformalClosures(
+            const Real * restrict const p,
+                  Real * restrict const w,
+                  Real * restrict const q,
+                  Real * restrict const K_edge_space,
+                  Real * restrict const K_quot_space,
+            const Int sample_count,
+            const Int thread_count = 1
+        ) const = 0;
         
         /*!
          * @brief Generates `sample_count` random open polygons, closes them, evaluates the random variable `F` on them, and writes the relevant information to the supplied buffers. The generated polygons are discarded immediately after evaluating the random variables on them.

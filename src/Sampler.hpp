@@ -66,6 +66,10 @@ namespace CoBarS
         
         static constexpr bool vectorizeQ   = VECTORIZE_Q   ;
         static constexpr bool zerofyfirstQ = ZEROFY_FIRST_Q;
+        
+        
+        template<int D, typename R, typename I, typename P>
+        friend class DouadyEarleExtension;
     
     public:
         
@@ -160,7 +164,7 @@ namespace CoBarS
         ,   edge_space_sampling_weight              ( other.edge_space_sampling_weight              )
         ,   edge_quotient_space_sampling_weight     ( other.edge_quotient_space_sampling_weight )
         ,   lambda_min(other.lambda_min)
-        ,   q(other.q)
+        ,   q_Newton(other.q_Newton)
         ,   errorestimator(other.errorestimator)
         ,   linesearchQ(other.linesearchQ)
         ,   succeededQ(other.succeededQ)
@@ -204,7 +208,7 @@ namespace CoBarS
             swap(A.edge_quotient_space_sampling_weight, B.edge_quotient_space_sampling_weight );
             
             swap(A.lambda_min,B.lambda_min);
-            swap(A.q,B.q);
+            swap(A.q_Newton,B.q_Newton);
             swap(A.errorestimator,B.errorestimator);
             swap(A.linesearchQ,B.linesearchQ);
             swap(A.succeededQ,B.succeededQ);
@@ -348,7 +352,7 @@ namespace CoBarS
         mutable Real edge_quotient_space_sampling_weight = -1;
         
         Real lambda_min = eps;
-        Real q = one;
+        Real q_Newton = one;
         Real errorestimator = infty;
         
         bool linesearchQ = true;    // Toggle line search.
@@ -386,20 +390,25 @@ namespace CoBarS
 #include "Sampler/Reweighting.hpp"
         
 #include "Sampler/Methods.hpp"
-
+        
+#include "Sampler/CreatePolygons.hpp"
+        
+#include "Sampler/ConformalClosure.hpp"
+        
+#include "Sampler/ConformalCentralization.hpp"
+        
 #include "Sampler/RandomOpenPolygons.hpp"
         
 #include "Sampler/RandomClosedPolygons.hpp"
+
+#include "Sampler/RandomCentralizedPointClouds.hpp"
         
 #include "Sampler/Sample.hpp"
-        
-#include "Sampler/ConformalClosures.hpp"
         
 #include "Sampler/BinnedSample.hpp"
         
 #include "Sampler/ConfidenceSample.hpp"
-        
-#include "Sampler/ComputeConformalClosure.hpp"
+
         
     public:
         
@@ -433,6 +442,30 @@ namespace CoBarS
             else
             {
                 x_.Read(X);
+            }
+        }
+        
+        virtual void ReadInitialVertexPositions( 
+            const Real * restrict const p, const Int offset = 0
+        ) override
+        {
+            cptr<Real> P = &p[AmbDim * (edge_count_ + Int(1)) * offset];
+            
+            for( Int i = 0; i < edge_count_; ++i )
+            {
+                cptr<Real> u = &P[AmbDim * (i + 0) ];
+                cptr<Real> v = &P[AmbDim * (i + 1) ];
+                
+                Vector_T x_i;
+                
+                for( Int j = 0; j < AmbDim; ++j )
+                {
+                    x_i[j] =  v[j] - u[j];
+                }
+
+                x_i.Normalize();
+                
+                x_i.Write( x_, i );
             }
         }
         
@@ -550,9 +583,9 @@ namespace CoBarS
             return Vector_T (p_,i);
         }
         
-        virtual void WriteVertexPositions( Real * restrict const p, const Int offset = 0 ) const override
+        virtual void WriteVertexPositions( Real * restrict const q, const Int offset = 0 ) const override
         {
-            p_.Write( &p[ (edge_count_+1) * AmbDim * offset ] );
+            p_.Write( &q[ (edge_count_+1) * AmbDim * offset ] );
         }
         
     private:
@@ -636,6 +669,35 @@ namespace CoBarS
         virtual Real EvaluateRandomVariable( Int i ) const override
         {
             return (*F_list_[i])( *this );
+        }
+        
+    public:
+        
+        virtual void ComputeConformalClosure() override
+        {
+            computeConformalClosure<true,true>();
+        }
+        
+    private:
+        
+        template<bool vertex_pos_Q, bool quot_space_Q>
+        void computeConformalClosure()
+        {
+            ComputeInitialShiftVector();
+
+            Optimize();
+            
+            if constexpr ( vertex_pos_Q )
+            {
+                ComputeVertexPositions();
+            }
+            
+            ComputeEdgeSpaceSamplingWeight();
+            
+            if constexpr ( quot_space_Q )
+            {
+                ComputeEdgeQuotientSpaceSamplingWeight();
+            }
         }
 
     private:
