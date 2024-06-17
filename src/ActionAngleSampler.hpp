@@ -189,6 +189,9 @@ namespace AAM
                 return trials;
             }
             
+            // Some buffer for the center of mass.
+            Vector_T c {Real(0),Real(0),Real(0)};
+            
             p[0] = zero;
             p[1] = zero;
             p[2] = zero;
@@ -196,12 +199,16 @@ namespace AAM
             p[4] = zero;
             p[5] = zero;
             
+            c[0] = p[3];
+            c[1] = p[4];
+            c[2] = p[5];
+            
             // Unit vector pointing to position of currect vertex..
             Vector_T e { one, zero, zero };
             
             // Some buffer for the cross product in Rodrigues' formula.
             Vector_T v;
-            
+
             // The current triangle's normal.
             Vector_T nu { zero, zero, one };
                         
@@ -231,6 +238,10 @@ namespace AAM
                 p[3 * (i+2) + 0] = d[i+1] * e[0];
                 p[3 * (i+2) + 1] = d[i+1] * e[1];
                 p[3 * (i+2) + 2] = d[i+1] * e[2];
+                
+                c[0] += p[3 * (i+2) + 0];
+                c[1] += p[3 * (i+2) + 1];
+                c[2] += p[3 * (i+2) + 2];
                 
                 // Now we also rotate the triangle's unit normal by theta[i] about the unit vector e.
                 
@@ -277,10 +288,23 @@ namespace AAM
             p[3 * (n-1) + 1] = d[n-2] * e[1];
             p[3 * (n-1) + 2] = d[n-2] * e[2];
             
-            // Fill the last (redundant) vertex with 0.
-            p[3 * n + 0] = Real(0);
-            p[3 * n + 1] = Real(0);
-            p[3 * n + 2] = Real(0);
+            c[0] += p[3 * (n-1) + 0];
+            c[1] += p[3 * (n-1) + 1];
+            c[2] += p[3 * (n-1) + 2];
+            
+            c /= Real(n);
+            // Now c contains the center of mass.
+            
+            for( Int i = 0; i < n; ++i )
+            {
+                p[3 * i + 0] -= c[0];
+                p[3 * i + 1] -= c[1];
+                p[3 * i + 2] -= c[2];
+            }
+            
+            p[3 * n + 0] = -c[0];
+            p[3 * n + 1] = -c[1];
+            p[3 * n + 2] = -c[2];
             
             return trials;
         }
