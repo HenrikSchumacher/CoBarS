@@ -101,7 +101,7 @@ private:
                 print("Using absolute error measures.");
             }
             
-            print("ConfidenceSample works on the following random variables:");
+            print("ConfidenceSample is computing means for the following random variables:");
             
             for( RandomVariable_Ptr F : F_list )
             {
