@@ -30,7 +30,7 @@ using CoBarS::Xoshiro256Plus;
 
 int main()
 {
-    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AMM) and the Progressive Action Angle Method (PAMM). Moreover, I use it to detect compilation errors in all code paths.");
+    print("Hello, this small test program compares the runtimes of CoBarS::Sampler with various settings to the Action Angle Method (AAM) and the Progressive Action Angle Method (PAAM). Moreover, I use it to detect compilation errors in all code paths.");
     
     using Real = double;
     using Int  = std::size_t;
@@ -110,7 +110,7 @@ int main()
         toc(S.ClassName());
     };
     
-    auto run_AMM = [&p,sample_count,thread_count]( auto & S )
+    auto run_AAM = [&p,sample_count,thread_count]( auto & S )
     {
         tic(S.ClassName());
         
@@ -150,23 +150,23 @@ int main()
 
     print("");
     
-//    run_AMM(M_MT64_0);
-//    run_AMM(M_MT64_1);
+//    run_AAM(M_MT64_0);
+//    run_AAM(M_MT64_1);
 //    
 //    print("");
 //
-//    run_AMM(M_PCG64_0);
-//    run_AMM(M_PCG64_1);
+//    run_AAM(M_PCG64_0);
+//    run_AAM(M_PCG64_1);
 //    
 //    print("");
 //
-//    run_AMM(M_WyRand_0);
-//    run_AMM(M_WyRand_1);
+//    run_AAM(M_WyRand_0);
+//    run_AAM(M_WyRand_1);
 //  
 //    print("");
 
-    run_AMM(M_Xoshiro_0);
-    run_AMM(M_Xoshiro_1);
+    run_AAM(M_Xoshiro_0);
+    run_AAM(M_Xoshiro_1);
 
     return 0;
 }
