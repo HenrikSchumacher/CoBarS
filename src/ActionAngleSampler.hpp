@@ -326,7 +326,7 @@ namespace AAM
             ptic(ClassName()+"::CreateRandomClosedPolygons");
             
             const Int trials = ParallelDoReduce(
-                [=]( const Int thread) -> Int
+                [=,this]( const Int thread) -> Int
                 {
                     
                     const Int k_begin = JobPointer( sample_count, thread_count, thread     );
