@@ -113,7 +113,7 @@ private:
         
         Real total_time = 0;
         
-        moments_.Resize( 4, fun_count + 1 );
+        moments_.template Resize<false>( 4, fun_count + 1 );
         moments_.SetZero();
         
         // moments[0] - 1-st moments
@@ -132,7 +132,7 @@ private:
                                 
                 S.LoadRandomVariables( F_list );
                 
-                S.moments_.Resize( 4, fun_count + 1 );
+                S.moments_.template Resize<false>( 4, fun_count + 1 );
                 
                 samplers[thread] = std::move(S);
                 
@@ -374,7 +374,7 @@ private:
         
         ptoc("Postprocessing");
         
-        moments_.Resize(0,0);
+        moments_.template Resize<false>(0,0);
         
         ptoc(ClassName()+"::ConfidenceSample");
         
