@@ -56,7 +56,7 @@ private:
     {
         // Samples the random variables in F_list until the radii of the confidence intervals of each function are lower or equal to the prescribed radii (or until max_sample_count samples have been drawn, whatever happens first).
         
-        ptic(ClassName()+"::ConfidenceSample");
+        TOOLS_PTIC(ClassName()+"::ConfidenceSample");
         
         if( (confidence < zero) )
         {
@@ -79,7 +79,7 @@ private:
 //            return 0;
         }
         
-        ptic("Preparation");
+        TOOLS_PTIC("Preparation");
         
         const Int fun_count = static_cast<Int>(F_list.size());
                 
@@ -141,13 +141,13 @@ private:
         );
         
         
-        ptoc("Preparation");
+        TOOLS_PTOC("Preparation");
         
         std::mutex moment_mutex;
         
         bool completed = false;
         
-        ptic("Sampling");
+        TOOLS_PTIC("Sampling");
         
         while( !completed )
         {
@@ -254,7 +254,7 @@ private:
                 
                 if( verboseQ )
                 {
-                    dump(N)
+                    TOOLS_DUMP(N)
                     
                     valprint("  total_time ", total_time );
                 }
@@ -298,7 +298,7 @@ private:
 
                     if( verboseQ )
                     {
-//                        dump(N)
+//                        TOOLS_DUMP(N)
 //                        
 //                        valprint("  total_time ", total_time );
                         
@@ -311,9 +311,9 @@ private:
             
         }
         
-        ptoc("Sampling");
+        TOOLS_PTOC("Sampling");
         
-        ptic("Postprocessing");
+        TOOLS_PTIC("Postprocessing");
         
         const Real Bessel_corr = Frac<Real>( N, N-1 );
         
@@ -372,11 +372,11 @@ private:
         }
         
         
-        ptoc("Postprocessing");
+        TOOLS_PTOC("Postprocessing");
         
         moments_.template Resize<false>(0,0);
         
-        ptoc(ClassName()+"::ConfidenceSample");
+        TOOLS_PTOC(ClassName()+"::ConfidenceSample");
         
         return N;
     }

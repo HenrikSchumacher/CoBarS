@@ -1937,7 +1937,7 @@ typedef pcg_engines::ext_setseq_xsl_rr_128_64<10,16,false>  pcg64_c1024;
 typedef pcg_engines::ext_oneseq_xsl_rr_128_64<10,128,false> pcg64_c1024_fast;
 
 // These generators have an insanely huge period (2^524352), and is suitable
-// for silly party tricks, such as dumping out 64 KB ZIP files at an arbitrary
+// for silly party tricks, such as TOOLS_DUMPing out 64 KB ZIP files at an arbitrary
 // point in the future.   [Actually, over the full period of the generator, it
 // will produce every 64 KB ZIP file 2^64 times!]
 

@@ -10,12 +10,12 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::ComputeConformalClosures");
+        TOOLS_PTIC(ClassName()+"::ComputeConformalClosures");
         
         CreatePolygons<0,0,1,0,1,0,1,1,1>(
             nullptr, nullptr, p, nullptr, w, nullptr, q, K_edge_space, K_quot_space,
             sample_count, thread_count
         );
         
-        ptoc(ClassName()+"::ComputeConformalClosures");
+        TOOLS_PTOC(ClassName()+"::ComputeConformalClosures");
     }

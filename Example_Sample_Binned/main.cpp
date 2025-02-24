@@ -30,7 +30,7 @@ int main()
     
     Sampler<d,Real,Int,Xoshiro256Plus> S ( &r[0], &rho[0], edge_count, opts );
     
-    dump(S.EdgeLengths());
+    TOOLS_DUMP(S.EdgeLengths());
     
     // A list of random variables to sample. We start with an empty list.
 

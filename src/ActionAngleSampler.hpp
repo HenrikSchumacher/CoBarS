@@ -323,7 +323,7 @@ namespace AAM
         
         Int CreateRandomClosedPolygons( Real * restrict const p, const Int sample_count, const Int thread_count = 1 )
         {
-            ptic(ClassName()+"::CreateRandomClosedPolygons");
+            TOOLS_PTIC(ClassName()+"::CreateRandomClosedPolygons");
             
             const Int trials = ParallelDoReduce(
                 [=,this]( const Int thread) -> Int
@@ -351,7 +351,7 @@ namespace AAM
                 thread_count
             );
             
-            ptoc(ClassName()+"::CreateRandomClosedPolygons");
+            TOOLS_PTOC(ClassName()+"::CreateRandomClosedPolygons");
             return trials;
         }
         

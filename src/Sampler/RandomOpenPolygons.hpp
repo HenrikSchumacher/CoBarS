@@ -6,7 +6,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::CreateRandomOpenPolygons");
+        TOOLS_PTIC(ClassName()+"::CreateRandomOpenPolygons");
         
         ParallelDo(
             [&,this]( const Int thread )
@@ -33,7 +33,7 @@ public:
             thread_count
         );
         
-        ptoc(ClassName()+"::CreateRandomOpenPolygons");
+        TOOLS_PTOC(ClassName()+"::CreateRandomOpenPolygons");
     }
 
 

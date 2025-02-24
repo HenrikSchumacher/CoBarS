@@ -167,7 +167,7 @@ public:
         const Int fun_count
     ) const
     {
-        ptic(ClassName()+"::NormalizeCompressedSamples");
+        TOOLS_PTIC(ClassName()+"::NormalizeCompressedSamples");
         for( Int i = 0; i < 3; ++i )
         {
             for( Int j = 0; j < fun_count; ++j )
@@ -186,5 +186,5 @@ public:
                 scale_buffer( factor, moments_i_j, mom_count );
             }
         }
-        ptoc(ClassName()+"::NormalizeCompressedSamples");
+        TOOLS_PTOC(ClassName()+"::NormalizeCompressedSamples");
     }

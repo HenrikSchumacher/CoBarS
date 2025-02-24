@@ -8,7 +8,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::CreateRandomCentralizedPointClouds");
+        TOOLS_PTIC(ClassName()+"::CreateRandomCentralizedPointClouds");
 
         if( quotient_space_Q )
         {
@@ -25,7 +25,7 @@ public:
             );
         }
         
-        ptoc(ClassName()+"::CreateRandomCentralizedPointClouds");
+        TOOLS_PTOC(ClassName()+"::CreateRandomCentralizedPointClouds");
     }
 
     virtual void CreateRandomCentralizedPointClouds_Detailed(
@@ -38,13 +38,13 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::CreateRandomCentralizedPointClouds_Detailed");
+        TOOLS_PTIC(ClassName()+"::CreateRandomCentralizedPointClouds_Detailed");
 
         CreatePolygons<0,1,0,0,1,1,0,1,1>(
             nullptr, x, nullptr, nullptr, w, y, nullptr, K_edge_space, K_quot_space,
             sample_count, thread_count
         );
         
-        ptoc(ClassName()+"::CreateRandomCentralizedPointClouds_Detailed");
+        TOOLS_PTOC(ClassName()+"::CreateRandomCentralizedPointClouds_Detailed");
     }
 

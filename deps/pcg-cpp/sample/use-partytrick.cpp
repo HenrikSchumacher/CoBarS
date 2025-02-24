@@ -25,7 +25,7 @@
  * See make-partytrick.cpp for more details.
  *
  * Typical usage:
- *      ./use-partytrick | hexdump -C | less
+ *      ./use-partytrick | hexTOOLS_DUMP -C | less
  */
 
 #include <cstdio>

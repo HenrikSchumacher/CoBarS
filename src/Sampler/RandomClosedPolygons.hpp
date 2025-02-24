@@ -8,7 +8,7 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::CreateRandomClosedPolygons");
+        TOOLS_PTIC(ClassName()+"::CreateRandomClosedPolygons");
         
         if( quotient_space_Q )
         {
@@ -25,5 +25,5 @@ public:
             );
         }
     
-        ptoc(ClassName()+"::CreateRandomClosedPolygons");
+        TOOLS_PTOC(ClassName()+"::CreateRandomClosedPolygons");
     }

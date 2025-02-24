@@ -10,12 +10,12 @@ public:
         const Int thread_count = 1
     ) const override
     {
-        ptic(ClassName()+"::ComputeConformalCentralizations");
+        TOOLS_PTIC(ClassName()+"::ComputeConformalCentralizations");
         
         CreatePolygons<1,0,0,0,1,1,0,1,1>(
             x, nullptr, nullptr, nullptr, w, y, nullptr, K_edge_space, K_quot_space,
             sample_count, thread_count
         );
         
-        ptoc(ClassName()+"::ComputeConformalCentralizations");
+        TOOLS_PTOC(ClassName()+"::ComputeConformalCentralizations");
     }

@@ -41,14 +41,14 @@ namespace CoBarS
         
         void PrintStats() const
         {
-            valprint( "tolerance           ", tolerance           , 16 );
-            valprint( "give_up_tolerance   ", give_up_tolerance   , 16 );
-            valprint( "regularization      ", regularization      , 16 );
-            valprint( "max_iter            ", max_iter            , 16 );
-            valprint( "Armijo_slope_factor ", Armijo_slope_factor , 16 );
-            valprint( "Armijo_shrink_factor", Armijo_shrink_factor, 16 );
-            valprint( "max_backtrackings   ", max_backtrackings   , 16 );
-            valprint( "use_linesearch      ", use_linesearch      , 16 );
+            valprint( "tolerance           ", tolerance           );
+            valprint( "give_up_tolerance   ", give_up_tolerance   );
+            valprint( "regularization      ", regularization      );
+            valprint( "max_iter            ", max_iter            );
+            valprint( "Armijo_slope_factor ", Armijo_slope_factor );
+            valprint( "Armijo_shrink_factor", Armijo_shrink_factor);
+            valprint( "max_backtrackings   ", max_backtrackings   );
+            valprint( "use_linesearch      ", use_linesearch      );
         }
     };
     

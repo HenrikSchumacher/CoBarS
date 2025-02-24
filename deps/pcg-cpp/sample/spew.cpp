@@ -26,7 +26,7 @@
  * 2^64 streams.
  *
  * Typical usage:
- *      ./spew | hexdump -C | less
+ *      ./spew | hexTOOLS_DUMP -C | less
  */
 
 #include <cstdio>

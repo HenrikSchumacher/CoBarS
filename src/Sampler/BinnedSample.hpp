@@ -15,7 +15,7 @@ public:
         
         // ranges: Specify the range for binning: For j-th function in F_list, the range from ranges(j,0) to ranges(j,1) will be divided into bin_count bins. The user is supposed to provide meaningful ranges. Some rough guess might be obtained by calling the random variables on the prepared Sampler S.
         
-        ptic(ClassName()+"::BinnedSample");
+        TOOLS_PTIC(ClassName()+"::BinnedSample");
         
         const Int f_count = static_cast<Int>(F_list.size());
         
@@ -129,6 +129,6 @@ public:
             thread_count
         );
         
-        ptoc(ClassName()+"::BinnedSample");
+        TOOLS_PTOC(ClassName()+"::BinnedSample");
     }
 

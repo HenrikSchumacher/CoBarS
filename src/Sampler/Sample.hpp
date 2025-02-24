@@ -9,7 +9,7 @@ public:
         const Int  thread_count = 1
     ) const override
     {   
-        ptic(ClassName()+"::Sample (batch)");
+        TOOLS_PTIC(ClassName()+"::Sample (batch)");
 
         if( K_edge_space != nullptr )
         {
@@ -26,7 +26,7 @@ public:
             );
         }
         
-        ptoc(ClassName()+"::Sample (batch)");
+        TOOLS_PTOC(ClassName()+"::Sample (batch)");
     }
 
 
@@ -47,7 +47,7 @@ public:
         // K_edge_space is expected to be an array of size at least sample_count -- or a nullptr.
         // K_quot_space is expected to be an array of size at least sample_count  -- or a nullptr.
         
-        ptic(ClassName()+"::Sample");
+        TOOLS_PTIC(ClassName()+"::Sample");
         
         std::vector< std::shared_ptr<RandomVariable_T>> F_list;
         
@@ -58,7 +58,7 @@ public:
             F_list, sample_count, thread_count
         );
         
-        ptoc(ClassName()+"::Sample");
+        TOOLS_PTOC(ClassName()+"::Sample");
     }
 
 

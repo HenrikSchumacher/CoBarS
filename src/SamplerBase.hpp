@@ -608,7 +608,7 @@ namespace CoBarS
         {
             const Int f_count = static_cast<Int>(random_vars.size());
             
-            ptic(this->ClassName()+"::BinnedSamples");
+            TOOLS_PTIC(this->ClassName()+"::BinnedSamples");
             for( Int i = 0; i < 3; ++i )
             {
                 for( Int j = 0; j < f_count; ++j )
@@ -627,7 +627,7 @@ namespace CoBarS
                     scale_buffer( factor, moms_i_j, mom_count );
                 }
             }
-            ptoc(this->ClassName()+"::BinnedSamples");
+            TOOLS_PTOC(this->ClassName()+"::BinnedSamples");
         }
         
         

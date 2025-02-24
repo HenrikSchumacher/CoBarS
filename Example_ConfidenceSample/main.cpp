@@ -72,9 +72,9 @@ int main()
     
     Tools::print("");
     
-    dump( means );
-    dump( sample_variances );
-    dump( errors );
+    TOOLS_DUMP( means );
+    TOOLS_DUMP( sample_variances );
+    TOOLS_DUMP( errors );
     
     return 0;
 }
