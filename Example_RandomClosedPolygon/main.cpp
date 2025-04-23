@@ -42,12 +42,20 @@ int main()
     
     std::cout << "Sampling " << sample_count <<" equilateral " << edge_count << "-gons, using " << thread_count << " threads." << std::endl;
     
+    Tools::TimeInterval T_equilateral;
+    
+    T_equilateral.Tic();
+    
     S.CreateRandomClosedPolygons(
         &p[0], &K[0], sample_count, quot_space_Q, thread_count
     );
     
-    std::cout << "Sampling done." << std::endl;
-
+    T_equilateral.Toc();
+    
+    std::cout << "Sampling done. Time elapsed = " << T_equilateral.Duration() << "." << std::endl;
+    
+    
+    
     // Let's compute the sample average of the squared gyradius.
     {
         double weighted_sum = 0;
@@ -118,12 +126,18 @@ int main()
     // It writes to raw pointers, so you are free to use whatever container you like,
     // as long as it stores its entries contiguously.
     
+    Tools::TimeInterval T_nonequilateral;
+    
+    T_nonequilateral.Tic();
+    
     // This call is automatically parallelized over `thread_count` threads.
     T.CreateRandomClosedPolygons(
         &p[0], &K[0], sample_count, quot_space_Q, thread_count
     );
     
-    std::cout << "Sampling done." << std::endl;
+    T_nonequilateral.Toc();
+    
+    std::cout << "Sampling done. Time elapsed = " << T_nonequilateral.Duration() << "." << std::endl;
     
     // You can also sample a few preimplemented random variables on the polygon space without exporting the polygons themselves. This may safe a lot of memory traffic.
     
